@@ -1,11 +1,11 @@
-# console_logger
+# flux
 
-A simple library for logging messages to the console.
+**Flux** is a simple yet customizable and versatile library for logging messages to the console.
 
 ## Installation
 
 You can install the library using pip:
 
 ```sh
-pip install console_logger
+pip install flux
 ```
