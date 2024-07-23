@@ -9,6 +9,8 @@ l.info("a", 3, 4, 4, "hello world 3", sep="_")
 l.info("a")
 l.info("ajkfhgfhkgdjhd")
 l.info(345)
+l.debug(3.0)
+l.debug(3.0, {})
 l.critical(
     {
         "abcdef": "abcdef",

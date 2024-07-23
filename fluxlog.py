@@ -391,8 +391,6 @@ class FluxLogger:
         # Highlight the formatted string
         style = get_style_by_name("one-dark")
 
-        print([pprint.pformat(variable, width=self._message_space)])
-
         highlighted_str = highlight(
             pprint.pformat(variable, width=self._message_space),
             PythonLexer(),
@@ -410,10 +408,8 @@ class FluxLogger:
             return len(ansi_escape.sub("", s))
 
         lines = text.split("\n")
-        print(f"Number of lines: {len(lines)}")  # Debug print
 
         for line_num, line in enumerate(lines, 1):
-            print(f"Processing line {line_num}: {repr(line)}")  # Debug print
             current_line = ""
             current_line_visible_length = 0
             words = re.findall(r"\S+\s*", line)
@@ -424,9 +420,6 @@ class FluxLogger:
                 if current_line_visible_length + word_visible_length > width:
                     if current_line:
                         result.append(current_line.rstrip())
-                        print(
-                            f"Added to result: {repr(current_line.rstrip())}"
-                        )  # Debug print
                     current_line = ""
                     current_line_visible_length = 0
 
@@ -435,7 +428,6 @@ class FluxLogger:
 
             if current_line:
                 result.append(current_line.rstrip())
-                print(f"Added to result: {repr(current_line.rstrip())}")  # Debug print
 
         return result
 
@@ -710,21 +702,23 @@ class FluxLogger:
         )
         self.__close()
 
-    def info(self, *values, sep: str = " ", rich: bool = True):
+    def info(self, *values, sep: str = None, rich: bool = True):
         """Logs the given values to the console with an "info" level.
 
         Args:
-            sep (str, optional): String inserted between values. Defaults to " "
+            sep (str, optional): String inserted between values. Defaults to None
             rich (bool, optional): Format values for easier readability with syntax highlighting. Defaults to True
         """
         rich = (
             False
-            if (
-                all(isinstance(value, (str, int)) for value in values)
-                and len(values) == 1
-            )
-            or sep not in ["", " "]
+            if all(isinstance(value, (str, int, float)) for value in values)
+            or sep not in ["", " ", None]
             else rich
+        )
+        sep = sep or (
+            " "
+            if all(isinstance(value, (str, int, float)) for value in values)
+            else "\n"
         )
         self.__log_method(
             values=values,
@@ -733,21 +727,23 @@ class FluxLogger:
             pretty_print=rich,
         )
 
-    def debug(self, *values, sep: str = " ", rich: bool = True):
+    def debug(self, *values, sep: str = None, rich: bool = True):
         """Logs the given values to the console with a "debug" level.
 
         Args:
-            sep (str, optional): String inserted between values. Defaults to " "
+            sep (str, optional): String inserted between values. Defaults to ""
             rich (bool, optional): Format values for easier readability with syntax highlighting. Defaults to True
         """
         rich = (
             False
-            if (
-                all(isinstance(value, (str, int)) for value in values)
-                and len(values) == 1
-            )
-            or sep not in ["", " "]
+            if all(isinstance(value, (str, int, float)) for value in values)
+            or sep not in ["", " ", None]
             else rich
+        )
+        sep = sep or (
+            " "
+            if all(isinstance(value, (str, int, float)) for value in values)
+            else "\n"
         )
         self.__log_method(
             values=values,
@@ -756,21 +752,23 @@ class FluxLogger:
             pretty_print=rich,
         )
 
-    def success(self, *values, sep: str = " ", rich: bool = True):
+    def success(self, *values, sep: str = None, rich: bool = True):
         """Logs the given values to the console with a "success" level.
 
         Args:
-            sep (str, optional): String inserted between values. Defaults to " "
+            sep (str, optional): String inserted between values. Defaults to None
             rich (bool, optional): Format values for easier readability with syntax highlighting. Defaults to True
         """
         rich = (
             False
-            if (
-                all(isinstance(value, (str, int)) for value in values)
-                and len(values) == 1
-            )
-            or sep not in ["", " "]
+            if all(isinstance(value, (str, int, float)) for value in values)
+            or sep not in ["", " ", None]
             else rich
+        )
+        sep = sep or (
+            " "
+            if all(isinstance(value, (str, int, float)) for value in values)
+            else "\n"
         )
         self.__log_method(
             values=values,
@@ -779,21 +777,23 @@ class FluxLogger:
             pretty_print=rich,
         )
 
-    def warning(self, *values, sep: str = " ", rich: bool = True):
+    def warning(self, *values, sep: str = None, rich: bool = True):
         """Logs the given values to the console with a "warning" level.
 
         Args:
-            sep (str, optional): String inserted between values. Defaults to " "
+            sep (str, optional): String inserted between values. Defaults to None
             rich (bool, optional): Format values for easier readability with syntax highlighting. Defaults to True
         """
         rich = (
             False
-            if (
-                all(isinstance(value, (str, int)) for value in values)
-                and len(values) == 1
-            )
-            or sep not in ["", " "]
+            if all(isinstance(value, (str, int, float)) for value in values)
+            or sep not in ["", " ", None]
             else rich
+        )
+        sep = sep or (
+            " "
+            if all(isinstance(value, (str, int, float)) for value in values)
+            else "\n"
         )
         self.__log_method(
             values=values,
@@ -802,21 +802,23 @@ class FluxLogger:
             pretty_print=rich,
         )
 
-    def error(self, *values, sep: str = " ", rich: bool = True):
+    def error(self, *values, sep: str = None, rich: bool = True):
         """Logs the given values to the console with an "error" level.
 
         Args:
-            sep (str, optional): String inserted between values. Defaults to " "
+            sep (str, optional): String inserted between values. Defaults to None
             rich (bool, optional): Format values for easier readability with syntax highlighting. Defaults to True
         """
         rich = (
             False
-            if (
-                all(isinstance(value, (str, int)) for value in values)
-                and len(values) == 1
-            )
-            or sep not in ["", " "]
+            if all(isinstance(value, (str, int, float)) for value in values)
+            or sep not in ["", " ", None]
             else rich
+        )
+        sep = sep or (
+            " "
+            if all(isinstance(value, (str, int, float)) for value in values)
+            else "\n"
         )
         self.__log_method(
             values=values,
@@ -825,21 +827,23 @@ class FluxLogger:
             pretty_print=rich,
         )
 
-    def critical(self, *values, sep: str = " ", rich: bool = True):
+    def critical(self, *values, sep: str = None, rich: bool = True):
         """Logs the given values to the console with a "critical" level.
 
         Args:
-            sep (str, optional): String inserted between values. Defaults to " "
+            sep (str, optional): String inserted between values. Defaults to None
             rich (bool, optional): Format values for easier readability with syntax highlighting. Defaults to True
         """
         rich = (
             False
-            if (
-                all(isinstance(value, (str, int)) for value in values)
-                and len(values) == 1
-            )
-            or sep not in ["", " "]
+            if all(isinstance(value, (str, int, float)) for value in values)
+            or sep not in ["", " ", None]
             else rich
+        )
+        sep = sep or (
+            " "
+            if all(isinstance(value, (str, int, float)) for value in values)
+            else "\n"
         )
         self.__log_method(
             values=values,
