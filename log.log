@@ -1,0 +1,73 @@
+16:32:17   test1.py:superlong…:0040 ERROR   Could
+                                            not
+                                            run function
+16:32:17   test1.py:source    :0046 INFO    {
+                                                "timestamps": {"always_show": False, "use_utc": False},
+                                                "stacking": {"enabled": True, "case_sensitive": True},
+                                                "formatting": {
+                                                    "ansi": True,
+                                                    "highlighting": True,
+                                                    "pretty_print": True,
+                                                    "fixed_format_width": 0,
+                                                },
+                                                "filtering": {
+                                                    "min_level": 0,
+                                                    "exclude_messages": [],
+                                                    "include_only_messages": [],
+                                                },
+                                                "output": {"default_file_stream": None},
+                                                "metadata": {
+                                                    "show_metadata": False,
+                                                    "include_timestamp": False,
+                                                    "include_level_name": False,
+                                                    "include_thread_name": True,
+                                                    "include_file_name": False,
+                                                    "include_wrapping_function": False,
+                                                    "include_function": True,
+                                                    "include_line_number": False,
+                                                    "include_value_count": True,
+                                                },
+                                                "log_line": {"format": "default"},
+                                            }
+16:32:17   test1.py:source    :0047 INFO    {"enabled": True, "case_sensitive": True}
+16:32:17   test1.py:source    :0048 INFO    <fluxutils.log.base.StackingRules object at 0x10131f4a0>
+16:32:17   test1.py:source    :0049 INFO    True
+16:32:17   test1.py:source    :0052 INFO    a
+                                            3
+                                            4
+                                            4
+                                            hello world 3
+16:32:17   test1.py:source    :0053 INFO    a
+                                            3
+                                            4
+                                            4
+                                            hello world 3
+16:32:17   test1.py:source    :0054 INFO    a
+                                            3
+                                            4
+                                            4
+                                            hello world 3
+                                            ["a\n\n\n\n", 3, 4.0, 4.2, "hello world 3"]
+16:32:17   test1.py:source    :0063 INFO    a 3 4 4 hello world 3
+16:32:17   test1.py:source    :0064 INFO    a_3_4_4_hello world 3
+16:32:17   test1.py:source    :0065 INFO    a
+16:32:17   test1.py:source    :0066 INFO    ajkfhgfhkgdjhd
+16:32:17   test1.py:source    :0067 INFO    345
+16:32:17   test1.py:source    :0072 DEBUG   3.0
+16:32:17   test1.py:source    :0073 DEBUG   3.0
+                                            {}
+16:32:17   test1.py:source    :0074 DEBUG   Dictionary: {}
+16:32:17   test1.py:source    :0077 LETHAL  {
+                                                "abcdef": "abcdef",
+                                                "l": ["l", ["l", ["l", ["l", ["l", ["l", []]]]]]],
+                                                "mnopqr": "mnopqr",
+                                                "stuvwx": "stuvwx",
+                                                "hi": (
+                                                    33,
+                                                    <fluxutils.log.methods.Logger object at 0x10131f410>,
+                                                ),
+                                            }
+16:32:17   test1.py:source    :0087 ERROR   hi
+                                            bye
+16:32:17   test1.py:source    :0088 WARNING The given tuple is not a valid RGB:
+                                            (132, 204, 256)
