@@ -594,12 +594,12 @@ If you encounter any issues or have questions about using FluxUtils, please file
 
 ## Changelog
 
-### 1.0.1 (2024-08-07) ***[FUTURE UPDATE]***
+### 1.1.0 (2024-08-07)
 
 - Updated `log` module
   - Added `TestLogger` class for bare-bones testing
   - Fixed a bug where only ANSI escape sequences were removed from the message when Formatting > ANSI was set to `False`
-  - Added working `add` and `modify` methods to `StreamHandler` for easier configuration updates
+  - Fixed `add` and `modify` methods for `StreamHandler` for easier configuration updates
   - Refactored `FileHandler`
   - Added robust nesting support for `fhgroup` and `shgroup`
   - Added support for multiple simultaneous streams with individual configurations
