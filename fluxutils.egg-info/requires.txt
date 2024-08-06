@@ -1,0 +1,10 @@
+black
+pygments
+colorama
+
+[dev]
+black
+bumpver
+isort
+pip-tools
+pytest
