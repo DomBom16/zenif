@@ -1,14 +1,15 @@
 from inspect import currentframe, getmodule
 from .handlers import Ruleset, Streams, FHGroup, SHGroup
 import sys
-from .utils import strip_ansi, strip_unsafe_objs, strip_repr_id
+from .utils import strip_unsafe_objs, strip_repr_id
 from black import format_str, Mode
 from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.formatters import Terminal256Formatter as tformatter
 from pygments.styles import get_style_by_name
 from random import choice
-
+from io import StringIO
+from copy import deepcopy
 
 class Logger:
     def __init__(self, ruleset: dict = {}):
@@ -105,7 +106,7 @@ class Logger:
                 PythonLexer(),
                 tformatter(style=get_style_by_name("one-dark")),
             )
-            return formatted if ruleset.formatting.ansi else strip_ansi(formatted)
+            return formatted
         return str(value)
 
     def __log(self, level: str, values: tuple, sep: str = " ", metadata: dict = None):
@@ -151,8 +152,127 @@ class Logger:
     def lethal(self, *values, sep: str = " "):
         self.__log("lethal", values, sep)
 
-    def fhgroup(self, *file_paths: str) -> FHGroup:
-        return FHGroup(self.stream.file, *file_paths)
+    def fhgroup(self, *items) -> FHGroup:
+        group = FHGroup(self.stream.file)
+        for item in [*items]:
+            if isinstance(item, str):
+                group.add(item)
+            elif isinstance(item, FHGroup):
+                group.add(*item.file_paths)
+        return group
 
-    def shgroup(self, *streams: str | object) -> SHGroup:
-        return SHGroup(self.stream.normal, *streams)
+    def shgroup(self, *items) -> SHGroup:
+        group = SHGroup(self.stream.normal)
+        for item in [*items]:
+            if isinstance(item, SHGroup):
+                group.add(*item.streams)
+            else:
+                group.add(item)
+        return group
+
+    def create_test_stream(self) -> tuple[StringIO, "SHGroup"]:
+        stream = StringIO()
+        group = self.shgroup(stream)
+        return stream, group
+
+    def clear_stream(self, stream: StringIO):
+        stream.truncate(0)
+        stream.seek(0)
+
+
+class TestLogger:
+    def __init__(self):
+        self.logger = Logger()
+        self.default_stream = sys.stdout
+        self.default_ruleset = deepcopy(self.logger.defaults)
+        self.test_streams = {
+            "default": StringIO(),
+            "no_ansi": StringIO(),
+            "timestamp": StringIO(),
+            "multi_stream": StringIO(),
+        }
+
+    def setup(self):
+        print("\n--- Setting up test streams ---")
+        self.logger.stream.normal.remove(self.default_stream)
+        for stream_name, stream in self.test_streams.items():
+            self.logger.stream.normal.add(stream)
+            self.logger.stream.normal.modify(
+                stream, self.default_ruleset, use_original=True
+            )
+
+    def clear_test_streams(self):
+        for stream in self.test_streams.values():
+            stream.truncate(0)
+            stream.seek(0)
+
+    def test_default_stream(self):
+        print("\n\033[35m--- Testing Default Stream ---\033[0m")
+        self.clear_test_streams()
+        self.logger.info("This is a default log message")
+        print(self.test_streams["default"].getvalue(), end="")
+
+    def test_no_ansi_stream(self):
+        print("\n\033[35m--- Testing No ANSI Stream ---\033[0m")
+        self.clear_test_streams()
+        self.logger.stream.normal.modify(
+            self.test_streams["no_ansi"], {"formatting": {"ansi": False}}
+        )
+        self.logger.info("This is a log message without ANSI formatting")
+        print(self.test_streams["no_ansi"].getvalue(), end="")
+
+    def test_timestamp_stream(self):
+        print("\n\033[35m--- Testing Always Show Timestamp Stream ---\033[0m")
+        self.clear_test_streams()
+        self.logger.stream.normal.modify(
+            self.test_streams["timestamp"], {"timestamps": {"always_show": True}}
+        )
+        self.logger.info("This log message should always show a timestamp")
+        self.logger.info(
+            "This log message should show a timestamp too, even if it's the same second"
+        )
+        print(self.test_streams["timestamp"].getvalue(), end="")
+
+    def test_multiple_streams(self):
+        print("\n\033[35m--- Testing Multiple Streams Simultaneously ---\033[0m")
+        self.clear_test_streams()
+
+        # Configure streams with different settings
+        self.logger.stream.normal.modify(
+            self.test_streams["default"], self.default_ruleset, use_original=True
+        )
+        self.logger.stream.normal.modify(
+            self.test_streams["no_ansi"], {"formatting": {"ansi": False}}
+        )
+        self.logger.stream.normal.modify(
+            self.test_streams["timestamp"], {"timestamps": {"always_show": True}}
+        )
+        self.logger.stream.normal.modify(
+            self.test_streams["multi_stream"],
+            {"formatting": {"ansi": False}, "timestamps": {"always_show": True}},
+        )
+
+        # Log messages to all streams
+        self.logger.info(
+            "This message should appear in all streams with different formatting"
+        )
+        self.logger.warning("This is a warning message to test multiple streams")
+
+        # Print output from each stream
+        for stream_name, stream in self.test_streams.items():
+            print(f"\nOutput from {stream_name} stream:")
+            print(stream.getvalue(), end="")
+
+    def reset(self):
+        print("\n\033[35m--- Resetting to default stream ---\033[0m")
+        for stream in self.test_streams.values():
+            self.logger.stream.normal.remove(stream)
+        self.logger.stream.normal.add(self.default_stream)
+
+    def run_tests(self):
+        self.setup()
+        self.test_default_stream()
+        self.test_no_ansi_stream()
+        self.test_timestamp_stream()
+        self.test_multiple_streams()
+        self.reset()

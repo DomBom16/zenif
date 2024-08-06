@@ -38,15 +38,23 @@ def wrap(text: str, width: int) -> list:
 
 
 def strip_ansi(text: str) -> str:
-    """Strips a string of ANSI escape codes.
+    """
+    Remove ANSI escape sequences from a string.
+
+    This function removes all ANSI escape sequences, including color codes,
+    cursor movements, and other control sequences.
 
     Args:
-        text (str): The string to strip from.
+        text (str): The input string containing ANSI escape sequences.
 
     Returns:
-        str: The stripped string.
+        str: The input string with all ANSI escape sequences removed.
     """
-    return re.compile(r"\033[@-_][0-?]*[ -/]*[@-~]").sub("", text)
+    ansi_escape = re.compile(
+        r"""\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])""",
+        re.VERBOSE,
+    )
+    return ansi_escape.sub("", text)
 
 
 def rgb_to_ansi(r: int = 255, g: int = 255, b: int = 255, fg: bool = True) -> str:

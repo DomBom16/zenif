@@ -105,6 +105,9 @@ class BaseHandler:
         log_line = self.template_engine.process(
             ruleset.log_line.format, context, level["name"]
         )
+        log_line = sub(r"\033\[(\d+)C", lambda m: " " * int(m.group(1)), log_line)
+        log_line = log_line if ruleset.formatting.ansi else strip_ansi(log_line)
+
         message_space = terminal_width - self.template_engine.processed.length
         message_indent = self.template_engine.processed.length
 
@@ -118,6 +121,12 @@ class BaseHandler:
         )
         log_metadata = self._generate_metadata(
             metadata, ruleset, message_space, terminal_width
+        )
+
+        formatted_message = (
+            formatted_message
+            if ruleset.formatting.ansi
+            else strip_ansi(formatted_message)
         )
 
         log_line += log_metadata
@@ -161,7 +170,7 @@ class BaseHandler:
                 PythonLexer(),
                 tformatter(style=get_style_by_name("one-dark")),
             )
-            return formatted if ruleset.formatting.ansi else strip_ansi(formatted)
+            return formatted
         return str(message)
 
     def _generate_metadata(
@@ -199,11 +208,41 @@ class BaseHandler:
 
 class StreamHandler(BaseHandler):
 
+    def __init__(self, defaults: dict[str, any]):
+        super().__init__(defaults)
+        self.output_streams = []
+        self.stream_rulesets = {}
+
+    def add(self, stream: object, ruleset: dict[str, any] = None):
+        if stream not in self.output_streams:
+            self.output_streams.append(stream)
+            if ruleset:
+                self.stream_rulesets[stream] = Ruleset(deepcopy(ruleset), self.defaults)
+            else:
+                self.stream_rulesets[stream] = Ruleset({}, self.defaults)
+        return stream
+
+    def modify(
+        self, stream: object, ruleset: dict[str, any], use_original: bool = False
+    ):
+        if stream not in self.stream_rulesets:
+            raise ValueError(f"Stream {stream} not found in handler.")
+
+        if use_original:
+            new_rules = deepcopy(self.defaults)
+            new_rules.update(deepcopy(ruleset))
+            self.stream_rulesets[stream] = Ruleset(new_rules, self.defaults)
+        else:
+            current_rules = deepcopy(self.stream_rulesets[stream].dict.all)
+            current_rules.update(deepcopy(ruleset))
+            self.stream_rulesets[stream] = Ruleset(current_rules, self.defaults)
+
+
     def write(
         self, message: str, level_dict: dict[str, str | int], metadata: dict[str, any]
     ):
         for stream in self.output_streams:
-            ruleset = self.stream_rulesets.get(stream, None)
+            ruleset = self.stream_rulesets.get(stream)
             if ruleset:
                 if not self._should_log(message, level_dict["level"], ruleset):
                     continue
@@ -231,20 +270,17 @@ class StreamHandler(BaseHandler):
 
 
 class FileHandler(BaseHandler):
-
     def __init__(self, defaults: dict[str, any]):
         super().__init__(defaults)
         self.file_streams = {}
-        self.file_rulesets = {}  # New dictionary to store rulesets by file path
+        self.file_rulesets = {}
 
     def add(
-        self, file_path: str, reset: bool = False, ruleset: dict[str, any] | None = None
+        self, file_path: str, ruleset: dict[str, any] | None = None, reset: bool = False
     ):
-        if file_path not in self.file_streams:
+        if file_path not in self.file_streams or reset:
             mode = "w" if reset else "a"
             self.file_streams[file_path] = open(file_path, mode)
-            self.file_streams[file_path].write("")
-            self.file_streams[file_path].flush()
             if ruleset:
                 self.file_rulesets[file_path] = Ruleset(
                     deepcopy(ruleset), self.defaults
@@ -263,17 +299,15 @@ class FileHandler(BaseHandler):
     def modify(
         self, file_path: str, ruleset: dict[str, any], use_original: bool = False
     ):
-        if file_path not in self.file_rulesets:
-            raise ValueError(f"File stream {file_path} not found in handler.")
-
-        if use_original:
-            new_rules = deepcopy(self.defaults)
-            new_rules.update(deepcopy(ruleset))
-            self.file_rulesets[file_path] = Ruleset(new_rules, self.defaults)
-        else:
-            current_rules = deepcopy(self.file_rulesets[file_path]._rules)
-            current_rules.update(deepcopy(ruleset))
-            self.file_rulesets[file_path] = Ruleset(current_rules, self.defaults)
+        if file_path in self.file_rulesets:
+            if use_original:
+                new_rules = deepcopy(self.defaults)
+                new_rules.update(deepcopy(ruleset))
+                self.file_rulesets[file_path] = Ruleset(new_rules, self.defaults)
+            else:
+                current_rules = deepcopy(self.file_rulesets[file_path]._rules)
+                current_rules.update(deepcopy(ruleset))
+                self.file_rulesets[file_path] = Ruleset(current_rules, self.defaults)
 
     def write(
         self, message: str, level_dict: dict[str, str | int], metadata: dict[str, any]
@@ -281,32 +315,18 @@ class FileHandler(BaseHandler):
         for file_path, file_stream in self.file_streams.items():
             ruleset = self.file_rulesets.get(file_path)
             if ruleset:
-                if not self._should_log(message, level_dict, ruleset):
+                if not self._should_log(message, level_dict["level"], ruleset):
                     continue
                 processed_message = self.process_message(
                     message, level_dict, metadata, ruleset
                 )
-                file_stream.write(
-                    strip_ansi(
-                        sub(
-                            r"\033\[(\d+)C",
-                            lambda m: " " * int(m.group(1)),
-                            processed_message,
-                        )
-                    )
-                )
+                file_stream.write(strip_ansi(processed_message))
             else:
-                file_stream.write(
-                    strip_ansi(
-                        sub(r"\033\[(\d+)C", lambda m: " " * int(m.group(1)), message)
-                    )
-                )
+                file_stream.write(strip_ansi(message))
             file_stream.flush()
 
-    def _should_log(
-        self, message: str, level_dict: dict[str, str | int], ruleset: dict[str, any]
-    ):
-        if level_dict["level"] < ruleset.filtering.min_level:
+    def _should_log(self, message: str, level: int, ruleset: dict[str, any]):
+        if level < ruleset.filtering.min_level:
             return False
         if any(
             substring in message for substring in ruleset.filtering.exclude_messages
@@ -332,9 +352,35 @@ class Streams:
 
 
 class FHGroup:
-    def __init__(self, file_handler: FileHandler, *file_paths: str):
+    def __init__(self, file_handler: FileHandler, *items):
         self.file_handler = file_handler
-        self.file_paths = file_paths
+        self.file_paths = []
+        self.add(*items)
+
+    def unwrap_fhgroups(self, items):
+        new = []
+        for item in items:
+            if isinstance(item, str):
+                new.append(item)
+            elif isinstance(item, FHGroup):
+                new.extend(self.unwrap_fhgroups(item.file_paths))
+        return new
+
+    def add(self, *items):
+        items = self.unwrap_fhgroups(items)
+        for item in items:
+            if item not in self.file_paths:
+                self.file_paths.append(item)
+                self.file_handler.add(item)
+        return [*items]
+
+    def remove(self, *items: str):
+        items = self.unwrap_fhgroups(items)
+        for file_path in items:
+            if file_path in self.file_paths:
+                self.file_paths.remove(file_path)
+                self.file_handler.remove(file_path)
+        return [*items]
 
     def reset(self):
         for file_path in self.file_paths:
@@ -345,20 +391,49 @@ class FHGroup:
         for file_path in self.file_paths:
             self.file_handler.modify(file_path, ruleset, use_original)
 
-    def remove(self):
+    def remove_all(self):
         for file_path in self.file_paths:
             self.file_handler.remove(file_path)
+        self.file_paths.clear()
 
 
 class SHGroup:
-    def __init__(self, stream_handler: StreamHandler, *streams: str | object):
+
+    def __init__(self, stream_handler: StreamHandler, *items):
         self.stream_handler = stream_handler
-        self.streams = streams
+        self.streams = []
+        self.add(*items)
+
+    def unwrap_shgroups(self, items):
+        new = []
+        for item in items:
+            if isinstance(item, SHGroup):
+                new.extend(item.streams)
+            else:
+                new.append(item)
+        return new
+
+    def add(self, *items):
+        items = self.unwrap_shgroups(items)
+        for item in items:
+            if item not in self.streams:
+                self.streams.append(item)
+                self.stream_handler.add(item)
+        return [*items]
+
+    def remove(self, *items: str):
+        items = self.unwrap_shgroups(items)
+        for item in items:
+            if item in self.streams:
+                self.streams.remove(item)
+                self.stream_handler.remove(item)
+        return [*items]
 
     def modify(self, ruleset: dict[str, any], use_original: bool = False):
         for stream in self.streams:
             self.stream_handler.modify(stream, ruleset, use_original)
 
-    def remove(self):
+    def remove_all(self):
         for stream in self.streams:
             self.stream_handler.remove(stream)
+        self.streams.clear()

@@ -56,4 +56,8 @@
 03:27:48 test1.py:<module>:77 WARNING The given tuple is not a valid RGB: (132, 204, 256)
 03:27:48 test1.py:<module>:78 WARNING The given tuple is not a valid RGB: (132, 204, 256)
 03:27:48 test1.py:<module>:84 DEBUG Added groups: ["log1.log", "log2.log", "log3.log"]
- test1.py:<module>:94 DEBUG Added groups: ["log4.log"]
+03:27:48 test1.py:<module>:94 DEBUG Added groups: ["log4.log"]
+03:27:48 test1.py:<module>:103 DEBUG Logs 1-3 won't get this message!
+03:27:48 test1.py:<module>:116 ERROR hello
+03:27:48 test1.py:<module>:117 ERROR hello
+03:27:48 test1.py:<module>:118 ERROR hello

@@ -7,7 +7,11 @@ l = Logger()
 fstream = l.stream.file
 nstream = l.stream.normal
 
-group = l.fhgroup(fstream.add("log.log"), fstream.add("log2.log"))
+group = l.fhgroup(
+    fstream.add("log1.log"),
+    l.fhgroup(fstream.add("log2.log"), fstream.add("log3.log")),
+    l.fhgroup(fstream.add("log4.log")),
+)
 
 group.reset()
 group.modify(
@@ -67,4 +71,50 @@ l.error("hi", "bye")
 l.warning("The given tuple is not a valid RGB:", (132, 204, 256))
 
 # Remove the log.log file stream
-fstream.remove("log.log")
+fstream.remove("log1.log")
+
+l.warning("The given tuple is not a valid RGB:", (132, 204, 256))
+l.warning("The given tuple is not a valid RGB:", (132, 204, 256))
+l.warning("The given tuple is not a valid RGB:", (132, 204, 256))
+
+
+# Create a file handler group
+fh_group = l.fhgroup(
+    fstream.add("log1.log"), fstream.add("log2.log"), fstream.add("log3.log")
+)
+
+l.debug("Added groups:", fh_group.file_paths)
+
+
+# Modify all files in the group
+
+
+fh_group.modify({"timestamps": {"use_utc": False}})
+
+# Add another file to the group
+
+l.debug("Added groups:", fh_group.add("log4.log"))
+
+
+# # Reset all files in the group
+# fh_group.reset()
+
+# Remove a specific file from the group
+fh_group.remove("log2.log", l.fhgroup("log3.log", l.fhgroup("log1.log")))
+
+l.debug("Logs 1-3 won't get this message!")
+
+# # Remove all files in the group
+# fh_group.remove_all()
+
+import sys
+from io import StringIO
+
+sh_group1 = l.shgroup(sys.stdout)
+sh_group2 = l.shgroup(sys.stderr)
+custom_stream = StringIO()
+combined_sh_group = l.shgroup(sh_group1, sh_group2, custom_stream)
+
+l.error("hello")
+l.error("hello")
+l.error("hello")
