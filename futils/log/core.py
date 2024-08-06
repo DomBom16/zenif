@@ -11,6 +11,7 @@ from random import choice
 from io import StringIO
 from copy import deepcopy
 
+
 class Logger:
     def __init__(self, ruleset: dict = {}):
         self.__levels = {

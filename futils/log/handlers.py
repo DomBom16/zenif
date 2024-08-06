@@ -237,7 +237,6 @@ class StreamHandler(BaseHandler):
             current_rules.update(deepcopy(ruleset))
             self.stream_rulesets[stream] = Ruleset(current_rules, self.defaults)
 
-
     def write(
         self, message: str, level_dict: dict[str, str | int], metadata: dict[str, any]
     ):

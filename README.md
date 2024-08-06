@@ -1,33 +1,80 @@
 # FluxUtils
 
-`fluxutils` is a powerful, highly customizable, and versatile Python module designed to enhance the efficiency and performance of your programs. Whether you're a seasoned developer or just starting out, `fluxutils` offers a suite of tools to streamline your workflow and improve code management. At the heart of `fluxutils` is a robust logging system that provides unparalleled flexibility and control over your application's logging behavior.
+FluxUtils is a powerful, highly customizable, and versatile Python module designed to enhance the efficiency and performance of your programs. Whether you're a seasoned developer or just starting out, FluxUtils offers a suite of tools to streamline your workflow and improve code management. FluxUtils currently enables developers with a simple yet highly customizable logger with support for multiple streams, a set of utility decorators, like `@cache` and `@rate_limiter`, and a handful of tools to create a command-line interface with interactive prompts and argument handling.
 
 ## Table of Contents
 
-1. [Installation](#installation)
-2. [Logger](#logger)
-   - [Initialization](#initialization)
-   - [Logging Functions](#logging-functions)
-   - [Streams and File Handling](#streams-and-file-handling)
-   - [Rules and Customization](#rules-and-customization)
-   - [Customizing the Log Line](#customizing-the-log-line)
-   - [Advanced Usage](#advanced-usage)
-3. [Contributing](#contributing)
-4. [License](#license)
+- [FluxUtils](#fluxutils)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+  - [Log Module](#log-module)
+    - [Initialization](#initialization)
+    - [Logging Functions](#logging-functions)
+      - [`*values`](#values)
+      - [`sep`](#sep)
+      - [`rich`](#rich)
+    - [Streams and File Handling](#streams-and-file-handling)
+      - [Adding and Removing Streams](#adding-and-removing-streams)
+      - [Stream Groups](#stream-groups)
+      - [Modifying Stream Behavior](#modifying-stream-behavior)
+      - [Resetting Streams](#resetting-streams)
+    - [Rules and Customization](#rules-and-customization)
+      - [Accessing and Modifying Rules](#accessing-and-modifying-rules)
+      - [Viewing Rules](#viewing-rules)
+      - [Rule Categories](#rule-categories)
+    - [Customizing the Log Line](#customizing-the-log-line)
+      - [Premade Formats](#premade-formats)
+      - [Custom Format Definition](#custom-format-definition)
+      - [Segment Types](#segment-types)
+      - [Built-in Templates](#built-in-templates)
+      - [Template Parameters](#template-parameters)
+    - [Advanced Usage](#advanced-usage)
+      - [Multiple Streams with Different Configurations](#multiple-streams-with-different-configurations)
+      - [Dynamic Formatting Based on Terminal Size](#dynamic-formatting-based-on-terminal-size)
+      - [Custom Logging Levels](#custom-logging-levels)
+  - [Decorators Module](#decorators-module)
+    - [retry](#retry)
+    - [retry\_exponential\_backoff](#retry_exponential_backoff)
+    - [timeout](#timeout)
+    - [rate\_limiter](#rate_limiter)
+    - [trace](#trace)
+    - [suppress\_exceptions](#suppress_exceptions)
+    - [deprecated](#deprecated)
+    - [type\_check](#type_check)
+    - [log\_execution\_time](#log_execution_time)
+    - [cache](#cache)
+    - [requires\_permission](#requires_permission)
+  - [CLI Module](#cli-module)
+    - [Basic Usage](#basic-usage)
+      - [How It Works](#how-it-works)
+      - [Running Your Application](#running-your-application)
+      - [Key Points](#key-points)
+    - [Interactive Prompts](#interactive-prompts)
+    - [Available Prompt Types](#available-prompt-types)
+  - [Contributing](#contributing)
+  - [Testing](#testing)
+  - [Versioning](#versioning)
+  - [License](#license)
+  - [Support](#support)
+  - [Changelog](#changelog)
+    - [v1](#v1)
+      - [1.2.0 (2024-08-07)](#120-2024-08-07)
+      - [1.1.0 (2024-08-06)](#110-2024-08-06)
+      - [1.0.0 (2024-08-05)](#100-2024-08-05)
 
 ## Installation
 
-`fluxutils` requires Python 3.12 or higher. To install the latest version, use pip:
+FluxUtils requires Python 3.12 or higher. To install the latest version, use pip:
 
 ```sh
 pip install fluxutils
 ```
 
-This command will download and install `fluxutils` along with its dependencies.
+This command will download and install FluxUtils along with its dependencies.
 
-## Logger
+## Log Module
 
-The Logger is the cornerstone of `fluxutils`, offering a powerful and flexible logging system that can be tailored to suit a wide range of needs, from simple console output to complex multi-stream logging with custom formatting.
+The Log module is the cornerstone of FluxUtils, offering a powerful and flexible logging system that can be tailored to suit a wide range of needs, from simple console output to complex multi-stream logging with custom formatting.
 
 ### Initialization
 
@@ -508,69 +555,307 @@ logger.info("[CUSTOM] This is a custom level message")
 
 This approach allows you to create pseudo-custom levels while still using the built-in logging functions.
 
+## Decorators Module
+
+FluxUtils provides a set of powerful decorators to enhance your Python functions. These decorators offer various functionalities such as retry mechanisms, timeout handling, rate limiting, and more.
+
+### retry
+
+Retries the decorated function a specified number of times with a delay between attempts.
+
+```python
+from fluxutils.decorators import retry
+
+@retry(max_retries=3, delay=1.0)
+def flaky_function():
+    # Your code here
+    # If an exception is raised, the function will be retried up to 3 times
+    # with a 1-second delay between attempts
+```
+
+### retry_exponential_backoff
+
+Similar to `retry`, but with an exponential backoff delay between attempts.
+
+```python
+from fluxutils.decorators import retry_exponential_backoff
+
+@retry_exponential_backoff(max_retries=3, initial_delay=1.0)
+def flaky_function():
+    # Your code here
+    # If an exception is raised, the function will be retried up to 3 times
+    # with delays of 1, 2, and 4 seconds between attempts
+```
+
+### timeout
+
+Sets a maximum execution time for the decorated function.
+
+```python
+from fluxutils.decorators import timeout
+
+@timeout(seconds=5)
+def long_running_function():
+    # Your code here
+    # If the function doesn't complete within 5 seconds, a TimeoutError will be raised
+```
+
+### rate_limiter
+
+Limits the rate at which the decorated function can be called.
+
+```python
+from fluxutils.decorators import rate_limiter
+
+@rate_limiter(calls=5, period=60, immediate_fail=True)
+def rate_limited_function():
+    # Your code here
+    # This function can only be called 5 times per 60 seconds
+    # If called more frequently, it will raise a RateLimitError
+```
+
+### trace
+
+Logs the function call, its arguments, and the return value.
+
+```python
+from fluxutils.decorators import trace
+
+@trace
+def function_to_trace(arg1, arg2):
+    # Your code here
+    # The function call, arguments, and return value will be printed
+```
+
+### suppress_exceptions
+
+Catches and suppresses any exceptions raised by the decorated function.
+
+```python
+from fluxutils.decorators import suppress_exceptions
+
+@suppress_exceptions
+def risky_function():
+    # Your code here
+    # Any exceptions raised will be caught and suppressed
+```
+
+### deprecated
+
+Marks a function as deprecated and issues a warning when it's used.
+
+```python
+from fluxutils.decorators import deprecated
+
+@deprecated
+def old_function():
+    # Your code here
+    # A deprecation warning will be issued when this function is called
+```
+
+### type_check
+
+Checks the types of arguments and return value against specified types.
+
+```python
+from fluxutils.decorators import type_check
+
+@type_check(arg_types=(int, str), return_type=str)
+def typed_function(num: int, text: str) -> str:
+    # Your code here
+    # The decorator will check if num is an int, text is a str,
+    # and the return value is a str
+```
+
+### log_execution_time
+
+Logs the execution time of the decorated function.
+
+```python
+from fluxutils.decorators import log_execution_time
+
+@log_execution_time
+def timed_function():
+    # Your code here
+    # The execution time of this function will be logged
+```
+
+### cache
+
+Caches the return value of the function based on its arguments.
+
+```python
+from fluxutils.decorators import cache
+
+@cache
+def expensive_function(arg):
+    # Your code here
+    # The return value will be cached based on the 'arg' value
+```
+
+### requires_permission
+
+Checks if the user has the required permission before executing the function.
+
+```python
+from fluxutils.decorators import requires_permission
+
+@requires_permission("admin")
+def admin_function(user):
+    # Your code here
+    # This function will only execute if the user has "admin" permission
+```
+
+## CLI Module
+
+FluxUtils includes a CLI (Command Line Interface) module that allows you to easily create interactive command-line applications. This module provides tools for building CLIs with argument parsing and command management.
+
+### Basic Usage
+
+Here's a comprehensive example of how to create a CLI application using FluxUtils, demonstrating the use of both `@argument` and `@option`:
+
+```python
+from fluxutils.cli import CLI, argument, option
+
+cli = CLI()  # Create a CLI instance
+
+@cli.command
+@argument("name", help="Name to greet")  # Required positional argument
+@option("--greeting", default="Hello", help="Greeting to use")  # Optional option with default
+@option("--shout", is_flag=True, help="Print in uppercase")  # Optional flag
+def greet(name: str, greeting: str, shout: bool = False):
+    """Greet a person."""
+    message = f"{greeting}, {name}!"
+    if shout:
+        message = message.upper()
+    return message
+
+if __name__ == '__main__':
+    cli.run()
+```
+
+#### How It Works
+
+In this example:
+
+- We create a `CLI` instance.
+- We define a `greet` command using the `@cli.command` decorator.
+- We add a required `name` argument using the `@argument` decorator. This is a positional argument.
+- We add an optional `--greeting` option using the `@option` decorator. This option has a default value of "Hello".
+- We add an optional `--shout` flag using the `@option` decorator. This is a boolean flag.
+- The `greet` function contains the logic for the command.
+- We call `cli.run()` to start the CLI application. You can run the application multiple times if you wish to.
+
+#### Running Your Application
+
+You can run this CLI in various ways:
+
+```zsh
+python your_script.py greet Alice
+# -> "Hello, Alice!"
+python your_script.py greet "Bob Jr." --greeting Hi
+# -> "Hi, Bob. Jr!"
+python your_script.py greet John --shout
+# -> "HELLO, JOHN!"
+python your_script.py greet Baby --greeting "Hasta la vista" --shout
+# -> "HASTA LA VISTA, BABY!"
+```
+
+#### Key Points
+
+1. `@argument` is used for required positional arguments. In this case, `name` must always be provided.
+
+2. `@option` is used to define command-line options. These are typically optional and are prefixed with `--` (or `-` for short versions).
+   - The `--greeting` option is optional and has a default value.
+   - The `--shout` option is a flag (boolean) that doesn't require a value.
+
+3. Options defined with `@option` can be required or optional, depending on how you configure them. In this example, both are optional.
+
+This structure allows for flexible and intuitive command-line interfaces, where users can provide required arguments and optionally customize behavior with additional options.
+
+### Interactive Prompts
+
+The CLI module also includes an API for creating interactive prompts:
+
+```python
+from fluxutils.cli import CLI, Prompt
+
+cli = CLI()
+
+@cli.command
+def setup():
+    """Interactive setup command"""
+    name = Prompt.text("What's your name?").ask()
+    age = Prompt.number("How old are you?").min(0).max(120).ask()
+    likes_pizza = Prompt.confirm("Do you like pizza?").ask()
+    favorite_color = Prompt.choice("What's your favorite color?", choices=['Red', 'Green', 'Blue']).ask()
+    hobbies = Prompt.checkbox("Select your hobbies:", choices=['Reading', 'Gaming', 'Sports', 'Cooking']).ask()
+    
+    print(f"Name: {name}")
+    print(f"Age: {age}")
+    print(f"Likes pizza: {likes_pizza}")
+    print(f"Favorite color: {favorite_color}")
+    print(f"Hobbies: {', '.join(hobbies)}")
+
+if __name__ == '__main__':
+    cli.run()
+```
+
+This setup command will interactively prompt the user for various pieces of information.
+
+### Available Prompt Types
+
+- `Prompt.text()`: For text input
+  - Includes default method
+- `Prompt.password()`: For hidden password input
+- `Prompt.confirm()`: For yes/no questions
+  - Includes default method
+- `Prompt.choice()`: For selecting one item from a list
+- `Prompt.checkbox()`: For selecting multiple items from a list
+- `Prompt.number()`: For numeric input
+  - Includes default method, as well as min and max methods
+
+Each prompt type has an `ask()` method that displays the prompt and returns the user's input.
+
+By using these features of the FluxUtils CLI module, you can create command-line applications with intuitive argument parsing and interactive prompts. This allows for more user-friendly and flexible command-line interfaces in your Python projects.
+
 ## Contributing
 
-Contributions to `fluxutils` are welcome! Whether you're fixing bugs, improving documentation, or proposing new features, your efforts are appreciated. Here's how you can contribute:
+Contributions to FluxUtils are welcome! Whether you're fixing bugs, improving documentation, or proposing new features, your efforts are appreciated. Here's how you can contribute:
 
-1. **Fork the Repository**: Start by forking the FluxUtils repository on GitHub.
-
-2. **Clone Your Fork**: Clone your fork to your local machine for development.
+1. **Fork & Clone the Repository**: Start by forking the FluxUtils repository on GitHub. Clone your fork to your local machine for development.
 
    ```zsh
-   git clone https://github.com/your-username/fluxutils.git
+   git clone https://github.com/<your-name>/fluxutils.git
    ```
 
-3. **Create a Branch**: Create a new branch for your feature or bug fix.
+2. **Create a Branch**: Create a new branch for your feature or bug fix.
 
    ```zsh
    git checkout -b feature/your-feature-name
    ```
 
-4. **Make Your Changes**: Implement your feature or bug fix.
-
-5. **Write Tests**: Add tests for your changes to ensure they work as expected and don't break existing functionality.
-
-6. **Run Tests**: Ensure all tests pass, including your new ones.
-
-   ```zsh
-   python -m pytest tests/
-   ```
-
-7. **Update Documentation**: If your changes require it, update the README and any relevant documentation.
-
-8. **Commit Your Changes**: Commit your changes with a clear and descriptive commit message.
+3. **Make Your Changes & Test**: Implement your feature or bug fix. Be sure to test it before continuing.
+4. **Update Documentation**: If your changes require it, update the README and any relevant documentation.
+5. **Commit Your Changes**: Commit your changes with a clear and descriptive commit message.
 
    ```zsh
    git commit -m "Add feature: your feature description"
    ```
 
-9. **Push to Your Fork**: Push your changes to your fork on GitHub.
+6. **Push to Your Fork**: Push your changes to your fork on GitHub.
 
    ```zsh
    git push origin feature/your-feature-name
    ```
 
-10. **Create a Pull Request**: Go to the FluxUtils repository on GitHub and create a new pull request from your feature branch.
+7. **Create a Pull Request**: Go to the FluxUtils repository on GitHub and create a new pull request from your feature branch.
 
 Please ensure your code adheres to the project's coding standards and includes appropriate documentation. We appreciate your contribution!
 
 ## Testing
 
-FluxUtils uses pytest for its test suite. To run the tests, follow these steps:
-
-1. Install the development dependencies:
-
-   ```zsh
-   pip install -e .[dev]
-   ```
-
-2. Run the tests:
-
-   ```zsh
-   pytest
-   ```
-
-We encourage contributors to write tests for new features and bug fixes. The `TestLogger` class in `tests/test_logger.py` provides a good example of how to structure tests for the Logger class.
+FluxUtils uses unittest for its test suite. We encourage contributors to write tests for new features and bug fixes. The `fluxutils/tests/decorators/test1.py` provides a good example of how to structure tests.
 
 ## Versioning
 
@@ -594,7 +879,42 @@ If you encounter any issues or have questions about using FluxUtils, please file
 
 ## Changelog
 
-### 1.1.0 (2024-08-07)
+### v1
+
+#### 1.2.0 (2024-08-07)
+
+- Added new `decorators` module with the following decorators:
+  - `retry`: Retries a function with a specified number of attempts and delay.
+  - `retry_exponential_backoff`: Retries with exponential backoff delay.
+  - `timeout`: Sets a maximum execution time for a function.
+  - `rate_limiter`: Limits the rate of function calls.
+  - `trace`: Logs function calls, arguments, and return values.
+  - `suppress_exceptions`: Catches and suppresses exceptions.
+  - `deprecated`: Marks functions as deprecated with warnings.
+  - `type_check`: Checks argument and return value types.
+  - `log_execution_time`: Logs function execution time.
+  - `cache`: Caches function return values.
+  - `requires_permission`: Checks user permissions before execution.
+- Added new `cli` module with the following features:
+  - `CLI` class for creating command-line interfaces
+  - `@command` decorator for defining CLI commands
+  - `@argument` decorator for adding required positional arguments
+  - `@option` decorator for adding optional command-line options
+  - `Prompt` class with various interactive prompt types:
+    - `text`: For text input
+    - `password`: For hidden password input
+    - `confirm`: For yes/no questions
+    - `choice`: For selecting one item from a list
+    - `checkbox`: For selecting multiple items from a list
+    - `number`: For numeric input with optional min/max values
+- Improved documentation:
+  - Added comprehensive examples for using the `decorators` module
+  - Expanded explanation of the `cli` module with detailed usage examples
+  - Updated README with new sections for Decorators and CLI modules
+- Added basic test suite for new modules
+- Updated package dependencies
+
+#### 1.1.0 (2024-08-06)
 
 - Updated `log` module
   - Added `TestLogger` class for bare-bones testing
@@ -611,11 +931,11 @@ If you encounter any issues or have questions about using FluxUtils, please file
   - Significantly expanded README with detailed explanations and examples
   - Added advanced usage scenarios and best practices
 
-### 1.0.0 (2024-08-06)
+#### 1.0.0 (2024-08-05)
 
 - Initial release of FluxUtils
-- Introduced `log`
+- Introduced `log` module with basic logging functionality
 
 ---
 
-Thank you for using FluxUtils! We hope it enhances your Python development experience and makes logging more powerful and flexible in your projects.
+Thank you for using FluxUtils! We hope it enhances your Python development experience and makes development more powerful and flexible in your projects.
