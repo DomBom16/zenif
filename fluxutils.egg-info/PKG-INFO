@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: fluxutils
-Version: 1.0.0
+Version: 1.1.0
 Summary: Various utilties to enhance your projects
 Author: dombom
 License: MIT License
@@ -45,27 +45,46 @@ Requires-Dist: pytest; extra == "dev"
 
 # FluxUtils
 
-`fluxutils` is a simple yet customizable and versatile module designed to provide various utilities that enhance the efficiency and performance of your programs. Whether you are a seasoned developer or just starting out, `fluxutils` offers tools that help streamline your workflow and improve code management.
+`fluxutils` is a powerful, highly customizable, and versatile Python module designed to enhance the efficiency and performance of your programs. Whether you're a seasoned developer or just starting out, `fluxutils` offers a suite of tools to streamline your workflow and improve code management. At the heart of `fluxutils` is a robust logging system that provides unparalleled flexibility and control over your application's logging behavior.
+
+## Table of Contents
+
+1. [Installation](#installation)
+2. [Logger](#logger)
+   - [Initialization](#initialization)
+   - [Logging Functions](#logging-functions)
+   - [Streams and File Handling](#streams-and-file-handling)
+   - [Rules and Customization](#rules-and-customization)
+   - [Customizing the Log Line](#customizing-the-log-line)
+   - [Advanced Usage](#advanced-usage)
+3. [Contributing](#contributing)
+4. [License](#license)
 
 ## Installation
 
-You can easily install `fluxutils` using pip, ensuring you have access to the latest features and updates. Note that `fluxutils` requires Python 3.12 or higher to function properly. To install, run the following command in your terminal:
+`fluxutils` requires Python 3.12 or higher. To install the latest version, use pip:
 
 ```sh
 pip install fluxutils
 ```
 
+This command will download and install `fluxutils` along with its dependencies.
+
 ## Logger
 
-One of the standout features of `fluxutils` is its logger, which is incredibly useful for both debugging and providing informative messages to users during various processes, such as app installations or complex computations. To get started with the logger, import it from `fluxutils.log`:
+The Logger is the cornerstone of `fluxutils`, offering a powerful and flexible logging system that can be tailored to suit a wide range of needs, from simple console output to complex multi-stream logging with custom formatting.
 
-```py
+### Initialization
+
+To start using the Logger, import it from `fluxutils.log` and create an instance:
+
+```python
 from fluxutils.log import Logger
 
-l = Logger()  # Initalize an instance of Logger
+logger = Logger()  # Initialize an instance of Logger
 ```
 
-The logger is designed to be easy to use while offering a high degree of customization, allowing you to tailor it to your specific needs.
+By default, the Logger is configured with sensible defaults, but you can customize its behavior during initialization or later through various methods.
 
 ### Logging Functions
 
@@ -81,132 +100,249 @@ The `Logger` class provides several logging functions to help with debugging and
 Each logging function accepts the following parameters:
 
 - `*values`: The values to be logged. You can pass multiple values, which will be concatenated into a single log message.
-- `sep` (optional): A string inserted between values. Defaults to a space.
+- `sep` (optional): A string inserted between values. Defaults to None.
 - `rich` (optional): When set to `True`, formats the values for easier readability with syntax highlighting and other enhancements. The default value is `True`.
 
 #### `*values`
 
-When logging a multitude of objects to the console, you can do so just like Python's native `print` function; there's no need to put your objects in a list or tuple. Instead all unnamed arguments are treated as a value, and will be joined together by the `sep` value.
+The `*values` parameter allows you to log multiple objects in a single call, similar to Python's built-in `print` function. There's no need to put your objects in a list or tuple. All unnamed arguments are treated as values and will be joined together using the `sep` value.
+
+Example:
+
+```python
+logger.info("User", username, action, f"@{datetime.now()}")
+```
+
+This flexibility allows for expressive and readable log statements.
 
 #### `sep`
 
-The `sep` argument is the string that joins 2 or more values together. When set to `None`, each value will be printed one next to the other.
+The `sep` argument is the string used to join two or more values together. When set to `None`, the default, each value will be printed with a space in between. To remove the space, set `sep` to `""`.
 
-> **Note**
-> A known bug causes 2 or more trailing newline characters, to be treated as one. For example, calling `Logger().info("Hello\n\n\n", "World!")` is the same as calling `Logger().info("Hello\n", "World!")`
+An example where the strings `"Hello"` and `"World"` will be joined with `" - "`:
+
+```python
+logger.info("Hello", "World", sep=" - ")  # Outputs: Hello - World
+```
+
+> **Note**: There's a known limitation where two or more trailing newline characters are treated as one. For example, `logger.info("Hello\n\n\n", "World!")` will produce the same output as `logger.info("Hello\n", "World!")`.
 
 #### `rich`
 
-The `rich` argument enables syntax formatting and highlighting for list, tuple, and dictionary data types. Rules for syntax formatting, highlighting, and color can be found in the Formatting ruleset. Additionally, the Formatting > Fixed Format Width rule allows you to provide a width to format lists, tuples, and dictionaries to. If set to `0`, the width will be set to the remaining space in the terminal.
+The `rich` argument enables syntax formatting and highlighting for complex data types like lists, tuples, and dictionaries. When `rich` is set to `True` (the default), these data structures are formatted for improved readability:
+
+```python
+data = {"user": "John Doe", "actions": ["login", "view_profile", "logout"]}
+logger.info("User activity:", data, rich=True)
+```
+
+This will output a nicely formatted and syntax-highlighted representation of the dictionary.
+
+The specific rules for syntax formatting, highlighting, and color can be found in the Formatting ruleset. Additionally, the Formatting > Fixed Format Width rule allows you to specify a width for formatting lists, tuples, and dictionaries. If set to `0`, the width will automatically adjust to the remaining space in the terminal.
 
 ### Streams and File Handling
 
-The logger supports both console output and file streaming using a robust handler toolkit.
+The Logger supports both console output and file streaming, allowing you to direct log messages to multiple destinations simultaneously. This is managed through a robust handler toolkit.
 
-```py
-l = Logger()
+#### Adding and Removing Streams
+
+You can add both console (standard output/error) and file streams to your logger:
+
+```python
+logger = Logger()
 
 # Add a file stream
-file_stream = l.stream.file.add("log.log")
+file_stream = logger.stream.file.add("application.log")
 
+# Add stdout as a stream (this is added by default, but shown here for completeness)
+stdout_stream = logger.stream.normal.add(sys.stdout)
+
+# Remove a stream
+logger.stream.file.remove("application.log")
+logger.stream.normal.remove(sys.stdout)
+
+# Remove a stream in a group
+group.remove("log.log")
+
+# Remove all streams in a group
+group.remove_all()
+```
+
+#### Stream Groups
+
+For more advanced management, you can create groups of streams:
+
+```python
 # Create a file group for multiple log files
-file_group = l.fhgroup(l.stream.file.add("log1.log"), l.stream.file.add("log2.log"))
-# You can do the same thing with console streams as well!
-stream_group = l.shgroup(l.stream.normal.add(sys.stdout), l.stream.normal.add(sys.stderr))
+file_group = logger.fhgroup(
+    logger.stream.file.add("info.txt"),
+    logger.stream.file.add("errors.log")
+)
 
-# Reset group; clears contents and reverts to default ruleset
-file_group.reset()
-stream_group.reset()
+# Create a group for console streams
+console_group = logger.shgroup(
+    logger.stream.normal.add(sys.stdout),
+    logger.stream.normal.add(sys.stderr)
+)
+```
 
-# Modify group settings
-file_group.modify(ruleset={
+These groups allow you to manage multiple streams collectively.
+
+#### Modifying Stream Behavior
+
+You can modify the behavior of individual streams or groups of streams:
+
+```python
+# Modify a single file stream
+logger.stream.file.modify("application.log", ruleset={
     "timestamps": {
         "always_show": True,
         "use_utc": True,
-    },
-    "log_line": {"format": "noalign"},
+    }
 })
 
-# Modify console output settings
-l.stream.normal.modify(sys.stdout, ruleset={"timestamps": {"always_show": True}})
+# Modify a group of streams
+group.modify(ruleset={"log_line": {"format": "noalign"}})
 
-# Remove a file stream
-l.stream.file.remove("log.log")
+# Modify console output settings
+logger.stream.normal.modify(sys.stdout, ruleset={"formatting": {"ansi": False}})
 ```
 
-### Rules
+#### Resetting Streams
 
-The `Logger` class also allows you to define custom rules that override the default settings, giving you control over how log messages are formatted and displayed. For instance, to enable stacking of identical log messages, you can set the `rules` argument like so:
+You can reset file streams or groups, which clears their contents and reverts them to the default ruleset:
 
 ```python
-l = Logger()
+# Reset a single file stream
+logger.stream.file.reset("application.log")
 
-# Enable message stacking
-l.ruleset.stacking.enabled = True
-
-# Change timestamp format
-l.ruleset.timestamps.always_show = True
-l.ruleset.timestamps.use_utc = True
-
-# Modify log line format
-l.ruleset.log_line.format = "noalign"
+# Reset a group of file streams
+group.reset()
 ```
 
-Additionally, if you want to view the default rules or the currently applied rules, you can use the respective `defaults` and `ruleset.dict.all` variables:
+### Rules and Customization
 
-- `defaults` provides the default rules.
-- `ruleset.dict.all` provides the currently applied rules.
+The Logger's behavior is governed by a set of rules that can be customized to suit your needs. These rules control various aspects of logging, from timestamp formatting to message stacking.
 
-```py
-from fluxutils.log import Logger
+#### Accessing and Modifying Rules
 
-l = Logger()  # Initialize an instance of Logger
+You can access and modify rules through the `ruleset` argument of your Logger stream/stream group:
 
-l.debug(l.defaults)  # View default rules
-l.debug(l.ruleset.dict.all)  # View currently applied rules
-l.debug(l.ruleset.dict.stacking)  # View specific rule category
+```python
+logger = Logger()
+
+# Change rules for one stream
+logger.stream.normal.modify(sys.stdout, ruleset={"timestamps": {"use_utc": True}})
+
+# Change rules for multiple streams using a group
+logger.stream.file.modify(logger.fhgroup("warnings.log", "debug.log"), ruleset={"timestamps": {"use_utc": True}})
 ```
 
-You can also access individual rule categories as dictionaries:
+#### Viewing Rules
 
-```py
-# Access the stacking ruleset as a dictionary
-print(l.ruleset.dict.stacking)
+To inspect the current rules or the default rules:
+
+```python
+# View default rules
+logger.debug(logger.defaults)
+
+# View currently applied rules
+logger.debug(logger.ruleset.dict.all)
+
+# View rules for a specific category
+logger.debug(logger.ruleset.dict.stacking)
 ```
 
-This structure allows you to have granular control over the logging behavior and easily view or modify the rules as needed.
+Replacing `.dict` with `.` will result in a `Ruleset` object instead of a dictionary. You can still retrieve single values as normal.
+
+#### Rule Categories
+
+The Logger's rules are organized into several categories, each controlling a different aspect of logging behavior:
+
+1. **Timestamps**: Controls how and when timestamps are displayed.
+2. **Stacking**: Manages the grouping of identical log messages. *Currently isn't supported.*
+3. **Formatting**: Governs the visual presentation of log messages.
+4. **Filtering**: Determines which messages are logged based on level and content.
+5. **Output**: Configures default output streams.
+6. **Metadata**: Controls the display of additional information alongside log messages.
+7. **Log Line**: Defines the structure and content of each log line.
+
+Each category can be accessed and modified individually, allowing for fine-grained control over the Logger's behavior.
 
 ### Customizing the Log Line
 
-The `Logger` in `fluxutils` includes many built-in rules for customization, but the Log Line > Format rule stands out for its versatility. This rule allows you to customize the information displayed in each log entry using a robust templating engine.
+The Log Line > Format rule is particularly powerful, allowing you to define a custom template for how each log line is formatted. This template is processed by a robust templating engine, giving you precise control over the appearance and content of your log messages.
 
 #### Premade Formats
 
-If you are in a hurry or it isn't worth the hassle, you can use the prebuilt formats by defining the Log Line > Format rule as a string instead.
+For quick setup, you can use one of the premade formats by setting the Log Line > Format rule to a string:
 
-- `default`: Sets the default log line. Great for most projects.
-- `filled`: A variant where the background and foreground colors have been reversed, displaying a box-like view. Great for increasing legibility.
-- `noalign`: The default view without any alignment parameters. Great for saving space.
+- `"default"`: A balanced format suitable for most projects.
+- `"filled"`: A variant with reversed background and foreground colors, creating a box-like view for increased legibility.
+- `"noalign"`: Similar to the default view but without alignment parameters, useful for saving space.
+
+An example where the sys.stdout stream's Log Line > Format is changed to `"filled"`:
+
+```python
+logger.stream.normal.modify(sys.stdout, ruleset={"log_line": {"format": "filled"}})
+```
+
+#### Custom Format Definition
+
+For more control, you can define a custom format using a list of segment dictionaries. Each segment represents a part of the log line and can be either static text or a dynamic template.
+
+Here's an example of a custom format:
+
+```python
+[
+    {
+        "type": "template",
+        "value": "timestamp",
+        "parameters": [{"color": {"foreground": "green"}}]
+    },
+    {"type": "static", "value": " "},
+    {
+        "type": "template",
+        "value": "level",
+        "parameters": [
+            {"color": {"foreground": "default"}},
+            {"case": "upper"},
+            {"align": {"alignment": "left", "width": 7}}
+        ]
+    },
+    {"type": "static", "value": " "},
+    {
+        "type": "template",
+        "value": "filename",
+        "parameters": [
+            {"color": {"foreground": "magenta"}},
+            {"truncate": {"width": 20, "position": "start"}}
+        ]
+    }
+]
+```
+
+This format would create log lines with a green timestamp, followed by an uppercase, left-aligned log level, and then the filename in magenta, truncated to 20 characters from the start if necessary.
 
 #### Segment Types
 
-Each segment is defined as a dictionary within the outer list. The segment `type` can be either `static` or `template`.
+There are two types of segments:
 
-Static segments are defined with the `value` key and are useful as separators or fixed text. They cannot have parameters applied and serve as constant elements in your log messages.
+1. **Static**: Defined with `"type": "static"` and a `"value"` key. These are fixed strings that appear in every log line.
 
-Template segments are also defined with the `value` key but offer much more flexibility. They can include built-in templates like timestamps, filenames, or custom variables, making your log messages more informative and context-aware.
+2. **Template**: Defined with `"type": "template"` and a `"value"` key. These are dynamic elements that are replaced with actual data when the log line is generated. If you still want to use parameters on a string that changes often, you can pass it in using `"builtin": False`.
 
 #### Built-in Templates
 
-Some of the built-in templates available for use in `fluxutils` include:
+FluxUtils provides several built-in templates that you can use in your log line format:
 
-- `timestamp`: The logging time, formatted according to the Timestamp > Format rule.
+- `timestamp`: The current time, formatted according to the Timestamp rules.
 - `filename`: The name of the file where the log function was called.
-- `wrapfunc`: The function housing the log call origin (returns `"<module>"` if not within a defined function).
-- `linenum`: The line number of the called log function.
-- `level`: The level of the log function call (e.g., info, debug).
+- `wrapfunc`: The name of the function containing the log call (shows as `"<module>"` if not within a defined function).
+- `linenum`: The line number of the log function call.
+- `level`: The level of the log message (e.g., "info", "debug", "error").
 
-For more specific needs, you can set the `builtin` key to `False` and pass in a custom string.
+You can also create custom templates by setting `"builtin": false` and providing your own string value.
 
 #### Template Parameters
 
@@ -217,8 +353,6 @@ Each parameter is a single-key dictionary, where the key is the parameter name a
 ```python
 {"align": {"alignment": "right", "width": 15}}
 ```
-
-Parameters are applied in the order they appear, except for the `color`, and `visible` parameters, which are always calculated last even if placed inside an `if` parameter.
 
 By utilizing the below parameters, you can create a highly customized logging experience tailored to your specific needs and preferences.
 
@@ -335,10 +469,198 @@ By utilizing the below parameters, you can create a highly customized logging ex
     - `reverse`: Boolean. Applies reverse formatting.
       - Default: `False`.
 
+Parameters are processed in the order they appear, except for the `color`, and `visible` parameters, which are always processed last.
+
+### Advanced Usage
+
+#### Multiple Streams with Different Configurations
+
+You can set up multiple output streams, each with its own configuration:
+
+```python
+logger = Logger()
+
+# Configure a file stream with timestamps always shown
+file_stream = logger.stream.file.add("detailed_log.log")
+logger.stream.file.modify(file_stream, {
+    "timestamps": {"always_show": True},
+    "formatting": {"log_line": "noalign"}
+})
+
+# Configure stdout with color but no timestamps
+logger.stream.normal.modify(sys.stdout, {
+    "timestamps": {"always_show": False},
+    "formatting": {"log_line": "filled"}
+})
+
+# Log a message - it will appear differently in each stream
+logger.info("This message appears in both streams with different formatting")
+```
+
+#### Dynamic Formatting Based on Terminal Size
+
+You can use the `if` parameter with the `breakpoint` condition to apply different formatting based on the terminal size:
+
+```python
+[
+    {
+        "type": "template",
+        "value": "filename",
+        "parameters": [
+            {"if": {
+                "condition": {"type": "breakpoint", "value": {"min": 100}},
+                "action": {"type": "parameters", "value": [
+                    {"truncate": {"width": 30, "position": "start"}}
+                ]}
+            }},
+            {"if": {
+                "condition": {"type": "breakpoint", "value": {"max": 100}},
+                "action": {"type": "parameters", "value": [
+                    {"truncate": {"width": 15, "position": "end"}}
+                ]}
+            }}
+        ]
+    }
+]
+```
+
+This configuration will show more of the filename on wider terminals and less on narrower ones.
+
+#### Custom Logging Levels
+
+While FluxUtils doesn't directly support creating custom logging levels, you can achieve similar functionality by modifying the log line format to replace an existing log level with a new one:
+
+```python
+[
+    {
+        "type": "template",
+        "value": "level",
+        "parameters": [
+            {"if": {
+                "condition": {"type": "matches", "value": ["info"]},
+                "action": {"type": "set", "value": "CUSTOM"}
+            }},
+            {"color": {"foreground": "cyan"}},
+            {"affix": {"prefix": "[", "suffix": "]"}}
+        ]
+    },
+    {"type": "static", "value": " "},
+    {"type": "template", "value": "message"}
+]
+
+logger.info("[CUSTOM] This is a custom level message")
+```
+
+This approach allows you to create pseudo-custom levels while still using the built-in logging functions.
+
 ## Contributing
 
-Contributions to `fluxutils` are welcome! Please refer to our contribution guidelines for more information on how to submit pull requests, report issues, or request features.
+Contributions to `fluxutils` are welcome! Whether you're fixing bugs, improving documentation, or proposing new features, your efforts are appreciated. Here's how you can contribute:
+
+1. **Fork the Repository**: Start by forking the FluxUtils repository on GitHub.
+
+2. **Clone Your Fork**: Clone your fork to your local machine for development.
+
+   ```zsh
+   git clone https://github.com/your-username/fluxutils.git
+   ```
+
+3. **Create a Branch**: Create a new branch for your feature or bug fix.
+
+   ```zsh
+   git checkout -b feature/your-feature-name
+   ```
+
+4. **Make Your Changes**: Implement your feature or bug fix.
+
+5. **Write Tests**: Add tests for your changes to ensure they work as expected and don't break existing functionality.
+
+6. **Run Tests**: Ensure all tests pass, including your new ones.
+
+   ```zsh
+   python -m pytest tests/
+   ```
+
+7. **Update Documentation**: If your changes require it, update the README and any relevant documentation.
+
+8. **Commit Your Changes**: Commit your changes with a clear and descriptive commit message.
+
+   ```zsh
+   git commit -m "Add feature: your feature description"
+   ```
+
+9. **Push to Your Fork**: Push your changes to your fork on GitHub.
+
+   ```zsh
+   git push origin feature/your-feature-name
+   ```
+
+10. **Create a Pull Request**: Go to the FluxUtils repository on GitHub and create a new pull request from your feature branch.
+
+Please ensure your code adheres to the project's coding standards and includes appropriate documentation. We appreciate your contribution!
+
+## Testing
+
+FluxUtils uses pytest for its test suite. To run the tests, follow these steps:
+
+1. Install the development dependencies:
+
+   ```zsh
+   pip install -e .[dev]
+   ```
+
+2. Run the tests:
+
+   ```zsh
+   pytest
+   ```
+
+We encourage contributors to write tests for new features and bug fixes. The `TestLogger` class in `tests/test_logger.py` provides a good example of how to structure tests for the Logger class.
+
+## Versioning
+
+FluxUtils follows [Semantic Versioning](https://semver.org/). The version number is structured as MAJOR.MINOR.PATCH:
+
+- MAJOR version increments denote incompatible API changes,
+- MINOR version increments add functionality in a backwards-compatible manner, and
+- PATCH version increments are for backwards-compatible bug fixes.
 
 ## License
 
-`fluxutils` is released under the MIT License. See the LICENSE file for more details.
+FluxUtils is released under the MIT License. See the [LICENSE](LICENSE) file for more details.
+
+<!-- ## Acknowledgements
+
+We would like to thank all the contributors who have helped to make FluxUtils better. Your time and effort are greatly appreciated. -->
+
+## Support
+
+If you encounter any issues or have questions about using FluxUtils, please file an issue on the [GitHub issue tracker](https://github.com/DomBom16/fluxutils/issues).
+
+## Changelog
+
+### 1.1.0 (2024-08-07)
+
+- Updated `log` module
+  - Added `TestLogger` class for bare-bones testing
+  - Fixed a bug where only ANSI escape sequences were removed from the message when Formatting > ANSI was set to `False`
+  - Fixed `add` and `modify` methods for `StreamHandler` for easier configuration updates
+  - Refactored `FileHandler`
+  - Added robust nesting support for `fhgroup` and `shgroup`
+  - Added support for multiple simultaneous streams with individual configurations
+  - Updated `strip_ansi` utility
+  - Turned `test1.py` into a more robust test environment
+  - Added `test2.py` to `tests` which executes `TestLogger`
+- Added changelog, support, license, versioning, testing, and contributing sections to README
+- Improved `Logger` documentation
+  - Significantly expanded README with detailed explanations and examples
+  - Added advanced usage scenarios and best practices
+
+### 1.0.0 (2024-08-06)
+
+- Initial release of FluxUtils
+- Introduced `log`
+
+---
+
+Thank you for using FluxUtils! We hope it enhances your Python development experience and makes logging more powerful and flexible in your projects.
