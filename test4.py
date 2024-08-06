@@ -1,7 +1,7 @@
 import asyncio
 import os
 from io import StringIO
-from fluxutils.log import Logger, LogLevel, StreamHandler, FileHandler, Formatter
+from src.log import Logger, LogLevel, StreamHandler, FileHandler, Formatter
 
 
 class TestLogger:

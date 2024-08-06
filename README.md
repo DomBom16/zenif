@@ -22,40 +22,89 @@ l = Logger()  # Initalize an instance of Logger
 
 The logger is designed to be easy to use while offering a high degree of customization, allowing you to tailor it to your specific needs.
 
-### Functions
+### Logging Functions
 
-The `Logger` class provides several logging functions to help with debugging and conveying information. These functions are `info`, `debug`, `success`, `warning`, `error`, and `critical`. These functions help you categorize and manage different types of log messages, making it easier to monitor and debug your applications.
+The `Logger` class provides several logging functions to help with debugging and conveying information:
+
+- `info`: For general information messages
+- `debug`: For detailed debugging information
+- `success`: For successful operation messages
+- `warning`: For warning messages
+- `error`: For error messages
+- `lethal`: For critical error messages
 
 Each logging function accepts the following parameters:
 
 - `*values`: The values to be logged. You can pass multiple values, which will be concatenated into a single log message.
-- `sep` (optional): A string inserted between values. Defaults to `None`, which means values will be concatenated without any separator.
-- `rich` (optional): When set to `True`, formats the values for easier readability with syntax highlighting and other enhancements. The default value is True.
+- `sep` (optional): A string inserted between values. Defaults to a space.
+- `rich` (optional): When set to `True`, formats the values for easier readability with syntax highlighting and other enhancements. The default value is `True`.
 
-#### *values
+#### `*values`
 
 When logging a multitude of objects to the console, you can do so just like Python's native `print` function; there's no need to put your objects in a list or tuple. Instead all unnamed arguments are treated as a value, and will be joined together by the `sep` value.
 
-#### sep
+#### `sep`
 
 The `sep` argument is the string that joins 2 or more values together. When set to `None`, each value will be printed one next to the other.
 
 > **Note**
-> A known bug causes values `None` and `""` to act as `"\n"`. Another known bug causes 2 or more trailing newline characters, to be treated as one. For example, `Logger().info("Hello\n\n\n", "World!")` is the same as `Logger().info("Hello\n", "World!")`
+> A known bug causes 2 or more trailing newline characters, to be treated as one. For example, calling `Logger().info("Hello\n\n\n", "World!")` is the same as calling `Logger().info("Hello\n", "World!")`
 
-#### rich
+#### `rich`
 
 The `rich` argument enables syntax formatting and highlighting for list, tuple, and dictionary data types. Rules for syntax formatting, highlighting, and color can be found in the Formatting ruleset. Additionally, the Formatting > Fixed Format Width rule allows you to provide a width to format lists, tuples, and dictionaries to. If set to `0`, the width will be set to the remaining space in the terminal.
+
+### Streams and File Handling
+
+The logger supports both console output and file streaming using a robust handler toolkit.
+
+```py
+l = Logger()
+
+# Add a file stream
+file_stream = l.stream.file.add("log.log")
+
+# Create a file group for multiple log files
+file_group = l.fhgroup(l.stream.file.add("log1.log"), l.stream.file.add("log2.log"))
+# You can do the same thing with console streams as well!
+stream_group = l.shgroup(l.stream.normal.add(sys.stdout), l.stream.normal.add(sys.stderr))
+
+# Reset group; clears contents and reverts to default ruleset
+file_group.reset()
+stream_group.reset()
+
+# Modify group settings
+file_group.modify(ruleset={
+    "timestamps": {
+        "always_show": True,
+        "use_utc": True,
+    },
+    "log_line": {"format": "noalign"},
+})
+
+# Modify console output settings
+l.stream.normal.modify(sys.stdout, ruleset={"timestamps": {"always_show": True}})
+
+# Remove a file stream
+l.stream.file.remove("log.log")
+```
 
 ### Rules
 
 The `Logger` class also allows you to define custom rules that override the default settings, giving you control over how log messages are formatted and displayed. For instance, to enable stacking of identical log messages, you can set the `rules` argument like so:
 
 ```python
-from fluxutils.log import Logger
+l = Logger()
 
-l = Logger()  # Initialize an instance of Logger
-l.ruleset.stacking.enabled = True  # Setting Stacking > Enabled to True
+# Enable message stacking
+l.ruleset.stacking.enabled = True
+
+# Change timestamp format
+l.ruleset.timestamps.always_show = True
+l.ruleset.timestamps.use_utc = True
+
+# Modify log line format
+l.ruleset.log_line.format = "noalign"
 ```
 
 Additionally, if you want to view the default rules or the currently applied rules, you can use the respective `defaults` and `ruleset.dict.all` variables:
@@ -68,11 +117,9 @@ from fluxutils.log import Logger
 
 l = Logger()  # Initialize an instance of Logger
 
-# View the default rules
-print(l.defaults)
-
-# View the currently applied rules
-print(l.ruleset.dict.all)
+l.debug(l.defaults)  # View default rules
+l.debug(l.ruleset.dict.all)  # View currently applied rules
+l.debug(l.ruleset.dict.stacking)  # View specific rule category
 ```
 
 You can also access individual rule categories as dictionaries:
@@ -94,7 +141,7 @@ If you are in a hurry or it isn't worth the hassle, you can use the prebuilt for
 
 - `default`: Sets the default log line. Great for most projects.
 - `filled`: A variant where the background and foreground colors have been reversed, displaying a box-like view. Great for increasing legibility.
-- `nopad`: The default view without any alignment parameters. Great for saving space.
+- `noalign`: The default view without any alignment parameters. Great for saving space.
 
 #### Segment Types
 
@@ -242,3 +289,11 @@ By utilizing the below parameters, you can create a highly customized logging ex
       - Default: `False`.
     - `reverse`: Boolean. Applies reverse formatting.
       - Default: `False`.
+
+## Contributing
+
+Contributions to `fluxutils` are welcome! Please refer to our contribution guidelines for more information on how to submit pull requests, report issues, or request features.
+
+## License
+
+`fluxutils` is released under the MIT License. See the LICENSE file for more details.

@@ -1,6 +1,3 @@
-from .methods import Logger
-from .base import Ruleset
+from .logger import Logger
 
-# from .base import FileHandler, StreamHandler
-
-__all__ = ["Logger", "Ruleset"]
+__all__ = ["Logger"]

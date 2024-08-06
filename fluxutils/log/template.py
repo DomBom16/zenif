@@ -32,7 +32,7 @@ def shorthand(shorthand: str) -> str:
                     {"visible": False},
                     {
                         "if": {
-                            "condition": {"type": "matches", "value": ["<module>"]},
+                            "condition": {"type": "matches", "value": [""]},
                             "action": {"type": "set", "value": "source"},
                         }
                     },
@@ -188,7 +188,7 @@ def shorthand(shorthand: str) -> str:
                     {"visible": False},
                     {
                         "if": {
-                            "condition": {"type": "matches", "value": ["<module>"]},
+                            "condition": {"type": "matches", "value": [""]},
                             "action": {"type": "set", "value": "source"},
                         }
                     },
@@ -348,7 +348,7 @@ def shorthand(shorthand: str) -> str:
                     {"visible": False},
                     {
                         "if": {
-                            "condition": {"type": "matches", "value": ["<module>"]},
+                            "condition": {"type": "matches", "value": [""]},
                             "action": {"type": "set", "value": "source"},
                         }
                     },

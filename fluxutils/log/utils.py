@@ -46,8 +46,7 @@ def strip_ansi(text: str) -> str:
     Returns:
         str: The stripped string.
     """
-    ansi_escape = re.compile(r"\033[@-_][0-?]*[ -/]*[@-~]")
-    return ansi_escape.sub("", text)
+    return re.compile(r"\033[@-_][0-?]*[ -/]*[@-~]").sub("", text)
 
 
 def rgb_to_ansi(r: int = 255, g: int = 255, b: int = 255, fg: bool = True) -> str:
