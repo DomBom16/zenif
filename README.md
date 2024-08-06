@@ -74,7 +74,7 @@ This flexibility allows for expressive and readable log statements.
 
 The `sep` argument is the string used to join two or more values together. When set to `None`, the default, each value will be printed with a space in between. To remove the space, set `sep` to `""`.
 
-Example:
+An example where the strings `"Hello"` and `"World"` will be joined with `" - "`:
 
 ```python
 logger.info("Hello", "World", sep=" - ")  # Outputs: Hello - World
@@ -236,10 +236,10 @@ For quick setup, you can use one of the premade formats by setting the Log Line 
 - `"filled"`: A variant with reversed background and foreground colors, creating a box-like view for increased legibility.
 - `"noalign"`: Similar to the default view but without alignment parameters, useful for saving space.
 
-Example:
+An example where the sys.stdout stream's Log Line > Format is changed to `"filled"`:
 
 ```python
-logger.stream.normal.modify(sys.stdout, ruleset={"format": {"log_line": "filled"}})
+logger.stream.normal.modify(sys.stdout, ruleset={"log_line": {"format": "filled"}})
 ```
 
 #### Custom Format Definition
