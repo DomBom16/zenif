@@ -3,7 +3,7 @@ import time
 from unittest.mock import patch
 import warnings
 
-from futils.decorators import (
+from fluxutils.decorators import (
     retry,
     retry_exponential_backoff,
     timeout,

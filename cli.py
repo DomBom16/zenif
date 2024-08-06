@@ -1,4 +1,4 @@
-from futils.cli import CLI, argument, option, Prompt
+from fluxutils.cli import CLI, argument, option, Prompt
 
 cli = CLI()
 

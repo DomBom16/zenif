@@ -1,4 +1,4 @@
-from futils.log import Logger
+from fluxutils.log import Logger
 import sys
 
 # Initialize a Logger instance
