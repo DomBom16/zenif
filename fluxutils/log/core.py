@@ -1,7 +1,7 @@
 from inspect import currentframe, getmodule
 from .handlers import Ruleset, Streams, FHGroup, SHGroup
 import sys
-from .utils import strip_unsafe_objs, strip_repr_id
+from .utils import strip_unsafe_objs, strip_repr_id  # , strip_ansi
 from black import format_str, Mode
 from pygments import highlight
 from pygments.lexers import PythonLexer
@@ -10,6 +10,24 @@ from pygments.styles import get_style_by_name
 from random import choice
 from io import StringIO
 from copy import deepcopy
+
+# import traceback
+# from colorama import init, Fore, Style
+
+# init(autoreset=False)
+
+# > File "demo.py", line 21, in <module>
+#     main(1, 2, z)  # Oops...
+#     |          └ 0
+#     └ <function main at 0x7ff810e63bf8>
+
+#   File "demo.py", line 16, in main
+#     x * y / z
+#     |   |   └ 0
+#     |   └ 2
+#     └ 1
+
+# ZeroDivisionError: division by zero
 
 
 class Logger:
@@ -171,6 +189,89 @@ class Logger:
                 group.add(item)
         return group
 
+    # def exception(self, exc_info=None):
+    #     """
+    #     Log an exception with a detailed traceback and variable callouts.
+
+    #     :param exc_info: A tuple (type, value, traceback) as returned by sys.exc_info().
+    #                      If not provided, it will use the current exception information.
+    #     """
+    #     if exc_info is None:
+    #         exc_info = sys.exc_info()
+
+    #     exc_type, exc_value, exc_traceback = exc_info
+
+    #     # Format the traceback
+    #     tb_lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+
+    #     # Remove the first line which typically says "Traceback (most recent call last):"
+    #     tb_lines = tb_lines[1:]
+    #     tb_lines = "\n".join(tb_lines).split("\n")
+
+    #     # Process each line of the traceback
+    #     processed_lines = []
+    #     frame = exc_traceback
+    #     for lineno, line in enumerate(tb_lines):
+
+    #         if "File" in tb_lines[lineno - 1]:
+    #             code_line = line.split("\n")[-1]
+    #             local_vars = frame.tb_frame.f_locals
+    #             var_positions = self._get_var_positions(code_line, local_vars)
+    #             processed_lines.append(
+    #                 highlight(
+    #                     code_line,
+    #                     PythonLexer(),
+    #                     tformatter(style=get_style_by_name("one-dark")),
+    #                 ).rstrip()
+    #             )
+
+    #             if var_positions:
+    #                 callout_lines = self._create_callout_lines(
+    #                     var_positions, local_vars
+    #                 )
+    #                 processed_lines.extend(callout_lines)
+
+    #             frame = frame.tb_next
+    #         else:
+    #             processed_lines.append(strip_ansi(line))
+
+    #     # Join the processed lines
+    #     full_tb = "\n".join(processed_lines)
+
+    #     # Log the exception
+    #     print(f"Exception occurred:\n{full_tb}")
+
+    # def _get_var_positions(self, code_line, local_vars):
+    #     """Find positions of variables in the code line."""
+    #     var_positions = {}
+    #     for var in local_vars:
+    #         if var in code_line:
+    #             var_positions[var] = code_line.index(var)
+    #     return dict(sorted(var_positions.items(), key=lambda x: x[1]))
+
+    # def _create_callout_lines(self, var_positions, local_vars):
+    #     """Create callout lines for variables."""
+    #     callout_lines = []
+    #     var_count = len(var_positions)
+
+    #     for i in range(var_count):
+    #         line = ""
+    #         for j, (var, pos) in enumerate(var_positions.items()):
+    #             value = repr(local_vars[var])
+    #             line += (
+    #                 f"\r\033[{pos}C{Fore.BLUE}{Style.DIM}┃{Style.RESET_ALL}"
+    #                 if ((var_count - 1) - i) > j
+    #                 else ""
+    #             )
+    #             line += (
+    #                 f"\r\033[{pos}C{Fore.BLUE}{Style.DIM}┗{Style.NORMAL} {value}{Style.RESET_ALL}"
+    #                 if ((var_count - 1) - i) == j
+    #                 else ""
+    #             )
+    #         callout_lines.append(line)
+
+    #     return callout_lines
+
     def create_test_stream(self) -> tuple[StringIO, "SHGroup"]:
         stream = StringIO()
         group = self.shgroup(stream)
@@ -196,7 +297,7 @@ class TestLogger:
     def setup(self):
         print("\n--- Setting up test streams ---")
         self.logger.stream.normal.remove(self.default_stream)
-        for stream_name, stream in self.test_streams.items():
+        for _, stream in self.test_streams.items():
             self.logger.stream.normal.add(stream)
             self.logger.stream.normal.modify(
                 stream, self.default_ruleset, use_original=True
@@ -277,3 +378,24 @@ class TestLogger:
         self.test_timestamp_stream()
         self.test_multiple_streams()
         self.reset()
+
+
+# len = 3
+# (len - 1) - i
+
+# == > C
+# >  > Y
+# <  > N
+
+# 0
+#   0   Y
+#   1   Y
+#   2   C
+# 1
+#   0   Y
+#   1   C
+#   2   N
+# 2
+#   0   C
+#   1   N
+#   2   N
