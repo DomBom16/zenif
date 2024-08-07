@@ -2,9 +2,7 @@
 
 ## 1.2.0 (2024-08-07)
 
-### 🚀 Features
-
-#### New `decorators` Module
+### 🎀 New `decorators` Module
 
 Introduced a powerful set of decorators to enhance function behavior:
 
@@ -25,7 +23,7 @@ Introduced a powerful set of decorators to enhance function behavior:
 - `@cache`: Efficient return value caching
 - `@requires_permission`: User permission management
 
-#### New `cli` Module
+### 💻 New `cli` Module
 
 Streamlined command-line interface creation:
 
@@ -40,11 +38,14 @@ Streamlined command-line interface creation:
   - Single and multi-select options
   - Numeric input with optional constraints
 
-### 📚 Documentation
+### 📚 Refactored Documentation
 
-- Comprehensive `decorators` module guide with real-world examples
-- Detailed `cli` module walkthrough
-- Expanded README with dedicated sections for new modules
+- New documentation inside of `docs/`
+  - `modules/`
+    - `cli.md`: CLI module documentation
+    - `log.md`: Log module documentation
+    - `decorators.md`: Decorators module documentation
+  - `changelog.md`: Changelog
 
 ### 🧪 Tests
 
