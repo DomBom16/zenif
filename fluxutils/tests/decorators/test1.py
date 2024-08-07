@@ -14,10 +14,13 @@ from fluxutils.decorators import (
     type_check,
     log_execution_time,
     cache,
-    requires_permission,
+    singleton,
+    enforce_types,
+    retry_on_exception,
+    background_task,
+    profile,
     TimeoutError,
     RateLimitError,
-    PermissionError,
 )
 
 
@@ -180,28 +183,67 @@ class TestDecorators(unittest.TestCase):
         self.assertEqual(expensive_function(3, 4), 7)
         self.assertEqual(call_count, 2)
 
-    def test_requires_permission(self):
-        class User:
-            def __init__(self, permissions: list[str]):
-                self.permissions = permissions
+    def test_singleton(self):
+        @singleton
+        class TestClass:
+            pass
 
-            def has_permission(self, permission: str) -> bool:
-                return permission in self.permissions
+        instance1 = TestClass()
+        instance2 = TestClass()
+        self.assertIs(instance1, instance2)
 
-        @requires_permission("admin")
-        def admin_function(user: User) -> str:
-            return "Admin action"
+    def test_enforce_types(self):
+        @enforce_types
+        def test_func(x: int, y: str) -> str:
+            return y * x
 
-        admin_user = User(["admin", "user"])
-        regular_user = User(["user"])
+        self.assertEqual(test_func(3, "a"), "aaa")
+        with self.assertRaises(TypeError):
+            test_func("3", "a")
+        with self.assertRaises(TypeError):
+            test_func(3, 2)
 
-        self.assertEqual(admin_function(admin_user), "Admin action")
+    def test_retry_on_exception(self):
+        attempts = 0
 
-        with self.assertRaises(PermissionError):
-            admin_function(regular_user)
+        @retry_on_exception((ValueError,), max_retries=3, delay=0.1)
+        def failing_function():
+            nonlocal attempts
+            attempts += 1
+            if attempts < 3:
+                raise ValueError("Not yet!")
+            return "Success"
 
-        with self.assertRaises(AttributeError):
-            admin_function("not a user object")
+        result = failing_function()
+        self.assertEqual(result, "Success")
+        self.assertEqual(attempts, 3)
+
+    def test_background_task(self):
+        @background_task
+        def long_task(duration):
+            time.sleep(duration)
+            return "Done"
+
+        start = time.time()
+        thread = long_task(0.5)
+        end = time.time()
+        self.assertLess(end - start, 0.5)  # Ensure it returns immediately
+        thread.join()
+        self.assertGreaterEqual(time.time() - start, 0.5)  # Ensure task completed
+
+    def test_profile(self):
+        @profile
+        def fibonacci(n):
+            if n <= 1:
+                return n
+            else:
+                return fibonacci(n - 1) + fibonacci(n - 2)
+
+        # This test is mainly to ensure the decorator doesn't break the function
+        # and that it completes without errors. The actual profiling output
+        # is printed to stdout.
+        result = fibonacci(10)
+        self.assertEqual(result, 55)
 
 
 if __name__ == "__main__":
