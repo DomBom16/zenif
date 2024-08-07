@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0.1 (2024-08-07)
+
+### 🩹 Small Patches
+
+- Changed relative link in `README.md` from `docs/CHANGELOG.md` to `docs/changelog.md`
+- Updated main module's docstring
+- Renamed `@retry_exponential_backoff` to `@retry_expo`
+
 ## 1.2.0 (2024-08-07)
 
 ### 🎀 New `decorators` Module

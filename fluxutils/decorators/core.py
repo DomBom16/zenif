@@ -12,6 +12,7 @@ import pstats
 import io
 import tracemalloc
 from .exceptions import TimeoutError, RateLimitError
+from .core import deprecated
 
 T = TypeVar("T")
 
@@ -37,7 +38,7 @@ def retry(
 
     return decorator_retry
 
-
+@deprecated
 def retry_exponential_backoff(
     max_retries: int = 3, initial_delay: float = 1.0
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
@@ -59,6 +60,28 @@ def retry_exponential_backoff(
         return wrapper_retry_exponential_backoff
 
     return decorator_retry_exponential_backoff
+
+def retry_expo(
+    max_retries: int = 3, initial_delay: float = 1.0
+) -> Callable[[Callable[..., T]], Callable[..., T]]:
+    def decorator_retry_expo_backoff(func: Callable[..., T]) -> Callable[..., T]:
+        @wraps(func)
+        def wrapper_retry_expo_backoff(*args: any, **kwargs: any) -> T:
+            attempts = 0
+            while attempts < max_retries:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    attempts += 1
+                    if attempts >= max_retries:
+                        raise
+                    delay = initial_delay * (2 ** (attempts - 1))
+                    time.sleep(max(0, delay))  # Ensure non-negative delay
+            raise RuntimeError("Exceeded maximum retries")
+
+        return wrapper_retry_expo_backoff
+
+    return decorator_retry_expo_backoff
 
 
 def timeout(seconds: float) -> Callable[[Callable[..., T]], Callable[..., T]]:

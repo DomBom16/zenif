@@ -2,6 +2,7 @@ from .core import (
     # decorators
     retry,
     retry_exponential_backoff,
+    retry_expo,
     retry_on_exception,
     rate_limiter,
     timeout,
@@ -24,6 +25,7 @@ __all__ = [
     # decorators
     "retry",
     "retry_exponential_backoff",
+    "retry_expo",
     "retry_on_exception",
     "rate_limiter",
     "timeout",
