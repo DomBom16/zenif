@@ -1,4 +1,4 @@
-from fluxutils.log import Logger
+from zenif.log import Logger
 import sys
 
 # Initialize a Logger instance

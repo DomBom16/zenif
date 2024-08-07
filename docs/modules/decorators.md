@@ -1,6 +1,6 @@
 # Decorators Module
 
-FluxUtils provides a set of powerful decorators to enhance your Python functions. These decorators offer various functionalities such as retry mechanisms, timeout handling, rate limiting, and more.
+Zenif provides a set of powerful decorators to enhance your Python functions. These decorators offer various functionalities such as retry mechanisms, timeout handling, rate limiting, and more.
 
 ## Available Decorators
 
@@ -11,7 +11,7 @@ Below are the available decorators.
 Retries the decorated function a specified number of times with a delay between attempts.
 
 ```python
-from fluxutils.decorators import retry
+from zenif.decorators import retry
 
 @retry(max_retries=3, delay=1.0)
 def flaky_function():
@@ -25,7 +25,7 @@ def flaky_function():
 Similar to `retry`, but with an exponential backoff delay between attempts.
 
 ```python
-from fluxutils.decorators import retry_exponential_backoff
+from zenif.decorators import retry_exponential_backoff
 
 @retry_exponential_backoff(max_retries=3, initial_delay=1.0)
 def flaky_function():
@@ -39,7 +39,7 @@ def flaky_function():
 Retries the function only when specific exceptions are raised.
 
 ```python
-from fluxutils.decorators import retry_on_exception
+from zenif.decorators import retry_on_exception
 
 @retry_on_exception((ValueError, TypeError), max_retries=3, delay=0.5)
 def potentially_failing_function(x):
@@ -56,7 +56,7 @@ print(potentially_failing_function(-1))  # Retries three times, then raises Valu
 Sets a maximum execution time for the decorated function.
 
 ```python
-from fluxutils.decorators import timeout
+from zenif.decorators import timeout
 
 @timeout(seconds=5)
 def long_running_function():
@@ -76,7 +76,7 @@ Limits the rate at which the decorated function can be called, which is useful f
 
 ```python
 import time
-from fluxutils.decorators import rate_limiter
+from zenif.decorators import rate_limiter
 
 @rate_limiter(calls=3, period=10, immediate_fail=True)
 def limited_api_call(call_id):
@@ -105,7 +105,7 @@ print(f"Total time: {end_time - start_time:.2f} seconds")
 Logs the function call, its arguments, and the return value.
 
 ```python
-from fluxutils.decorators import trace
+from zenif.decorators import trace
 
 @trace
 def function_to_trace(arg1, arg2):
@@ -118,7 +118,7 @@ def function_to_trace(arg1, arg2):
 Catches and suppresses any exceptions raised by the decorated function.
 
 ```python
-from fluxutils.decorators import suppress_exceptions
+from zenif.decorators import suppress_exceptions
 
 @suppress_exceptions
 def risky_function():
@@ -131,7 +131,7 @@ def risky_function():
 Marks a function as deprecated and issues a warning when it's used.
 
 ```python
-from fluxutils.decorators import deprecated
+from zenif.decorators import deprecated
 
 @deprecated
 def old_function():
@@ -144,7 +144,7 @@ def old_function():
 Checks the types of arguments and return value against specified types.
 
 ```python
-from fluxutils.decorators import type_check
+from zenif.decorators import type_check
 
 @type_check(arg_types=(int, str), return_type=str)
 def typed_function(num: int, text: str) -> str:
@@ -158,7 +158,7 @@ def typed_function(num: int, text: str) -> str:
 Logs the execution time of the decorated function.
 
 ```python
-from fluxutils.decorators import log_execution_time
+from zenif.decorators import log_execution_time
 
 @log_execution_time
 def timed_function():
@@ -171,7 +171,7 @@ def timed_function():
 Caches the return value of the function based on its arguments. The cache can be extremely useful for functions with a recursive nature, and in some cases running boatloads faster.
 
 ```python
-from fluxutils.decorators import cache
+from zenif.decorators import cache
 
 @cache
 def expensive_function(arg):
@@ -184,7 +184,7 @@ def expensive_function(arg):
 Ensures only one instance of a class is created.
 
 ```python
-from fluxutils.decorators import singleton
+from zenif.decorators import singleton
 
 @singleton
 class DatabaseConnection:
@@ -205,7 +205,7 @@ print(db1 is db2)  # Output: True
 Strictly enforces type hints on function arguments and return values.
 
 ```python
-from fluxutils.decorators import enforce_types
+from zenif.decorators import enforce_types
 
 @enforce_types
 def greet(name: str, times: int) -> str:
@@ -220,7 +220,7 @@ print(greet("Bob", "2"))  # Raises TypeError: Argument times must be <class 'int
 Runs the decorated function in a separate thread.
 
 ```python
-from fluxutils.decorators import background_task
+from zenif.decorators import background_task
 
 @background_task
 def long_running_task(duration):
@@ -239,7 +239,7 @@ thread.join()  # Wait for the background task to complete
 Profiles the function's execution and logs performance metrics, including memory usage. This decorator handles recursive calls correctly, only profiling the outermost call.
 
 ```python
-from fluxutils.decorators import profile
+from zenif.decorators import profile
 
 @profile
 def fibonacci(n):
@@ -259,7 +259,7 @@ This decorator will print out execution time, memory usage, and a summary of the
 In addition to a wide range of decorators, these decorators can be used in a combined manner to add powerful functionality to your Python functions. For example, the following combines the use of the `cache` and `profile` decorators to compare the difference between using a cache and without:
 
 ```python
-from fluxutils.decorators import profile, cache
+from zenif.decorators import profile, cache
 
 @profile
 def fibonacci(n):

@@ -3,7 +3,7 @@ import time
 from unittest.mock import patch
 import warnings
 
-from fluxutils.decorators import (
+from zenif.decorators import (
     retry,
     retry_exponential_backoff,
     timeout,

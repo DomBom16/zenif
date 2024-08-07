@@ -1,4 +1,4 @@
-from fluxutils.cli import CLI, argument, option, Prompt
+from zenif.cli import CLI, argument, option, Prompt
 
 cli = CLI()
 

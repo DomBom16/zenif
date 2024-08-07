@@ -1,13 +1,13 @@
 # Log Module
 
-The Log module is the cornerstone of FluxUtils, offering a powerful and flexible logging system that can be tailored to suit a wide range of needs, from simple console output to complex multi-stream logging with custom formatting.
+The Log module is the cornerstone of Zenif, offering a powerful and flexible logging system that can be tailored to suit a wide range of needs, from simple console output to complex multi-stream logging with custom formatting.
 
 ## Initialization
 
-To start using the Logger, import it from `fluxutils.log` and create an instance:
+To start using the Logger, import it from `zenif.log` and create an instance:
 
 ```python
-from fluxutils.log import Logger
+from zenif.log import Logger
 
 logger = Logger()  # Initialize an instance of Logger
 ```
@@ -258,7 +258,7 @@ There are two types of segments:
 
 ### Built-in Templates
 
-FluxUtils provides several built-in templates that you can use in your log line format:
+Zenif provides several built-in templates that you can use in your log line format:
 
 - `timestamp`: The current time, formatted according to the Timestamp rules.
 - `filename`: The name of the file where the log function was called.
@@ -463,7 +463,7 @@ This configuration will show more of the filename on wider terminals and less on
 
 ### Custom Logging Levels
 
-While FluxUtils doesn't directly support creating custom logging levels, you can achieve similar functionality by modifying the log line format to replace an existing log level with a new one:
+While Zenif doesn't directly support creating custom logging levels, you can achieve similar functionality by modifying the log line format to replace an existing log level with a new one:
 
 ```python
 [

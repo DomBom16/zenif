@@ -1,21 +1,27 @@
 # Changelog
 
-## 1.2.0.1 (2024-08-07)
+## 0.1.0 (2024-08-07)
 
-### 🩹 Small Patches
+### 🎉 Initial Release of Zenif
 
-- Changed relative link in `README.md` from `docs/CHANGELOG.md` to `docs/changelog.md`
-- Updated main module's docstring
-- Renamed `@retry_exponential_backoff` to `@retry_expo`
+Zenif emerges as a powerful toolkit for Python developers, combining advanced logging capabilities, a rich set of decorators for enhanced function behaviors, and tools for building intuitive command-line interfaces. This initial release lays a strong foundation for future enhancements and additions to the Zenif ecosystem.
 
-## 1.2.0 (2024-08-07)
+#### 📝 Log Module
 
-### 🎀 New `decorators` Module
+- Powerful and flexible logging system with customizable formatting
+- Support for multiple output streams (console and file)
+- Advanced log line customization with templating engine
+- Stream and file handling with grouping capabilities
+- Rule-based configuration for fine-grained control over logging behavior
+- ANSI color support and rich formatting options
+- `TestLogger` class for simplified testing scenarios
 
-Introduced a powerful set of decorators to enhance function behavior:
+#### 🎀 Decorators Module
+
+A suite of powerful decorators to enhance function behavior:
 
 - `@retry`: Resilient function execution with customizable retry attempts and delay
-- `@retry_exponential_backoff`: Smart retries with exponential backoff
+- `@retry_expo`: Smart retries with exponential backoff
 - `@retry_on_exception`: Targeted exception handling with flexible retry options
 - `@singleton`: Ensures class instantiation uniqueness
 - `@enforce_types`: Strict type hint enforcement for robust code
@@ -31,9 +37,9 @@ Introduced a powerful set of decorators to enhance function behavior:
 - `@cache`: Efficient return value caching
 - `@requires_permission`: User permission management
 
-### 💻 New `cli` Module
+#### 💻 CLI Module
 
-Streamlined command-line interface creation:
+Tools for creating intuitive command-line interfaces:
 
 - `CLI` class: Core CLI builder
 - `@command` decorator: Intuitive command definition
@@ -46,58 +52,24 @@ Streamlined command-line interface creation:
   - Single and multi-select options
   - Numeric input with optional constraints
 
-### 📚 Refactored Documentation
+### 📚 Documentation
 
-- New documentation inside of `docs/`
-  - `modules/`
-    - `cli.md`: CLI module documentation
-    - `log.md`: Log module documentation
-    - `decorators.md`: Decorators module documentation
-  - `changelog.md`: Changelog
+- Comprehensive README with usage examples and best practices
+- Detailed module documentation in `docs/modules/`:
+  - `cli.md`: CLI module documentation
+  - `log.md`: Log module documentation
+  - `decorators.md`: Decorators module documentation
+- Changelog (`docs/changelog.md`)
 
 ### 🧪 Tests
 
-- Foundational CLI module test suite
-- Extensive unit tests for all decorators
+- Extensive test suite covering all modules
+- Specific tests for `TestLogger` functionality
+- Unit tests for all decorators
+- CLI module test suite
 
 ### 🔧 Other
 
-- Updated package dependencies
-
-## 1.1.0 (2024-08-06)
-
-### 🔧 Enhancements to `log` Module
-
-- Introduced `TestLogger` for streamlined testing scenarios
-- Fixed ANSI escape sequence handling
-- Improved `StreamHandler` configuration
-- Refactored `FileHandler` for better performance
-- Enhanced support for nested logging groups
-- Added multi-stream logging capabilities
-- Upgraded `strip_ansi` utility
-
-### 📚 Documentation
-
-- Expanded README with new sections:
-  - Changelog
-  - Support
-  - License
-  - Versioning
-  - Testing
-  - Contributing
-- Significantly improved `Logger` documentation
-  - Detailed explanations and examples
-  - Advanced usage scenarios
-  - Best practices guide
-
-### 🧪 Tests
-
-- Enhanced `test1.py` for comprehensive logging tests
-- Added `test2.py` to validate `TestLogger` functionality
-
-## 1.0.0 (2024-08-05)
-
-### 🎉 Initial Release
-
-- Launched FluxUtils
-- Introduced `log` module with foundational logging capabilities
+- Modular architecture for easy expansion and maintenance
+- Consistent coding style across all modules
+- Performance optimizations for core functionalities

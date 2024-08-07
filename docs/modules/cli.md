@@ -1,13 +1,13 @@
 # CLI Module
 
-FluxUtils includes a CLI (Command Line Interface) module that allows you to easily create interactive command-line applications. This module provides tools for building CLIs with argument parsing and command management.
+Zenif includes a CLI (Command Line Interface) module that allows you to easily create interactive command-line applications. This module provides tools for building CLIs with argument parsing and command management.
 
 ## Basic Usage
 
-Here's a comprehensive example of how to create a CLI application using FluxUtils, demonstrating the use of both `@argument` and `@option`:
+Here's a comprehensive example of how to create a CLI application using Zenif, demonstrating the use of both `@argument` and `@option`:
 
 ```python
-from fluxutils.cli import CLI, argument, option
+from zenif.cli import CLI, argument, option
 
 cli = CLI()  # Create a CLI instance
 
@@ -68,7 +68,7 @@ This structure allows for flexible and intuitive command-line interfaces, where 
 The CLI module also includes an API for creating interactive prompts:
 
 ```python
-from fluxutils.cli import CLI, Prompt
+from zenif.cli import CLI, Prompt
 
 cli = CLI()
 
@@ -107,4 +107,4 @@ This setup command will interactively prompt the user for various pieces of info
 
 Each prompt type has an `ask()` method that displays the prompt and returns the user's input.
 
-By using these features of the FluxUtils CLI module, you can create command-line applications with intuitive argument parsing and interactive prompts. This allows for more user-friendly and flexible command-line interfaces in your Python projects.
+By using these features of the Zenif CLI module, you can create command-line applications with intuitive argument parsing and interactive prompts. This allows for more user-friendly and flexible command-line interfaces in your Python projects.

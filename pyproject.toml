@@ -3,8 +3,8 @@ requires      = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "fluxutils"
-version = "1.2.0.1"
+name = "zenif"
+version = "0.1.0"
 description = "Various utilties to enhance your projects"
 readme = "README.md"
 authors = [{ name = "dombom" }]
@@ -23,4 +23,4 @@ dependencies = [
 requires-python = ">=3.12"
 
 [project.urls]
-Homepage = "https://github.com/DomBom16/fluxutils"
+Homepage = "https://github.com/DomBom16/zenif"
