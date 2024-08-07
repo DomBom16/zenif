@@ -23,7 +23,7 @@ This command will download and install FluxUtils along with its dependencies.
 
 ## Documentation
 
-- [Changelog](docs/CHANGELOG.md)
+- [Changelog](docs/changelog.md)
 - [Decorators Module](docs/modules/decorators.md)
 - [CLI Module](docs/modules/cli.md)
 - [Log Module](docs/modules/log.md)
