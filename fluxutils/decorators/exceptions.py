@@ -4,7 +4,3 @@ class TimeoutError(Exception):
 
 class RateLimitError(Exception):
     pass
-
-
-class PermissionError(Exception):
-    pass

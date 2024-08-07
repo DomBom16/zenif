@@ -1,37 +1,43 @@
 from .core import (
     # decorators
     retry,
+    retry_exponential_backoff,
+    retry_on_exception,
     rate_limiter,
     timeout,
     cache,
     log_execution_time,
-    requires_permission,
     type_check,
     deprecated,
-    retry_exponential_backoff,
     suppress_exceptions,
     trace,
+    singleton,
+    profile,
+    background_task,
+    enforce_types,
     # error types
     RateLimitError,
     TimeoutError,
-    PermissionError,
 )
 
 __all__ = [
     # decorators
     "retry",
+    "retry_exponential_backoff",
+    "retry_on_exception",
     "rate_limiter",
     "timeout",
     "cache",
     "log_execution_time",
-    "requires_permission",
     "type_check",
     "deprecated",
-    "retry_exponential_backoff",
     "suppress_exceptions",
     "trace",
+    "singleton",
+    "profile",
+    "background_task",
+    "enforce_types",
     # error types
     "RateLimitError",
     "TimeoutError",
-    "PermissionError",
 ]
