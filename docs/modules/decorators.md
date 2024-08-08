@@ -133,7 +133,7 @@ Marks a function as deprecated and issues a warning when it's used.
 ```python
 from zenif.decorators import deprecated
 
-@deprecated
+@deprecated(expected_removal="2.0.0")
 def old_function():
     # Your code here
     # A deprecation warning will be issued when this function is called
@@ -173,7 +173,7 @@ Caches the return value of the function based on its arguments. The cache can be
 ```python
 from zenif.decorators import cache
 
-@cache
+@cache(max_size=512)
 def expensive_function(arg):
     # Your code here
     # The return value will be cached based on the 'arg' value

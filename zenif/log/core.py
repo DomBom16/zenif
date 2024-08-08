@@ -97,10 +97,10 @@ class Logger:
         # Add default stdout stream
         self.stream.normal.add(sys.stdout, ruleset=self.__rules)
 
-        if self.ruleset.stacking.enabled:
-            self.warning(
-                "Stacking is currently not supported. You're seeing this message because you have the Stacking > Stacking Enabled rule set to True."
-            )
+        # if self.ruleset.stacking.enabled:
+        #     self.warning(
+        #         "Stacking is currently not supported. You're seeing this message because you have the Stacking > Stacking Enabled rule set to True."
+        #     )
 
     def __format_value(self, value, ruleset):
         repr_id = "".join(

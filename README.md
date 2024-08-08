@@ -1,6 +1,6 @@
 # Zenif
 
-Zenif is a powerful, highly customizable, and versatile Python module designed to enhance the efficiency and performance of your programs. Whether you're a seasoned developer or just starting out, Zenif offers a suite of tools to streamline your workflow and improve code management. Zenif currently enables developers with a simple yet highly customizable logger with support for multiple streams, a set of utility decorators, like `@cache` and `@rate_limiter`, and a handful of tools to create a command-line interface with interactive prompts and argument handling.
+Zenif (pronounced "Zenith") is a powerful, highly customizable, and versatile Python module designed to enhance the efficiency and performance of your programs. Whether you're a seasoned developer or just starting out, Zenif offers a suite of tools to streamline your workflow and improve code management. Zenif currently enables developers with a simple yet highly customizable logger with support for multiple streams, a set of utility decorators, like `@cache` and `@rate_limiter`, and a handful of tools to create a command-line interface with interactive prompts and argument handling.
 
 - [Zenif](#zenif)
   - [Installation](#installation)
@@ -13,7 +13,7 @@ Zenif is a powerful, highly customizable, and versatile Python module designed t
 
 ## Installation
 
-Zenif requires Python 3.12 or higher. To install the latest version, use pip:
+Zenif requires Python 3.12 or higher. To install the latest version, install with `pip` or your favorite PyPi package manager.
 
 ```sh
 pip install zenif

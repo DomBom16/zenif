@@ -1,7 +1,7 @@
 from typing import Callable
 
 
-def argument(*args, **kwargs):
+def arg(*args, **kwargs):
     """Decorator to add an argument to a CLI command."""
 
     def decorator(func: Callable) -> Callable:
@@ -13,7 +13,7 @@ def argument(*args, **kwargs):
     return decorator
 
 
-def option(*args, **kwargs):
+def kwarg(*args, **kwargs):
     """Decorator to add an option to a CLI command."""
     kwargs["is_option"] = True
-    return argument(*args, **kwargs)
+    return arg(*args, **kwargs)

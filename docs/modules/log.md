@@ -204,6 +204,8 @@ For quick setup, you can use one of the premade formats by setting the Log Line 
 - `"default"`: A balanced format suitable for most projects.
 - `"filled"`: A variant with reversed background and foreground colors, creating a box-like view for increased legibility.
 - `"noalign"`: Similar to the default view but without alignment parameters, useful for saving space.
+- `"simple"`: Shows only the timestamp and the level.
+- `"short"`: Shows only the timestamps and 3-letter level abbreviations.
 
 An example where the sys.stdout stream's Log Line > Format is changed to `"filled"`:
 

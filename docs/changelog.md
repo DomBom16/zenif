@@ -1,75 +1,109 @@
 # Changelog
 
+## 0.2.0 (2024-08-DD)
+
+*Zenif takes a quantum leap forward with a suite of enhancements designed to supercharge your development experience. This update introduces smart memory management, more informative deprecation warnings, streamlined CLI interactions, and – drum roll, please – a powerful new Schema module for bulletproof data validation. While we've made some breaking changes to keep Zenif sleek and intuitive, the payoff in improved functionality and clarity is well worth it.*
+
+### 🔍 Introducing Schema Module: Data Validation, Zenif Style
+
+Introducing our brand new Schema module, your new best friend for data integrity:
+
+- Define data structures with a declarative, Pythonic syntax that's a joy to write and read.
+- Validate input with pinpoint precision using a rich set of built-in validators.
+- Seamlessly integrate with the CLI module for robust, schema-driven command-line interfaces.
+- Create custom validators to fit your unique data validation needs.
+- Nested schemas? List validation? We've got you covered, because real-world data is complex.
+
+Dive deeper into the world of schemas with our [shiny new documentation](/docs/modules/schema.md). It's a page-turner, we promise!
+
+### 🎀 Decorators Module: Smarter and More Informative
+
+- `@cache` now features a `max_size` argument, allowing you to cap the cache size and keep memory usage in check.
+- `@deprecated` gets an upgrade with the new `expected_removal` argument, providing clearer timelines for deprecation.
+- We've bid farewell to `@retry_exponential_backoff` in favor of the more concise `@retry_expo`.
+- Under the hood, `@deprecated` now leverages Zenif's own logger for deprecation messages.
+- Our test suite has been expanded to cover these new features comprehensively.
+
+### 💻 CLI Module: Cleaner, More Powerful, and Schema-Aware
+
+- We've renamed `@argument` to `@arg` and `@option` to `@kwarg` for more intuitive use.
+- Introducing the `install_setup_command()` method: now you can easily generate a shell script to install your CLI app as a Zsh command alias.
+- We've squashed a pesky type hint error in `NumberPrompt`.
+- All prompt types now support schema validation and have been refactored to open the doors for so many new types, bringing robust data integrity to your interactive CLIs.
+- `ChoicePrompt` now includes type checking to ensure it's only used with String schema fields.
+- `CheckboxPrompt` now shows an underline underneath the `X` if the current position overlaps with a selected item.
+- `TextPrompt` and `PasswordPrompt` will now ignore arrow key presses.
+
+### 📝 Log Module: More Flexibility, Less Clutter
+
+- For those who prefer simplicity, we've added new `"simple"` and `"short"` premade formats.
+- We've removed the warning log on `Logger` initialization when Stacking > Enabled is set to True, reducing unnecessary output.
+
+### ✨ Polishing Touches
+
+- Our GitHub project link now sports the more fitting label "GitHub" instead of "Homepage".
+- The `README` now includes a pronunciation guide for "Zenif" (it's "Zenith", by the way).
+- We've given this very changelog a makeover, infusing it with personality and clearer explanations to better showcase Zenif's evolution.
+- New documentation for the Schema module has been added, complete with examples and integration guides.
+
+*While these changes bring exciting new capabilities, please note that some are breaking changes. Be sure to review your use of exponential retry decorators and CLI argument decorators when upgrading to this version. The new Schema module integration with CLI prompts may also require updates to your existing code.*
+
 ## 0.1.0 (2024-08-07)
 
-### 🎉 Initial Release of Zenif
+*Behold, the dawn of Zenif! This initial release is not just a toolkit; it's a Swiss Army knife for Python developers. Zenif bursts onto the scene with a triad of powerful modules, each designed to elevate your coding experience to new heights. Whether you're wrestling with logs, yearning for smarter functions, or crafting command-line interfaces, Zenif has got your back.*
 
-Zenif emerges as a powerful toolkit for Python developers, combining advanced logging capabilities, a rich set of decorators for enhanced function behaviors, and tools for building intuitive command-line interfaces. This initial release lays a strong foundation for future enhancements and additions to the Zenif ecosystem.
+### 📝 Log Module: Your Logs, Your Way
 
-#### 📝 Log Module
+Imagine a logging system that bends to your will:
 
-- Powerful and flexible logging system with customizable formatting
-- Support for multiple output streams (console and file)
-- Advanced log line customization with templating engine
-- Stream and file handling with grouping capabilities
-- Rule-based configuration for fine-grained control over logging behavior
-- ANSI color support and rich formatting options
-- `TestLogger` class for simplified testing scenarios
+- Flex your creativity with a customizable formatting system that makes your logs a joy to read.
+- Juggle multiple output streams like a pro, be it console or file.
+- Dive deep into log customization with our advanced templating engine.
+- Group your streams for efficient management.
+- Take control with rule-based configuration for pinpoint precision in log behavior.
+- Add a splash of color with ANSI support and rich formatting options.
+- Simplify your testing workflow with the `TestLogger` class.
 
-#### 🎀 Decorators Module
+### 🎀 Decorators Module: Superpowers for Your Functions
 
-A suite of powerful decorators to enhance function behavior:
+Unleash a legion of decorators to transform your functions:
 
-- `@retry`: Resilient function execution with customizable retry attempts and delay
-- `@retry_expo`: Smart retries with exponential backoff
-- `@retry_on_exception`: Targeted exception handling with flexible retry options
-- `@singleton`: Ensures class instantiation uniqueness
-- `@enforce_types`: Strict type hint enforcement for robust code
-- `@background_task`: Non-blocking execution in separate threads
-- `@profile`: In-depth performance profiling with recursive call support
-- `@timeout`: Set maximum execution time limits
-- `@rate_limiter`: Control function call frequency
-- `@trace`: Comprehensive function call logging
-- `@suppress_exceptions`: Graceful exception handling
-- `@deprecated`: Clear marking of deprecated functions
-- `@type_check`: Runtime type verification
-- `@log_execution_time`: Performance timing made easy
-- `@cache`: Efficient return value caching
-- `@requires_permission`: User permission management
+- `@retry`, `@retry_expo`, `@retry_on_exception`: Make your functions resilient in the face of failures.
+- `@singleton`: Ensure your class stays unique, just like you.
+- `@enforce_types`: Keep your types in check, because discipline is freedom.
+- `@background_task`: Let your functions run free in their own threads.
+- `@profile`: Gain x-ray vision into your function's performance.
+- `@timeout`, `@rate_limiter`: Set boundaries, because even functions need limits.
+- `@trace`: Follow your function's journey, breadcrumb by breadcrumb.
+- `@suppress_exceptions`, `@deprecated`, `@type_check`: Handle the unexpected with grace.
+- `@log_execution_time`, `@cache`: Optimize like a boss.
 
-#### 💻 CLI Module
+### 💻 CLI Module: Command Line Interfaces, Reimagined
 
-Tools for creating intuitive command-line interfaces:
+Craft CLIs that users will actually enjoy using:
 
-- `CLI` class: Core CLI builder
-- `@command` decorator: Intuitive command definition
-- `@argument` decorator: Required positional argument handling
-- `@option` decorator: Flexible optional argument support
-- `Prompt` class: Rich interactive prompts
-  - Text input
-  - Secure password entry
-  - Yes/no confirmations
-  - Single and multi-select options
-  - Numeric input with optional constraints
+- `CLI` class: The foundation of your command-line dreams.
+- `@command` decorator: Define commands so intuitively, it feels like cheating.
+- `@argument` and `@option` decorators: Handle args and options with finesse.
+- `Prompt` class: Interaction is an art, and you're about to become a master.
+  - From simple text inputs to multi-select options, create CLIs that talk back.
 
-### 📚 Documentation
+### 📚 Documentation: Because Great Tools Deserve Great Guides
 
-- Comprehensive README with usage examples and best practices
-- Detailed module documentation in `docs/modules/`:
-  - `cli.md`: CLI module documentation
-  - `log.md`: Log module documentation
-  - `decorators.md`: Decorators module documentation
-- Changelog (`docs/changelog.md`)
+- Dive into our comprehensive README, complete with examples to get you started.
+- Explore detailed documentation for each module in `docs/modules/`.
+- Keep track of our journey with this very changelog.
 
-### 🧪 Tests
+### 🧪 Tests: Because We Believe in Trust, but Verify
 
-- Extensive test suite covering all modules
-- Specific tests for `TestLogger` functionality
-- Unit tests for all decorators
-- CLI module test suite
+- Every module, every feature, rigorously tested.
+- Special attention to `TestLogger` and all our beloved decorators.
+- CLI module put through its paces with a dedicated test suite.
 
-### 🔧 Other
+### 🔧 The Zenif Promise
 
-- Modular architecture for easy expansion and maintenance
-- Consistent coding style across all modules
-- Performance optimizations for core functionalities
+- Modular architecture: Expand and adapt with ease.
+- Consistent coding style: A feast for the eyes of code reviewers.
+- Performance optimizations: Because every millisecond counts.
+
+*With Zenif 0.1.0, we're not just releasing a library; we're igniting a revolution in Python development. Welcome to the future of effortless, powerful, and joyful coding!*

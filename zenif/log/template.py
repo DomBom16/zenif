@@ -386,6 +386,67 @@ def shorthand(shorthand: str) -> str:
             },
             {"type": "static", "value": " "},
         ],
+        "simple": [
+            {
+                "type": "template",
+                "value": "timestamp",
+                "parameters": [{"color": {"foreground": "default"}}],
+            },
+            {"type": "static", "value": " "},
+            {
+                "type": "template",
+                "value": "level",
+                "parameters": [
+                    {"color": {"foreground": "default"}},
+                    {"case": "upper"},
+                    {"align": {"alignment": "left", "width": 7}},
+                ],
+            },
+            {"type": "static", "value": " "},
+        ],
+        "short": [
+            {
+                "type": "template",
+                "value": "timestamp",
+                "parameters": [{"color": {"foreground": "default"}}],
+            },
+            {"type": "static", "value": " "},
+            {
+                "type": "template",
+                "value": "level",
+                "parameters": [
+                    {"color": {"foreground": "default"}},
+                    {"case": "upper"},
+                    {"align": {"alignment": "left", "width": 7}},
+                    {"truncate": {"width": 3, "marker": ""}},
+                    {
+                        "if": {
+                            "condition": {"type": "matches", "value": "WAR"},
+                            "action": {"type": "set", "value": "WRN"},
+                        }
+                    },
+                    {
+                        "if": {
+                            "condition": {"type": "matches", "value": "DEB"},
+                            "action": {"type": "set", "value": "DBG"},
+                        }
+                    },
+                    {
+                        "if": {
+                            "condition": {"type": "matches", "value": "SUC"},
+                            "action": {"type": "set", "value": "SCS"},
+                        }
+                    },
+                    {
+                        "if": {
+                            "condition": {"type": "matches", "value": "CRI"},
+                            "action": {"type": "set", "value": "CRT"},
+                        }
+                    },
+                ],
+            },
+            {"type": "static", "value": " "},
+        ],
     }
     return shorthands.get(shorthand, "")
 

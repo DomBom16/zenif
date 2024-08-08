@@ -23,4 +23,4 @@ dependencies = [
 requires-python = ">=3.12"
 
 [project.urls]
-Homepage = "https://github.com/DomBom16/zenif"
+GitHub = "https://github.com/DomBom16/zenif"

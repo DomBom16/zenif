@@ -1,11 +1,10 @@
 import unittest
 import time
 from unittest.mock import patch
-import warnings
 
 from zenif.decorators import (
     retry,
-    retry_exponential_backoff,
+    retry_expo,
     timeout,
     rate_limiter,
     trace,
@@ -52,7 +51,7 @@ class TestDecorators(unittest.TestCase):
     def test_retry_exponential_backoff(self):
         attempts = 0
 
-        @retry_exponential_backoff(max_retries=4, initial_delay=0.1)
+        @retry_expo(max_retries=4, initial_delay=0.1)
         def flaky_function() -> str:
             nonlocal attempts
             attempts += 1
@@ -124,17 +123,29 @@ class TestDecorators(unittest.TestCase):
             )
 
     def test_deprecated(self):
+        # Test basic usage
         @deprecated
-        def old_function() -> str:
-            return "I'm old"
+        def old_function():
+            return "I'm old!"
 
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            result = old_function()
-            self.assertEqual(result, "I'm old")
-            self.assertEqual(len(w), 1)
-            self.assertTrue(issubclass(w[-1].category, DeprecationWarning))
-            self.assertIn("old_function is deprecated", str(w[-1].message))
+        result = old_function()
+        assert result == "I'm old!"
+
+        # Test with expected_removal argument
+        @deprecated(expected_removal="v2.0.0")
+        def another_old_function():
+            return "I'm also old!"
+
+        result = another_old_function()
+        assert result == "I'm also old!"
+
+        # Test with arguments and keyword arguments
+        @deprecated
+        def old_function_with_args(x, y, z=3):
+            return x + y + z
+
+        result = old_function_with_args(1, 2, z=4)
+        assert result == 7
 
     def test_type_check(self):
         @type_check(arg_types=(int, str), return_type=str)
@@ -169,18 +180,90 @@ class TestDecorators(unittest.TestCase):
         call_count = 0
 
         @cache
-        def expensive_function(x: int, y: int) -> int:
+        def expensive_function(x, y):
             nonlocal call_count
             call_count += 1
             return x + y
 
-        self.assertEqual(expensive_function(2, 3), 5)
+        # First call
+        result = expensive_function(2, 3)
+        self.assertEqual(result, 5)
         self.assertEqual(call_count, 1)
-        self.assertEqual(expensive_function(2, 3), 5)
-        self.assertEqual(
-            call_count, 1
-        )  # Should not increase since value already cached
-        self.assertEqual(expensive_function(3, 4), 7)
+
+        # Second call with same arguments (should use cached result)
+        result = expensive_function(2, 3)
+        self.assertEqual(result, 5)
+        self.assertEqual(call_count, 1)  # Call count should not increase
+
+        # Call with different arguments
+        result = expensive_function(3, 4)
+        self.assertEqual(result, 7)
+        self.assertEqual(call_count, 2)
+
+    def test_cache_with_max_size(self):
+        call_count = 0
+
+        @cache(max_size=3)
+        def expensive_function(x):
+            nonlocal call_count
+            call_count += 1
+            return x * 2
+
+        # First call
+        result = expensive_function(1)
+        self.assertEqual(result, 2)
+        self.assertEqual(call_count, 1)
+
+        # Second call
+        result = expensive_function(2)
+        self.assertEqual(result, 4)
+        self.assertEqual(call_count, 2)
+
+        # Third call (should not evict anything yet)
+        result = expensive_function(3)
+        self.assertEqual(result, 6)
+        self.assertEqual(call_count, 3)
+
+        # Fourth call (should evict the oldest entry)
+        result = expensive_function(4)
+        self.assertEqual(result, 8)
+        self.assertEqual(call_count, 4)
+
+        # Call with evicted argument (should recalculate)
+        result = expensive_function(1)
+        self.assertEqual(result, 2)
+        self.assertEqual(call_count, 5)
+
+        # Call with cached argument
+        result = expensive_function(3)
+        self.assertEqual(result, 6)
+        self.assertEqual(call_count, 5)  # Call count should not increase
+
+    def test_cache_clear(self):
+        call_count = 0
+
+        @cache
+        def expensive_function(x):
+            nonlocal call_count
+            call_count += 1
+            return x * 2
+
+        # First call
+        result = expensive_function(1)
+        self.assertEqual(result, 2)
+        self.assertEqual(call_count, 1)
+
+        # Second call (should use cached result)
+        result = expensive_function(1)
+        self.assertEqual(result, 2)
+        self.assertEqual(call_count, 1)
+
+        # Clear the cache
+        expensive_function.clear_cache()
+
+        # Call again (should recalculate)
+        result = expensive_function(1)
+        self.assertEqual(result, 2)
         self.assertEqual(call_count, 2)
 
     def test_singleton(self):

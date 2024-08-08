@@ -1,20 +1,20 @@
 # CLI Module
 
-Zenif includes a CLI (Command Line Interface) module that allows you to easily create interactive command-line applications. This module provides tools for building CLIs with argument parsing and command management.
+Zenif includes a CLI (Command Line Interface) module that allows you to easily create interactive command-line applications. This module provides tools for building CLIs with argument parsing, command management, and now includes schema integration for robust input validation.
 
 ## Basic Usage
 
-Here's a comprehensive example of how to create a CLI application using Zenif, demonstrating the use of both `@argument` and `@option`:
+Here's a comprehensive example of how to create a CLI application using Zenif, demonstrating the use of both `@arg` and `@kwarg`:
 
 ```python
-from zenif.cli import CLI, argument, option
+from zenif.cli import CLI, arg, kwarg
 
-cli = CLI()  # Create a CLI instance
+cli = CLI(name="demo")  # Create a CLI instance, optionally with a name
 
 @cli.command
-@argument("name", help="Name to greet")  # Required positional argument
-@option("--greeting", default="Hello", help="Greeting to use")  # Optional option with default
-@option("--shout", is_flag=True, help="Print in uppercase")  # Optional flag
+@arg("name", help="Name to greet")  # Required positional argument
+@kwarg("--greeting", default="Hello", help="Greeting to use")  # Optional option with default
+@kwarg("--shout", is_flag=True, help="Print in uppercase")  # Optional flag
 def greet(name: str, greeting: str, shout: bool = False):
     """Greet a person."""
     message = f"{greeting}, {name}!"
@@ -26,85 +26,64 @@ if __name__ == '__main__':
     cli.run()
 ```
 
-### How It Works
+## Interactive Prompts with Schema Validation
 
-In this example:
-
-- We create a `CLI` instance.
-- We define a `greet` command using the `@cli.command` decorator.
-- We add a required `name` argument using the `@argument` decorator. This is a positional argument.
-- We add an optional `--greeting` option using the `@option` decorator. This option has a default value of "Hello".
-- We add an optional `--shout` flag using the `@option` decorator. This is a boolean flag.
-- The `greet` function contains the logic for the command.
-- We call `cli.run()` to start the CLI application. You can run the application multiple times if you wish to.
-
-### Running Your Application
-
-You can run your application however you've defined your commands, arguments, and options. In this example, some possible combinations include the following:
-
-```zsh
-python your_script.py greet Alice
-# -> "Hello, Alice!"
-python your_script.py greet "Bob Jr." --greeting Hi
-# -> "Hi, Bob. Jr!"
-python your_script.py greet John --shout
-# -> "HELLO, JOHN!"
-python your_script.py greet Baby --greeting "Hasta la vista" --shout
-# -> "HASTA LA VISTA, BABY!"
-```
-
-### Key Points
-
-1. `@argument` is used for required positional arguments. In this case, `name` must always be provided.
-2. `@option` is used to define command-line options. These are typically optional and are prefixed with `--` (or `-` for short versions).
-   - The `--greeting` option is optional and has a default value.
-   - The `--shout` option is a flag (boolean) that doesn't require a value.
-3. Options defined with `@option` can be required or optional, depending on how you configure them. In this example, both are optional.
-
-This structure allows for flexible and intuitive command-line interfaces, where users can provide required arguments and optionally customize behavior with additional options.
-
-## Interactive Prompts
-
-The CLI module also includes an API for creating interactive prompts:
+The CLI module is now able to be integrated with the Schema module to validate your inputs in real-time:
 
 ```python
 from zenif.cli import CLI, Prompt
+from zenif.schema import Schema, String, Integer, List, MinLength, MaxLength, MinValue, MaxValue
 
 cli = CLI()
 
+user_schema = Schema({
+    'enter_your_name': String(validators=[MinLength(3), MaxLength(50)]),
+    'enter_your_age': Integer(validators=[MinValue(18), MaxValue(120)]),
+    'select_your_interests': List(String(), validators=[MinLength(1), MaxLength(5)])
+})
+
 @cli.command
 def setup():
-    """Interactive setup command"""
-    name = Prompt.text("What's your name?").ask()
-    age = Prompt.number("How old are you?").min(0).max(120).ask()
-    likes_pizza = Prompt.confirm("Do you like pizza?").ask()
-    favorite_color = Prompt.choice("What's your favorite color?", choices=['Red', 'Green', 'Blue']).ask()
-    hobbies = Prompt.checkbox("Select your hobbies:", choices=['Reading', 'Gaming', 'Sports', 'Cooking']).ask()
+    """Interactive setup command with schema validation"""
+    name = Prompt.text("Enter your name", schema=user_schema).ask()
+    age = Prompt.number("Enter your age", schema=user_schema).ask()
+    interests = Prompt.checkbox("Select your interests", 
+                                choices=["Reading", "Gaming", "Sports", "Cooking", "Travel"], 
+                                schema=user_schema).ask()
 
     print(f"Name: {name}")
     print(f"Age: {age}")
-    print(f"Likes pizza: {likes_pizza}")
-    print(f"Favorite color: {favorite_color}")
-    print(f"Hobbies: {', '.join(hobbies)}")
+    print(f"Interests: {', '.join(interests)}")
 
 if __name__ == '__main__':
     cli.run()
 ```
 
-This setup command will interactively prompt the user for various pieces of information.
+When using schemas with the CLI module, make sure that your keys are kebab_cased versions of your prompts (e.g., `"Enter your name"` -> `"enter_your_name"`).
 
 ## Available Prompt Types
 
-- `Prompt.text()`: For text input
-  - Includes default method
-- `Prompt.password()`: For hidden password input
-- `Prompt.confirm()`: For yes/no questions
-  - Includes default method
-- `Prompt.choice()`: For selecting one item from a list
-- `Prompt.checkbox()`: For selecting multiple items from a list
-- `Prompt.number()`: For numeric input
-  - Includes default method, as well as min and max methods
+- `Prompt.text()`: For text input (works with String schema fields)
+- `Prompt.password()`: For hidden password input (works with String schema fields)
+- `Prompt.confirm()`: For yes/no questions (works with Boolean schema fields)
+- `Prompt.choice()`: For selecting one item from a list (works only with String schema fields)
+- `Prompt.checkbox()`: For selecting multiple items from a list (works with List schema fields)
+- `Prompt.number()`: For numeric input (works with Integer or Float schema fields)
 
-Each prompt type has an `ask()` method that displays the prompt and returns the user's input.
+Each prompt type now supports schema validation when a schema is provided.
 
-By using these features of the Zenif CLI module, you can create command-line applications with intuitive argument parsing and interactive prompts. This allows for more user-friendly and flexible command-line interfaces in your Python projects.
+## Type Checking for ChoicePrompt
+
+The `ChoicePrompt` (used by `Prompt.choice()`) now includes type checking to ensure it's only used with String schema fields. If a non-String field is provided, a TypeError will be raised with a clear error message.
+
+## Schema Integration
+
+When using prompts with schemas:
+
+- The schema validates the input in real-time, providing immediate feedback to the user.
+- Users cannot proceed until they provide valid input according to the schema.
+- Error messages from the schema validation are displayed inline to the right of the users cursor.
+
+For more detailed information on creating and using schemas, please refer to the `schema.md` documentation.
+
+By using these features of the Zenif CLI module, you can create command-line applications with intuitive argument parsing, interactive prompts, and robust input validation. This allows for more user-friendly, flexible, and reliable command-line interfaces in your Python projects.

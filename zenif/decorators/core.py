@@ -5,6 +5,7 @@ from collections import deque
 from typing import Callable, TypeVar, Union
 from inspect import signature
 from threading import Thread
+from collections import OrderedDict
 import time
 import functools
 import cProfile
@@ -12,7 +13,9 @@ import pstats
 import io
 import tracemalloc
 from .exceptions import TimeoutError, RateLimitError
-from .core import deprecated
+from ..log import Logger
+
+logger = Logger(ruleset={"timestamps": {"always_show": True}})
 
 T = TypeVar("T")
 
@@ -38,28 +41,6 @@ def retry(
 
     return decorator_retry
 
-@deprecated
-def retry_exponential_backoff(
-    max_retries: int = 3, initial_delay: float = 1.0
-) -> Callable[[Callable[..., T]], Callable[..., T]]:
-    def decorator_retry_exponential_backoff(func: Callable[..., T]) -> Callable[..., T]:
-        @wraps(func)
-        def wrapper_retry_exponential_backoff(*args: any, **kwargs: any) -> T:
-            attempts = 0
-            while attempts < max_retries:
-                try:
-                    return func(*args, **kwargs)
-                except Exception as e:
-                    attempts += 1
-                    if attempts >= max_retries:
-                        raise
-                    delay = initial_delay * (2 ** (attempts - 1))
-                    time.sleep(max(0, delay))  # Ensure non-negative delay
-            raise RuntimeError("Exceeded maximum retries")
-
-        return wrapper_retry_exponential_backoff
-
-    return decorator_retry_exponential_backoff
 
 def retry_expo(
     max_retries: int = 3, initial_delay: float = 1.0
@@ -173,20 +154,26 @@ def suppress_exceptions(func: Callable[..., T | None]) -> Callable[..., T | None
     return wrapper_suppress_exceptions
 
 
-import warnings
+def deprecated(
+    func: Callable[..., T] | None = None, *, expected_removal: str | None = None
+) -> Callable[..., T]:
+    def decorator(f: Callable[..., T]) -> Callable[..., T]:
+        @wraps(f)
+        def wrapper_deprecated(*args: any, **kwargs: any) -> T:
+            warning_message = (
+                f"{f.__name__} is deprecated and will be removed in a future version"
+            )
+            if expected_removal:
+                warning_message += f" (expected removal: {expected_removal})"
+            logger.warning(warning_message)
+            return f(*args, **kwargs)
 
+        return wrapper_deprecated
 
-def deprecated(func: Callable[..., T]) -> Callable[..., T]:
-    @wraps(func)
-    def wrapper_deprecated(*args: any, **kwargs: any) -> T:
-        warnings.warn(
-            f"{func.__name__} is deprecated and will be removed in a future version",
-            category=DeprecationWarning,
-            stacklevel=2,
-        )
-        return func(*args, **kwargs)
-
-    return wrapper_deprecated
+    if func is None:
+        return decorator
+    else:
+        return decorator(func)
 
 
 def type_check(
@@ -227,17 +214,31 @@ def log_execution_time(func: Callable[..., T]) -> Callable[..., T]:
     return wrapper_log_execution_time
 
 
-def cache(func: Callable[..., T]) -> Callable[..., T]:
-    cache_dict: dict[tuple[any, ...], any] = {}
+def cache(
+    func: Callable[..., T] | None = None, *, max_size: int | None = None
+) -> Callable[..., T]:
+    def decorator(f: Callable[..., T]) -> Callable[..., T]:
+        cache_dict: OrderedDict = OrderedDict()
 
-    @wraps(func)
-    def wrapper_cache(*args: any, **kwargs: any) -> T:
-        key = (*args, *sorted(kwargs.items()))
-        if key not in cache_dict:
-            cache_dict[key] = func(*args, **kwargs)
-        return cache_dict[key]
+        @wraps(f)
+        def wrapper_cache(*args: any, **kwargs: any) -> T:
+            key = (*args, *sorted(kwargs.items()))
+            if key not in cache_dict:
+                result = f(*args, **kwargs)
+                cache_dict[key] = result
+                if max_size is not None and len(cache_dict) > max_size:
+                    cache_dict.popitem(last=False)  # Remove the oldest item
+            return cache_dict[key]
 
-    return wrapper_cache
+        # Add a method to clear the cache
+        wrapper_cache.clear_cache = cache_dict.clear
+
+        return wrapper_cache
+
+    if func is None:
+        return decorator
+    else:
+        return decorator(func)
 
 
 def singleton(cls):

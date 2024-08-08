@@ -1,21 +1,129 @@
 import sys
 from colorama import init, Fore, Style
-import getpass
+import signal
+from zenif.schema import Schema, Field, String, Integer, Float, Boolean, List
 
 init(autoreset=True)
 
 
-class BasePrompt:
-    def __init__(self, message: str):
-        self.message = message
+def clear_line():
+    print("\033[2K")
 
-    def ask(self) -> any:
-        raise NotImplementedError
+
+class BasePrompt:
+    def __init__(
+        self, message: str, schema: Schema | None = None, field: Field | None = None
+    ):
+        self.message = message
+        self.schema = schema
+        self.field = field
+        if schema and not field:
+            self.field_name = message.lower().replace(" ", "_")
+            self.field = schema.fields.get(self.field_name)
+        else:
+            self.field_name = message.lower().replace(" ", "_")
+        if not self.field:
+            self.field = field or String()
+
+    def validate(self, value):
+        try:
+            if self.schema:
+                result = self.schema.validate({self.field_name: value})
+                if not result.is_valid:
+                    return result.errors.get(self.field_name)
+            else:
+                self.field.validate(value)
+            return None
+        except ValueError as e:
+            return str(e)
+
+    @staticmethod
+    def _get_key():
+        def handle_interrupt(signum, frame):
+            raise KeyboardInterrupt()
+
+        if sys.platform.startswith("win"):
+            import msvcrt
+
+            # Set up the interrupt handler
+            signal.signal(signal.SIGINT, handle_interrupt)
+
+            try:
+                while True:
+                    if msvcrt.kbhit():
+                        char = msvcrt.getch().decode("utf-8")
+                        if char == "\x03":  # Ctrl+C
+                            raise KeyboardInterrupt()
+                        return char
+            finally:
+                # Reset the interrupt handler
+                signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+        else:
+            import termios
+            import tty
+
+            fd = sys.stdin.fileno()
+            old_settings = termios.tcgetattr(fd)
+            try:
+                tty.setraw(fd)
+                # Set up the interrupt handler
+                signal.signal(signal.SIGINT, handle_interrupt)
+
+                while True:
+                    char = sys.stdin.read(1)
+                    if char == "\x03":  # Ctrl+C
+                        raise KeyboardInterrupt()
+                    if char == "\x1b":
+                        # Handle escape sequences (e.g., arrow keys)
+                        next_char = sys.stdin.read(1)
+                        if next_char == "[":
+                            last_char = sys.stdin.read(1)
+                            return f"\x1b[{last_char}"
+                    return char
+            finally:
+                # Reset terminal settings and interrupt handler
+                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+                signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+    @staticmethod
+    def _print_prompt(
+        prompt: str = "",
+        value: str = "",
+        default: any = None,
+        options: list[str] | None = None,
+        default_option: str | None = None,
+        error: str | None = None,
+    ):
+        sys.stdout.write(f"\033[2K\r{Fore.GREEN}? {Fore.CYAN}{prompt}{Fore.RESET}")
+        if default and not options:
+            sys.stdout.write(f" {Fore.CYAN}{Style.DIM}({default}){Style.RESET_ALL}")
+        if options:
+            if default_option:
+                options[
+                    [option.lower() for option in options].index(default_option.lower())
+                ] = options[
+                    [option.lower() for option in options].index(default_option.lower())
+                ].upper()
+            if len(options) == 2:
+                sys.stdout.write(
+                    f" {Fore.CYAN}{Style.DIM}[{options[0]}/{options[1]}]{Style.RESET_ALL}"
+                )
+            else:
+                sys.stdout.write(
+                    f" {Fore.CYAN}{Style.DIM}[{"".join(options)}]{Style.RESET_ALL}"
+                )
+        sys.stdout.write(f"{Fore.CYAN}: {Fore.YELLOW}{value}")
+        if error:
+            sys.stdout.write(f"  {Fore.RED}{error}\033[{2 + len(error)}D")
+        sys.stdout.flush()
 
 
 class TextPrompt(BasePrompt):
-    def __init__(self, message: str):
-        super().__init__(message)
+    def __init__(
+        self, message: str, schema: Schema | None = None, field: Field | None = None
+    ):
+        super().__init__(message, schema, field)
         self._default: str | None = None
 
     def default(self, value: str) -> "TextPrompt":
@@ -23,41 +131,46 @@ class TextPrompt(BasePrompt):
         return self
 
     def ask(self) -> str:
-        default_text = (
-            f" {Style.DIM}({self._default}){Style.NORMAL}" if self._default else ""
-        )
+        value = ""
         while True:
-            user_input = input(
-                f"{Fore.GREEN}? {Fore.CYAN}{self.message}{default_text}{Fore.CYAN}: {Fore.YELLOW}"
-            )
-            user_input = user_input or self._default
-            if not user_input:
-                user_input = ""
-            print(
-                f"\033[1A\033[2K{Fore.GREEN}? {Fore.CYAN}{self.message}: {Fore.YELLOW}{user_input}{Fore.RESET}"
-            )
-            if user_input:
-                return user_input
-            print(f"\033[2A")
+            error = self.validate(value or self._default or "")
+            self._print_prompt(self.message, value, self._default, error=error)
+            char = self._get_key()
+            if char == "\r":  # Enter key
+                if not error and (value or self._default):
+                    self._print_prompt(
+                        self.message, value or self._default, self._default
+                    )
+                    print()
+                    return value or self._default
+            elif char == "\x7f":  # Backspace
+                value = value[:-1]
+            elif char not in ("\x1b[A", "\x1b[B", "\x1b[C", "\x1b[D"):
+                value += char
 
 
 class PasswordPrompt(BasePrompt):
     def ask(self) -> str:
+        value = ""
         while True:
-            password = getpass.getpass(
-                f"{Fore.GREEN}? {Fore.CYAN}{self.message}: {Fore.YELLOW}"
-            )
-            print(
-                f"\033[1A\033[2K{Fore.GREEN}? {Fore.CYAN}{self.message}: {Fore.YELLOW}{'*' * len(password)}{Fore.RESET}"
-            )
-            if password:
-                return password
-            print(f"\033[2A")
+            error = self.validate(value or "")
+            self._print_prompt(self.message, "*" * len(value), error=error)
+            char = self._get_key()
+            if char == "\r":  # Enter key
+                if not error and value:
+                    print()  # Move to next line after input
+                    return value
+            elif char == "\x7f":  # Backspace
+                value = value[:-1]
+            elif char not in ("\x1b[A", "\x1b[B", "\x1b[C", "\x1b[D"):
+                value += char
 
 
 class ConfirmPrompt(BasePrompt):
-    def __init__(self, message: str):
-        super().__init__(message)
+    def __init__(
+        self, message: str, schema: Schema | None = None, field: Field | None = None
+    ):
+        super().__init__(message, schema, field)
         self._default: bool | None = None
 
     def default(self, value: bool) -> "ConfirmPrompt":
@@ -65,265 +178,251 @@ class ConfirmPrompt(BasePrompt):
         return self
 
     def ask(self) -> bool:
-        default_text = (
-            " (y/N)"
+        options = (
+            ["y", "N"]
             if self._default is False
-            else " (Y/n)" if self._default is True else " (y/n)"
-        )
-        print(
-            f"{Fore.GREEN}? {Fore.CYAN}{self.message}{Style.DIM}{default_text}{Style.NORMAL}: ",
-            end="",
-            flush=True,
+            else ["Y", "n"] if self._default is True else ["y", "n"]
         )
         while True:
+            self._print_prompt(
+                self.message,
+                options=options,
+                default_option=(
+                    "Y"
+                    if self._default is True
+                    else "N" if self._default is False else None
+                ),
+            )
             key = self._get_key().lower()
-
-            if key in ("y", "n"):
-                print(
-                    f"\r\033[2K{Fore.GREEN}? {Fore.CYAN}{self.message}: {Fore.YELLOW}{"Yes" if key == "y" else "No"}{Fore.RESET}"
+            result = (
+                key == "y"
+                if key in ("y", "n")
+                else (
+                    self._default if key == "\r" and self._default is not None else None
                 )
-                return key == "y"
-            elif key == "\r" and self._default:
-                print(
-                    f"\r\033[2K{Fore.GREEN}? {Fore.CYAN}{self.message}: {Fore.YELLOW}{"Yes" if self._default else "No"}{Fore.RESET}"
-                )
-                return self._default
-
-    @staticmethod
-    def _get_key():
-        if sys.platform.startswith("win"):
-            import msvcrt
-
-            return msvcrt.getch().decode("utf-8")
-        else:
-            import termios, tty
-
-            fd = sys.stdin.fileno()
-            old_settings = termios.tcgetattr(fd)
-            try:
-                tty.setraw(sys.stdin.fileno())
-                ch = sys.stdin.read(1)
-            finally:
-                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-            return ch
+            )
+            if result is not None:
+                error = self.validate(result or "")
+                if not error:
+                    self._print_prompt(
+                        self.message,
+                        value="Yes" if result else "No",
+                        options=options,
+                        default_option=(
+                            "Y"
+                            if self._default is True
+                            else "N" if self._default is False else None
+                        ),
+                    )
+                    print()
+                    return result
+                else:
+                    self._print_prompt(self.message, error=error)
 
 
 class ChoicePrompt(BasePrompt):
-    def __init__(self, message: str, choices: list[str]):
-        super().__init__(message)
+    def __init__(
+        self,
+        message: str,
+        choices: list[str],
+        schema: Schema | None = None,
+        field: Field | None = None,
+    ):
+        super().__init__(message, schema, field)
         self.choices = choices
 
+        # Check if the field is a String
+        if not isinstance(self.field, String):
+            field_type = type(self.field).__name__
+            error_message = (
+                f"ChoicePrompt requires a String field, but got {field_type}"
+            )
+            raise TypeError(error_message)
+
     def ask(self) -> str:
+        current = 0
         print(
             f"{Fore.GREEN}? {Fore.CYAN}{self.message}:{Fore.RESET}\n{Style.DIM}  Use Up/Down to navigate and Enter to select"
         )
-        current = 0
-
-        def print_choices():
+        while True:
             for i, choice in enumerate(self.choices):
                 if i == current:
                     print(f"{Fore.YELLOW}{Style.NORMAL}> {choice}{Fore.RESET}")
                 else:
-                    print(f"{Fore.YELLOW}{Style.DIM}  {choice}")
+                    print(f"{Fore.YELLOW}{Style.DIM}  {choice}{Fore.RESET}")
 
-        print_choices()
-        while True:
             key = self._get_key()
             if key == "\r":  # Enter key
-                for _ in range(len(self.choices) + 2):
-                    print(f"\033[1A\033[2K", end="")
-                print(
-                    f"{Fore.GREEN}? {Fore.CYAN}{self.message}: {Fore.YELLOW}{self.choices[current]}"
-                )
-                return self.choices[current]
+                result = self.choices[current]
+                error = self.validate(result or "")
+                if not error:
+                    for _ in range(len(self.choices) + 2):
+                        print(f"\033[1A\033[2K", end="")
+                    self._print_prompt(self.message, result)
+                    print()  # Move to next line
+                    return result
+                else:
+                    for _ in range(len(self.choices) + 2):
+                        print(f"\033[1A\033[2K", end="")
+                    self._print_prompt(self.message, error=error)
+                    print()
+                    print(
+                        f"{Fore.GREEN}? {Fore.CYAN}{self.message}:{Fore.RESET}\n{Style.DIM}  Use Up/Down to navigate and Enter to select"
+                    )
             elif key == "\x1b[A" and current > 0:  # Up arrow
                 current -= 1
             elif key == "\x1b[B" and current < len(self.choices) - 1:  # Down arrow
                 current += 1
-            else:
-                continue
 
-            # Clear the output and reprint choices
-            print(f"\033[{len(self.choices)}A\033[J", end="")
-            print_choices()
-
-    @staticmethod
-    def _get_key():
-        if sys.platform.startswith("win"):
-            import msvcrt
-
-            return msvcrt.getch().decode("utf-8")
-        else:
-            import termios, tty
-
-            fd = sys.stdin.fileno()
-            old_settings = termios.tcgetattr(fd)
-            try:
-                tty.setraw(sys.stdin.fileno())
-                ch = sys.stdin.read(1)
-                if ch == "\x1b":
-                    ch += sys.stdin.read(2)
-            finally:
-                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-            return ch
+            print(f"\033[{len(self.choices) + 1}A")  # Move cursor up to redraw choices
 
 
 class CheckboxPrompt(BasePrompt):
-    def __init__(self, message: str, choices: list[str]):
-        super().__init__(message)
+
+    # TODO: Only show output on Enter like everything else
+
+    def __init__(
+        self,
+        message: str,
+        choices: list[str],
+        schema: Schema | None = None,
+        field: Field | None = None,
+    ):
+        super().__init__(message, schema, field)
         self.choices = choices
 
     def ask(self) -> list[str]:
         selected = [False] * len(self.choices)
-        current = 0
-        first_render = True
-
-        def print_choices():
-            nonlocal first_render
-            if not first_render:
-                # Move cursor up to the start of the prompt
-                print(f"\033[{len(self.choices) + 2}A", end="")
-            else:
-                first_render = False
-
-            # Clear from cursor to end of screen
-            print("\033[J", end="")
-
-            print(
-                f"{Fore.GREEN}? {Fore.CYAN}{self.message}:{Fore.RESET}\n  {Style.DIM}Use Up/Down to navigate, Space to select, and Enter to confirm"
-            )
+        current = 1
+        print(
+            f"{Fore.GREEN}? {Fore.CYAN}{self.message}:{Fore.RESET}\n{Style.DIM}  Use Up/Down to navigate, Space to select, and Enter to confirm"
+        )
+        i = True
+        while True:
             for i, (choice, is_selected) in enumerate(zip(self.choices, selected)):
                 if i == current:
                     print(f"{Fore.YELLOW}{Style.DIM}X{Style.NORMAL}", end="")
                 else:
                     print(f"{Fore.YELLOW} ", end="")
                 print(
-                    f"\r{f"{Fore.YELLOW}X" if is_selected else '\033[1C'} {Fore.YELLOW}{Style.DIM}{choice}{Fore.RESET}"
+                    f"\r{f"{Fore.YELLOW}{"\033[4m" if i == current else ""}X\033[0m" if is_selected else '\033[1C'} {Fore.YELLOW}{Style.DIM}{choice}{Fore.RESET}"
                 )
 
-        print_choices()
-        while True:
-            key = self._get_key()
-            if key == " ":
-                selected[current] = not selected[current]
-                print_choices()
-            elif key == "\r":
-                for _ in range(len(self.choices) + 2):
-                    print(f"\033[1A\033[2K", end="")
-                selected_choices = [
+            if i:
+                i = False
+                result = [
                     choice
                     for choice, is_selected in zip(self.choices, selected)
                     if is_selected
                 ]
+                error = self.validate(result)
+
+                print(f"\033[{len(self.choices) + 2}A", end="")
+                self._print_prompt(self.message, error=f"{error if error else ""}\n")
                 print(
-                    f"{Fore.GREEN}? {Fore.CYAN}{self.message}: {Fore.YELLOW}{", ".join(selected_choices)}"
+                    f"\r{Fore.RESET}{Style.DIM}  Use Up/Down to navigate, Space to select, and Enter to confirm\033[{len(self.choices)}B"
                 )
-                return selected_choices
-            elif key == "\x1b[A" and current > 0:
+
+            key = self._get_key()
+            if key == " ":  # Space
+                selected[current] = not selected[current]
+
+            result = [
+                choice
+                for choice, is_selected in zip(self.choices, selected)
+                if is_selected
+            ]
+            error = self.validate(result)
+
+            print(f"\033[{len(self.choices) + 2}A", end="")
+            self._print_prompt(self.message, error=f"{error if error else ""}\n")
+            print(
+                f"\r{Fore.RESET}{Style.DIM}  Use Up/Down to navigate, Space to select, and Enter to confirm\033[{len(self.choices)}B"
+            )
+
+            if key == "\r" and not error:
+                return result
+            elif key == "\x1b[A" and current > 0:  # Up arrow
                 current -= 1
-                print_choices()
-            elif key == "\x1b[B" and current < len(self.choices) - 1:
+            elif key == "\x1b[B" and current < len(self.choices) - 1:  # Down arrow
                 current += 1
-                print_choices()
 
-    @staticmethod
-    def _get_key():
-        if sys.platform.startswith("win"):
-            import msvcrt
-
-            return msvcrt.getch().decode("utf-8")
-        else:
-            import termios, tty
-
-            fd = sys.stdin.fileno()
-            old_settings = termios.tcgetattr(fd)
-            try:
-                tty.setraw(sys.stdin.fileno())
-                ch = sys.stdin.read(1)
-                if ch == "\x1b":
-                    ch += sys.stdin.read(2)
-            finally:
-                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-            return ch
+            print(f"\033[{len(self.choices) + 1}A")  # Move cursor up to redraw choices
 
 
 class NumberPrompt(BasePrompt):
-    def __init__(self, message: str):
-        super().__init__(message)
-        self._min: float | None = None
-        self._max: float | None = None
-        self._default: float | None = None
+    def __init__(
+        self, message: str, schema: Schema | None = None, field: Field | None = None
+    ):
+        super().__init__(message, schema, field)
+        self._default: int | None = None
 
-    def default(self, value: float) -> "ConfirmPrompt":
+    def default(self, value: int) -> "NumberPrompt":
         self._default = value
         return self
 
-    def min(self, value: float) -> "NumberPrompt":
-        self._min = value
-        return self
-
-    def max(self, value: float) -> "NumberPrompt":
-        self._max = value
-        return self
-
-    def ask(self) -> float:
+    def ask(self) -> int:
+        value = ""
         while True:
             try:
-                default_text = (
-                    f" {Style.DIM}({self._default}){Style.NORMAL}"
-                    if self._default
-                    else ""
+                int_value = (
+                    int(value) if value else self._default if self._default else 0
                 )
-                user_input = input(
-                    f"{Fore.GREEN}? {Fore.CYAN}{self.message}{default_text}: {Fore.YELLOW}"
-                ) or (self._default if self._default else "")
-                value = float(user_input)
-                if (self._min is not None and value < self._min) or (
-                    self._max is not None and value > self._max
-                ):
-                    raise ValueError
-                print(
-                    f"\033[1A\033[2K{Fore.GREEN}? {Fore.CYAN}{self.message}: {Fore.YELLOW}{user_input}"
-                )
-                return value
+                error = self.validate(int_value)
             except ValueError:
-                if self._min is not None and self._max is not None:
-                    print(
-                        f"{Fore.RED}Please enter a number between {self._min} and {self._max}.{Fore.RESET}"
-                    )
-                elif self._min is not None:
-                    print(
-                        f"{Fore.RED}Please enter a number greater than or equal to {self._min}.{Fore.RESET}"
-                    )
-                elif self._max is not None:
-                    print(
-                        f"{Fore.RED}Please enter a number less than or equal to {self._max}.{Fore.RESET}"
-                    )
-                else:
-                    print(f"{Fore.RED}Please enter a valid number.{Fore.RESET}")
+                error = "Please enter a valid number."
+
+            self._print_prompt(self.message, value, self._default, error=error)
+            char = self._get_key()
+            if char == "\r":  # Enter key
+                if not error and (value or self._default is not None):
+                    print()  # Move to next line after input
+                    return float(value) if value else self._default
+            elif char == "\x7f":  # Backspace
+                value = value[:-1]
+            elif char.isdigit() or char in (".", "-") and len(value) < 22:
+                value += char
 
 
 class Prompt:
     @staticmethod
-    def text(message: str) -> TextPrompt:
-        return TextPrompt(message)
+    def text(
+        message: str, schema: Schema | None = None, field: Field | None = None
+    ) -> TextPrompt:
+        return TextPrompt(message, schema, field)
 
     @staticmethod
-    def password(message: str) -> PasswordPrompt:
-        return PasswordPrompt(message)
+    def password(
+        message: str, schema: Schema | None = None, field: Field | None = None
+    ) -> PasswordPrompt:
+        return PasswordPrompt(message, schema, field)
 
     @staticmethod
-    def confirm(message: str) -> ConfirmPrompt:
-        return ConfirmPrompt(message)
+    def confirm(
+        message: str, schema: Schema | None = None, field: Field | None = None
+    ) -> ConfirmPrompt:
+        return ConfirmPrompt(message, schema, field)
 
     @staticmethod
-    def choice(message: str, choices: list[str]) -> ChoicePrompt:
-        return ChoicePrompt(message, choices)
+    def choice(
+        message: str,
+        choices: list[str],
+        schema: Schema | None = None,
+        field: Field | None = None,
+    ) -> ChoicePrompt:
+        return ChoicePrompt(message, choices, schema, field)
 
     @staticmethod
-    def checkbox(message: str, choices: list[str]) -> CheckboxPrompt:
-        return CheckboxPrompt(message, choices)
+    def checkbox(
+        message: str,
+        choices: list[str],
+        schema: Schema | None = None,
+        field: Field | None = None,
+    ) -> CheckboxPrompt:
+        return CheckboxPrompt(message, choices, schema, field)
 
     @staticmethod
-    def number(message: str) -> NumberPrompt:
-        return NumberPrompt(message)
+    def number(
+        message: str, schema: Schema | None = None, field: Field | None = None
+    ) -> NumberPrompt:
+        return NumberPrompt(message, schema, field)
