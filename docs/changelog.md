@@ -8,11 +8,36 @@
 
 Introducing our brand new Schema module, your new best friend for data integrity:
 
-- Define data structures with a declarative, Pythonic syntax that's a joy to write and read.
+- Define data structures with a fluent, method-chaining approach that prioritizes readability and expressiveness .
 - Validate input with pinpoint precision using a rich set of built-in validators.
 - Seamlessly integrate with the CLI module for robust, schema-driven command-line interfaces.
 - Create custom validators to fit your unique data validation needs.
 - Nested schemas? List validation? We've got you covered, because real-world data is complex.
+
+```python
+Schema(
+    username=StringF()
+        .name("username")
+        .has(Length(min=3, max=50))
+        .has(Regex(r"^[a-zA-Z0-9_]+$")),
+    age=IntegerF()
+        .name("age")
+        .has(Value(min=18, max=120))
+        .optional(),
+    email=StringF()
+        .name("email")
+        .has(EmailValidator()),
+    interests=ListF()
+        .name("interests")
+        .item_type(StringF())
+        .has(Length(min=3)),
+    profile=DictF()
+        .name("profile")
+        .key_type(StringF())
+        .value_type(StringF())
+        .optional(),
+)
+```
 
 Dive deeper into the world of schemas with our [shiny new documentation](/docs/modules/schema.md). It's a page-turner, we promise!
 
@@ -29,10 +54,11 @@ Dive deeper into the world of schemas with our [shiny new documentation](/docs/m
 - We've renamed `@argument` to `@arg` and `@option` to `@kwarg` for more intuitive use.
 - Introducing the `install_setup_command()` method: now you can easily generate a shell script to install your CLI app as a Zsh command alias.
 - We've squashed a pesky type hint error in `NumberPrompt`.
-- All prompt types now support schema validation and have been refactored to open the doors for so many new types, bringing robust data integrity to your interactive CLIs.
-- `ChoicePrompt` now includes type checking to ensure it's only used with String schema fields.
-- `CheckboxPrompt` now shows an underline underneath the `X` if the current position overlaps with a selected item.
-- `TextPrompt` and `PasswordPrompt` will now ignore arrow key presses.
+- All prompt types now support schema validation, opening the floodgates for a whole new world of prompt types! Bring robust data integrity to your interactive CLIs with ease. And pro-tip by the way, to define a schema, give your prompts IDs that you can use in your your schema. It's like a spell that turns your prompts into schema-ready powerhouses!
+- `ChoicePrompt` now comes with built-in type checking, ensuring it plays nice with String schema fields only.
+- `CheckboxPrompt` gets a visual upgrade: it now sports a snazzy underline beneath the 'X' if the current position overlaps with a selected item.
+- `TextPrompt` and `PasswordPrompt` have learned to ignore arrow keys, because sometimes less is more.
+- `TextPrompt`, `NumberPrompt`, and `PasswordPrompt` now come with a magical screen-overflow handling: they'll gracefully truncate the start of long responses, ensuring your CLI stays sleek without losing a single character of input.
 
 ### 📝 Log Module: More Flexibility, Less Clutter
 
@@ -46,7 +72,7 @@ Dive deeper into the world of schemas with our [shiny new documentation](/docs/m
 - We've given this very changelog a makeover, infusing it with personality and clearer explanations to better showcase Zenif's evolution.
 - New documentation for the Schema module has been added, complete with examples and integration guides.
 
-*While these changes bring exciting new capabilities, please note that some are breaking changes. Be sure to review your use of exponential retry decorators and CLI argument decorators when upgrading to this version. The new Schema module integration with CLI prompts may also require updates to your existing code.*
+*While these changes bring exciting new capabilities, please note that some are breaking changes. Be sure to review your use of exponential retry decorators and CLI argument decorators when upgrading to this version.*
 
 ## 0.1.0 (2024-08-07)
 

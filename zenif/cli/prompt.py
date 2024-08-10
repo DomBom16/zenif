@@ -1,7 +1,8 @@
 import sys
 from colorama import init, Fore, Style
 import signal
-from zenif.schema import Schema, Field, String, Integer, Float, Boolean, List
+from zenif.schema import Schema, StringF
+import shutil
 
 init(autoreset=True)
 
@@ -12,26 +13,30 @@ def clear_line():
 
 class BasePrompt:
     def __init__(
-        self, message: str, schema: Schema | None = None, field: Field | None = None
+        self,
+        message: str,
+        schema: Schema | None = None,
+        id: str | None = None,
     ):
         self.message = message
         self.schema = schema
-        self.field = field
-        if schema and not field:
-            self.field_name = message.lower().replace(" ", "_")
-            self.field = schema.fields.get(self.field_name)
+        self.id = id
+        if schema and not id:
+            raise ValueError("You must have an ID in order to use a schema.")
+        if schema and id:
+            self.field = schema.fields.get(id)
+            if not self.field:
+                raise ValueError(f"Field '{id}' not found in the schema.")
         else:
-            self.field_name = message.lower().replace(" ", "_")
-        if not self.field:
-            self.field = field or String()
+            self.field = None
 
     def validate(self, value):
         try:
-            if self.schema:
-                result = self.schema.validate({self.field_name: value})
-                if not result.is_valid:
-                    return result.errors.get(self.field_name)
-            else:
+            if self.schema and self.id:
+                is_valid, errors, _ = self.schema.validate({self.id: value})
+                if not is_valid:
+                    return errors.get(self.id, ["Invalid input"])[0].rstrip(".")
+            elif self.field:
                 self.field.validate(value)
             return None
         except ValueError as e:
@@ -121,9 +126,12 @@ class BasePrompt:
 
 class TextPrompt(BasePrompt):
     def __init__(
-        self, message: str, schema: Schema | None = None, field: Field | None = None
+        self,
+        message: str,
+        schema: Schema | None = None,
+        id: str | None = None,
     ):
-        super().__init__(message, schema, field)
+        super().__init__(message, schema, id)
         self._default: str | None = None
 
     def default(self, value: str) -> "TextPrompt":
@@ -134,7 +142,24 @@ class TextPrompt(BasePrompt):
         value = ""
         while True:
             error = self.validate(value or self._default or "")
-            self._print_prompt(self.message, value, self._default, error=error)
+            marker = "..."
+            width = (
+                shutil.get_terminal_size().columns
+                - len(self.message)
+                - len(error or "")
+                - len(self._default or "")
+                - (6 if self._default else 4)
+                - (2 if error else 0)
+            )
+            truncated_value = (
+                marker + value[-(width - len(marker)) :]
+                if len(value) > width
+                else value
+            )
+
+            self._print_prompt(
+                self.message, truncated_value, self._default, error=error
+            )
             char = self._get_key()
             if char == "\r":  # Enter key
                 if not error and (value or self._default):
@@ -150,11 +175,34 @@ class TextPrompt(BasePrompt):
 
 
 class PasswordPrompt(BasePrompt):
+    def __init__(
+        self,
+        message: str,
+        schema: Schema | None = None,
+        id: str | None = None,
+    ):
+        super().__init__(message, schema, id)
+
     def ask(self) -> str:
         value = ""
         while True:
             error = self.validate(value or "")
-            self._print_prompt(self.message, "*" * len(value), error=error)
+            masked_value = "*" * len(value)
+            marker = "..."
+            width = (
+                shutil.get_terminal_size().columns
+                - len(self.message)
+                - len(error or "")
+                - 2
+                if error
+                else 0 - 4
+            )
+            truncated_value = (
+                marker + masked_value[-(width - len(marker)) :]
+                if len(masked_value) > width
+                else masked_value
+            )
+            self._print_prompt(self.message, truncated_value, error=error)
             char = self._get_key()
             if char == "\r":  # Enter key
                 if not error and value:
@@ -168,9 +216,12 @@ class PasswordPrompt(BasePrompt):
 
 class ConfirmPrompt(BasePrompt):
     def __init__(
-        self, message: str, schema: Schema | None = None, field: Field | None = None
+        self,
+        message: str,
+        schema: Schema | None = None,
+        id: str | None = None,
     ):
-        super().__init__(message, schema, field)
+        super().__init__(message, schema, id)
         self._default: bool | None = None
 
     def default(self, value: bool) -> "ConfirmPrompt":
@@ -226,16 +277,16 @@ class ChoicePrompt(BasePrompt):
         message: str,
         choices: list[str],
         schema: Schema | None = None,
-        field: Field | None = None,
+        id: str | None = None,
     ):
-        super().__init__(message, schema, field)
+        super().__init__(message, schema, id)
         self.choices = choices
 
-        # Check if the field is a String
-        if not isinstance(self.field, String):
+        # Check if the field is a StringF
+        if not isinstance(self.field, StringF):
             field_type = type(self.field).__name__
             error_message = (
-                f"ChoicePrompt requires a String field, but got {field_type}"
+                f"ChoicePrompt requires a StringF field, but got {field_type}"
             )
             raise TypeError(error_message)
 
@@ -286,14 +337,14 @@ class CheckboxPrompt(BasePrompt):
         message: str,
         choices: list[str],
         schema: Schema | None = None,
-        field: Field | None = None,
+        id: str | None = None,
     ):
-        super().__init__(message, schema, field)
+        super().__init__(message, schema, id)
         self.choices = choices
 
     def ask(self) -> list[str]:
         selected = [False] * len(self.choices)
-        current = 1
+        current = 0
         print(
             f"{Fore.GREEN}? {Fore.CYAN}{self.message}:{Fore.RESET}\n{Style.DIM}  Use Up/Down to navigate, Space to select, and Enter to confirm"
         )
@@ -352,13 +403,21 @@ class CheckboxPrompt(BasePrompt):
 
 class NumberPrompt(BasePrompt):
     def __init__(
-        self, message: str, schema: Schema | None = None, field: Field | None = None
+        self,
+        message: str,
+        schema: Schema | None = None,
+        id: str | None = None,
     ):
-        super().__init__(message, schema, field)
+        super().__init__(message, schema, id)
         self._default: int | None = None
+        self._commas: bool = False
 
     def default(self, value: int) -> "NumberPrompt":
         self._default = value
+        return self
+
+    def commas(self) -> "NumberPrompt":
+        self._commas = True
         return self
 
     def ask(self) -> int:
@@ -372,7 +431,25 @@ class NumberPrompt(BasePrompt):
             except ValueError:
                 error = "Please enter a valid number."
 
-            self._print_prompt(self.message, value, self._default, error=error)
+            marker = "..."
+            width = (
+                shutil.get_terminal_size().columns
+                - len(self.message)
+                - len(error or "")
+                - len(str(self._default or ""))
+                - (7 if self._default else 5)
+                - (2 if error else 0)
+            )
+            formatted_value = f"{int_value:,}" if self._commas else str(value)
+            truncated_value = (
+                marker + formatted_value[-(width - len(marker)) :]
+                if len(formatted_value) > width
+                else formatted_value
+            )
+
+            self._print_prompt(
+                self.message, truncated_value, self._default, error=error
+            )
             char = self._get_key()
             if char == "\r":  # Enter key
                 if not error and (value or self._default is not None):
@@ -380,49 +457,57 @@ class NumberPrompt(BasePrompt):
                     return float(value) if value else self._default
             elif char == "\x7f":  # Backspace
                 value = value[:-1]
-            elif char.isdigit() or char in (".", "-") and len(value) < 22:
+            elif char.isdigit() or char in ("-"):
                 value += char
 
 
 class Prompt:
     @staticmethod
     def text(
-        message: str, schema: Schema | None = None, field: Field | None = None
+        message: str,
+        schema: Schema | None = None,
+        id: str | None = None,
     ) -> TextPrompt:
-        return TextPrompt(message, schema, field)
+        return TextPrompt(message, schema, id)
 
     @staticmethod
     def password(
-        message: str, schema: Schema | None = None, field: Field | None = None
+        message: str,
+        schema: Schema | None = None,
+        id: str | None = None,
     ) -> PasswordPrompt:
-        return PasswordPrompt(message, schema, field)
+        return PasswordPrompt(message, schema, id)
 
     @staticmethod
     def confirm(
-        message: str, schema: Schema | None = None, field: Field | None = None
+        message: str,
+        schema: Schema | None = None,
+        id: str | None = None,
     ) -> ConfirmPrompt:
-        return ConfirmPrompt(message, schema, field)
+        return ConfirmPrompt(message, schema, id)
 
     @staticmethod
     def choice(
         message: str,
         choices: list[str],
         schema: Schema | None = None,
-        field: Field | None = None,
+        id: str | None = None,
     ) -> ChoicePrompt:
-        return ChoicePrompt(message, choices, schema, field)
+        return ChoicePrompt(message, choices, schema, id)
 
     @staticmethod
     def checkbox(
         message: str,
         choices: list[str],
         schema: Schema | None = None,
-        field: Field | None = None,
+        id: str | None = None,
     ) -> CheckboxPrompt:
-        return CheckboxPrompt(message, choices, schema, field)
+        return CheckboxPrompt(message, choices, schema, id)
 
     @staticmethod
     def number(
-        message: str, schema: Schema | None = None, field: Field | None = None
+        message: str,
+        schema: Schema | None = None,
+        id: str | None = None,
     ) -> NumberPrompt:
-        return NumberPrompt(message, schema, field)
+        return NumberPrompt(message, schema, id)

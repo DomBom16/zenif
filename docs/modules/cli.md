@@ -31,28 +31,34 @@ if __name__ == '__main__':
 The CLI module is now able to be integrated with the Schema module to validate your inputs in real-time:
 
 ```python
-from zenif.cli import CLI, Prompt
+from zenif.cli import CLI, Prompt, schemafy
 from zenif.schema import Schema, String, Integer, List, MinLength, MaxLength, MinValue, MaxValue
 
 cli = CLI()
 
 user_schema = Schema({
-    'enter_your_name': String(validators=[MinLength(3), MaxLength(50)]),
-    'enter_your_age': Integer(validators=[MinValue(18), MaxValue(120)]),
-    'select_your_interests': List(String(), validators=[MinLength(1), MaxLength(5)])
+    "name": String(validators=[MinLength(3), MaxLength(50)]),
+    "age": Integer(validators=[MinValue(18), MaxValue(120)]),
+    "salary": Integer(validators=[MinValue(18), MaxValue(120)]),
+    "interests": List(String(), validators=[MinLength(1), MaxLength(5)])
 })
 
 @cli.command
 def setup():
     """Interactive setup command with schema validation"""
-    name = Prompt.text("Enter your name", schema=user_schema).ask()
-    age = Prompt.number("Enter your age", schema=user_schema).ask()
+    name = Prompt.text("Enter your name", schema=user_schema, id="name").ask()
+    age = Prompt.number("Enter your age", schema=user_schema, id="age").ask()
+    # By defining .commas() the input will visually show commas,
+    # but the returned value will not include commas
+    salary = Prompt.number("What's your salary?", schema=user_schema, id="salary").commas().ask()
     interests = Prompt.checkbox("Select your interests", 
                                 choices=["Reading", "Gaming", "Sports", "Cooking", "Travel"], 
-                                schema=user_schema).ask()
+                                schema=user_schema,
+                                id="interests").ask()
 
     print(f"Name: {name}")
     print(f"Age: {age}")
+    print(f"Salary: {salary}")
     print(f"Interests: {', '.join(interests)}")
 
 if __name__ == '__main__':

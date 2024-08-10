@@ -14,6 +14,6 @@ def arg(*args, **kwargs):
 
 
 def kwarg(*args, **kwargs):
-    """Decorator to add an option to a CLI command."""
+    """Decorator to add a keyword argument to a CLI command."""
     kwargs["is_option"] = True
     return arg(*args, **kwargs)
