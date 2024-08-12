@@ -7,10 +7,6 @@ import shutil
 init(autoreset=True)
 
 
-def clear_line():
-    print("\033[2K")
-
-
 class BasePrompt:
     def __init__(
         self,
@@ -440,7 +436,7 @@ class NumberPrompt(BasePrompt):
                 - (7 if self._default else 5)
                 - (2 if error else 0)
             )
-            formatted_value = f"{int_value:,}" if self._commas else str(value)
+            formatted_value = f"{int_value:,}" if self._commas and value else str(value)
             truncated_value = (
                 marker + formatted_value[-(width - len(marker)) :]
                 if len(formatted_value) > width

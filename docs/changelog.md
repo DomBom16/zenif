@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 (2024-08-DD)
+## 0.2.0 (2024-08-11)
 
 *Zenif takes a quantum leap forward with a suite of enhancements designed to supercharge your development experience. This update introduces smart memory management, more informative deprecation warnings, streamlined CLI interactions, and – drum roll, please – a powerful new Schema module for bulletproof data validation. While we've made some breaking changes to keep Zenif sleek and intuitive, the payoff in improved functionality and clarity is well worth it.*
 
@@ -8,29 +8,37 @@
 
 Introducing our brand new Schema module, your new best friend for data integrity:
 
-- Define data structures with a fluent, method-chaining approach that prioritizes readability and expressiveness .
+- Define data structures with a fluent, method-chaining approach that prioritizes readability and expressiveness.
 - Validate input with pinpoint precision using a rich set of built-in validators.
 - Seamlessly integrate with the CLI module for robust, schema-driven command-line interfaces.
 - Create custom validators to fit your unique data validation needs.
-- Nested schemas? List validation? We've got you covered, because real-world data is complex.
+- Complex form flows? Use conditionals and transform functions to handle your user's data.
 
 ```python
+def to_lowercase(s: str) -> str:
+    return s.lower()
+
+def remove_whitespace(s: str) -> str:
+    return ''.join(s.split())
+
 Schema(
     username=StringF()
         .name("username")
-        .has(Length(min=3, max=50))
+        .has(Length(min=3, max=50, err="Your username must be between 3 and 50 characters."))
         .has(Regex(r"^[a-zA-Z0-9_]+$")),
     age=IntegerF()
         .name("age")
-        .has(Value(min=18, max=120))
+        .has(Value(max=120))
         .optional(),
+    driver_license=StringF().name("driver_license").when(
+        lambda data: data.get('age', 0) >= 16,
+        "Driver's license is required for ages 16 and above"
+    ),
     email=StringF()
         .name("email")
+        .pre(to_lowercase)
+        .post(remove_whitespace)
         .has(EmailValidator()),
-    interests=ListF()
-        .name("interests")
-        .item_type(StringF())
-        .has(Length(min=3)),
     profile=DictF()
         .name("profile")
         .key_type(StringF())
@@ -64,6 +72,7 @@ Dive deeper into the world of schemas with our [shiny new documentation](/docs/m
 
 - For those who prefer simplicity, we've added new `"simple"` and `"short"` premade formats.
 - We've removed the warning log on `Logger` initialization when Stacking > Enabled is set to True, reducing unnecessary output.
+- We've added a `StructuredLogger` class that takes in the same arguments as `Logger`, but also includes "kwargs" in a dictionary. We plan to add JSON mode for file streams.
 
 ### ✨ Polishing Touches
 

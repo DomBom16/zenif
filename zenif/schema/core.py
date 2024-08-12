@@ -1,23 +1,50 @@
 from __future__ import annotations
-from typing import Any, Callable, Generic, TypeVar, Union
+from typing import Callable, Generic, TypeVar
 
 T = TypeVar("T")
 
 
-class Validator:
-    def __call__(self, value: Any):
-        self.validate(value)
+class Condition:
+    def __init__(self, condition: Callable[[dict], bool], error_message: str):
+        self.condition = condition
+        self.error_message = error_message
 
-    def validate(self, value: Any):
+    def check(self, data: dict) -> bool:
+        return self.condition(data)
+
+
+class Validator:
+    def __init__(self, err: str | None = None):
+        self.err = f"{err}{"" if err.endswith(".") else "."}"
+
+    def __call__(self, value: any) -> any:
+        self.validate(value=value)
+
+    def validate(self, value: any):
+        try:
+            self._validate(value)
+        except ValueError as e:
+            if self.err:
+                raise ValueError(self.err)
+            else:
+                raise e
+
+    def _validate(self, value: any):
         raise NotImplementedError()
 
 
 class SchemaField(Generic[T]):
     def __init__(self):
         self._name: str | None = None
+        self._default: any | None = None
+
         self.validators: list[Validator] = []
-        self._default: Any | None = None
+
         self.is_required: bool = True
+
+        self.condition: Condition | None = None
+        self.pre_transform: Callable[[any], any] | None = None
+        self.post_transform: Callable[[T], any] | None = None
 
     def name(self, name: str) -> SchemaField[T]:
         self._name = name
@@ -27,7 +54,13 @@ class SchemaField(Generic[T]):
         self.validators.append(validator)
         return self
 
-    def default(self, value: Union[T, Callable[[], T]]) -> SchemaField[T]:
+    def when(
+        self, condition: Callable[[dict], bool], error_message: str
+    ) -> "SchemaField[T]":
+        self.condition = Condition(condition, error_message)
+        return self
+
+    def default(self, value: T | Callable[[], T]) -> SchemaField[T]:
         self._default = value
         self.is_required = False
         return self
@@ -36,7 +69,15 @@ class SchemaField(Generic[T]):
         self.is_required = False
         return self
 
-    def coerce(self, value: Any) -> T:
+    def pre(self, func: Callable[[any], any]) -> "SchemaField[T]":
+        self.pre_transform = func
+        return self
+
+    def post(self, func: Callable[[T], any]) -> "SchemaField[T]":
+        self.post_transform = func
+        return self
+
+    def coerce(self, value: any) -> T:
         return value  # Default implementation, subclasses should override if needed
 
 
@@ -60,6 +101,13 @@ class Schema:
         coerced_data = {}
 
         for field_name, field in self.fields.items():
+            if not field.__class__.__name__.endswith("F"):
+                raise SyntaxError(
+                    f'Field {field.__class__.__name__} name must end with "F".'
+                )
+            if field.condition:
+                if not field.condition.check(data):
+                    continue  # Skip this field if the condition is not met
             if field_name not in data:
                 if field.is_required and not self._all_optional:
                     is_valid = False
@@ -71,8 +119,12 @@ class Schema:
             else:
                 try:
                     value = data[field_name]
+
                     if not self._strict:
                         value = field.coerce(value)
+
+                    if field.pre_transform:
+                        value = field.pre_transform(value)
 
                     field_errors = []
                     for validator in field.validators:
@@ -81,6 +133,9 @@ class Schema:
                         except ValueError as e:
                             is_valid = False
                             field_errors.append(str(e))
+
+                    if field.post_transform:
+                        value = field.post_transform(value)
 
                     if field_errors:
                         errors[field_name] = field_errors

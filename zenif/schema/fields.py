@@ -1,5 +1,4 @@
 from __future__ import annotations
-from typing import Any
 from enum import Enum
 from datetime import datetime
 from ast import literal_eval
@@ -7,29 +6,29 @@ from .core import SchemaField
 
 
 class StringF(SchemaField[str]):
-    def coerce(self, value: Any) -> str:
+    def coerce(self, value: any) -> str:
         return str(value)
 
 
 class IntegerF(SchemaField[int]):
-    def coerce(self, value: Any) -> int:
+    def coerce(self, value: any) -> int:
         return int(float(value))
 
 
 class FloatF(SchemaField[float]):
-    def coerce(self, value: Any) -> float:
+    def coerce(self, value: any) -> float:
         return float(value)
 
 
 class BooleanF(SchemaField[bool]):
-    def coerce(self, value: Any) -> bool:
+    def coerce(self, value: any) -> bool:
         if isinstance(value, str):
             return value.lower() in ("true", "1", "yes", "on")
         return bool(value)
 
 
 class DateF(SchemaField[datetime]):
-    def coerce(self, value: Any) -> datetime:
+    def coerce(self, value: any) -> datetime:
         if isinstance(value, str):
             return datetime.fromisoformat(value)
         return value
@@ -44,7 +43,7 @@ class EnumF(SchemaField[Enum]):
         self._enum_class = enum_class
         return self
 
-    def coerce(self, value: Any) -> Enum:
+    def coerce(self, value: any) -> Enum:
         if self._enum_class is None:
             raise ValueError("Enum class not set")
         if isinstance(value, str):
@@ -61,7 +60,7 @@ class ListF(SchemaField[list]):
         self._item_type = item_type
         return self
 
-    def coerce(self, value: Any) -> list:
+    def coerce(self, value: any) -> list:
         if isinstance(value, str):
             value = literal_eval(value)
         if not isinstance(value, list):
@@ -85,7 +84,7 @@ class DictF(SchemaField[dict]):
         self._value_type = value_type
         return self
 
-    def coerce(self, value: Any) -> dict:
+    def coerce(self, value: any) -> dict:
         if isinstance(value, str):
             value = literal_eval(value)
         if not isinstance(value, dict):

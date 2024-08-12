@@ -23,17 +23,22 @@ valid_data = {
 }
 
 is_valid, errors, coerced_data = user_schema.validate(valid_data)
-print(is_valid)  # True
+print(is_valid)
+# True
+print(errors)
+# {}
 
 invalid_data = {
     'name': 'Jo',
-    'age': 15,
+    'age': 246,
     'interests': []
 }
 
 is_valid, errors, coerced_data = user_schema.validate(invalid_data)
-print(is_valid)  # False
-print(errors)  # Dictionary of validation errors
+print(is_valid)
+# False
+print(errors)
+# {'name': ['Minimum length is 3.'], 'age': ['Maximum value is 120.'], 'interests': ['Minimum length is 1.']}
 ```
 
 ## Available Field Types
@@ -47,12 +52,26 @@ print(errors)  # Dictionary of validation errors
 - `DateF`: For date/time values
 - `EnumF`: For enumerated values
 
+Although you should avoid it, if you ever need to create a new field type, simply extend the SchemaField class:
+
+```python
+from zenif.schema import SchemaField
+
+class MyTypeF(SchemaField[MyType]):
+    ...
+
+    def coerce(self, value: any) -> MyType:
+        return ...
+```
+
+When creating a field, your class name should be in the `{type}F` format, where the type name is followed by the letter "F". It is required that class names end with "F". When extending the SchemaField class, you don't need to worry about the `default()`, `optional()`, `name()`, and `has()` methods. While the `coerce` method is optional, the default instace will simply return the value as is.
+
 ## Validators
 
 Validators are used to apply specific rules to fields. Zenif's built-in validators include:
 
-- `Length(min = -inf, max = inf)`: Ensures a minimum and maximum length for strings or lists
-- `Value(min = -inf, max = inf)`: Ensures a minimum and maximum value for numbers
+- `Length(min=None, max=None)`: Ensures a minimum and maximum length for strings or lists
+- `Value(min=None, max=None)`: Ensures a minimum and maximum value for numbers
 - `Regex(pattern)`: Validates strings against a regular expression
 - `EmailValidator()`: Validates email adresses
 
@@ -65,7 +84,7 @@ class OddOrEven(Validator):
     def __init__(self, parity: str = "even"):
         self.parity = 1 if parity.lower() == "odd" else 0
 
-    def validate(self, value):
+    def _validate(self, value):
         if value % 2 != self.parity:
             raise ValueError(f"Must be an {'even' if self.parity == 0 else 'odd'} number.")
 
@@ -100,22 +119,7 @@ In this example, the prompts will enforce the schema rules, ensuring that the na
 
 ### Nested Schemas
 
-You can create nested structures using the `DictF` field type:
-
-```python
-from zenif.schema import Schema, StringF, DictF, Regex
-
-address_schema = Schema(
-    street=StringF().name("street"),
-    city=StringF().name("city"),
-    zipcode=StringF().name("zipcode").has(Regex(r'^\d{5}$'))
-)
-
-user_schema = Schema(
-    name=StringF().name("name"),
-    address=DictF().name("address").value_type(address_schema)
-)
-```
+*Not yet available.*
 
 ### List Validation
 

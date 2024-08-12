@@ -2,11 +2,8 @@ from os import stat, chmod, path, unlink
 from stat import S_IEXEC
 from typing import Callable
 from zenif.cli import CLI, kwarg
-from zenif.log import Logger
 from subprocess import run, CalledProcessError
 from tempfile import NamedTemporaryFile
-
-logger = Logger(ruleset={"log_line": {"format": "short"}})
 
 
 def install_setup_command(cli: CLI, script_path: str) -> Callable:
@@ -55,27 +52,27 @@ rm -f "$0"
         st = stat(temp_script_path)
         chmod(temp_script_path, st.st_mode | S_IEXEC)
 
-        logger.info(f"Executing installation script for '{alias}' command...")
+        print(f"Executing installation script for '{alias}' command...")
 
         try:
             # Execute the script
             result = run(
                 ["zsh", temp_script_path], check=True, text=True, capture_output=True
             )
-            logger.success(result.stdout)
+            print(f"\n{result.stdout}")
             if result.stderr:
-                logger.warning(result.stderr)
+                print(f"\n{result.stderr}")
         except CalledProcessError as e:
-            logger.error(f"Installation failed with error: {e}")
-            logger.error(e.stderr)
+            print(f"Installation failed with error: {e}")
+            print(e.stderr)
         finally:
             try:
                 if "temp_script_path" in locals() and path.exists(temp_script_path):
                     unlink(temp_script_path)
-                    logger.info("Installation script has been cleaned up.")
+                    print("Installation script has been cleaned up.")
                 else:
-                    logger.info("No temporary script to clean up; already cleaned up.")
+                    print("No temporary script to clean up; already cleaned up.")
             except Exception as e:
-                logger.warning(f"Failed to delete temporary script: {e}")
+                print(f"Failed to delete temporary script: {e}")
 
     return setup

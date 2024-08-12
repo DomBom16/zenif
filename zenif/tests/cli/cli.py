@@ -1,7 +1,10 @@
-from zenif.cli import CLI, arg, kwarg, Prompt
+from zenif.cli import CLI, arg, kwarg, Prompt, install_setup_command
 from zenif.schema import Schema, StringF, IntegerF, ListF, Length, Value, EmailValidator
+import os
 
 cli = CLI()
+
+install_setup_command(cli, os.path.abspath(__file__))
 
 
 @cli.command
@@ -30,7 +33,7 @@ def test_prompts():
                     f"Must be an {'even' if self.parity == 0 else 'odd'} number."
                 )
 
-    user_schema = Schema(
+    schema = Schema(
         name=StringF().name("name").has(Length(min=3, max=50)),
         age=IntegerF()
         .name("age")
@@ -41,21 +44,21 @@ def test_prompts():
         email=StringF().name("email").has(EmailValidator()),
     ).all_optional()
 
-    name = Prompt.text("Enter your name", schema=user_schema, id="name").ask()
-    age = Prompt.number("Enter your age", schema=user_schema, id="age").ask()
+    name = Prompt.text("Enter your name", schema=schema, id="name").ask()
+    age = Prompt.number("Enter your age", schema=schema, id="age").ask()
     interests = Prompt.checkbox(
         "Select your interests",
         choices=["Reading", "Gaming", "Sports", "Cooking", "Travel"],
-        schema=user_schema,
+        schema=schema,
         id="interests",
     ).ask()
     fav_interest = Prompt.choice(
         "Select your favorite interest",
-        choices=["Reading", "Gaming", "Sports", "Cooking", "Travel"],
-        schema=user_schema,
+        choices=interests,
+        schema=schema,
         id="fav_interest",
     ).ask()
-    email = Prompt.text("Enter your email", schema=user_schema, id="email").ask()
+    email = Prompt.text("Enter your email", schema=schema, id="email").ask()
 
     print(f"Name: {name}")
     print(f"Age: {age}")

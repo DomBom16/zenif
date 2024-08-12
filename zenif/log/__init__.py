@@ -1,3 +1,3 @@
-from .core import Logger, TestLogger
+from .core import Logger, StructuredLogger
 
-__all__ = ["Logger"]
+__all__ = ["Logger", "StructuredLogger"]
