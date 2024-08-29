@@ -104,7 +104,7 @@ from zenif.schema import Schema, StringF, IntegerF, Length, Value
 user_schema = Schema(
     name=StringF().name("name").has(Length(min=3, max=50)),
     age=IntegerF().name("age").has(Value(min=18, max=120))
-)
+).all_optional()
 
 name = Prompt.text("Enter your name", schema=user_schema, id="name").ask()
 age = Prompt.number("Enter your age", schema=user_schema, id="age").ask()
