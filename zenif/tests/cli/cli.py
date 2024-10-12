@@ -39,26 +39,29 @@ def test_prompts():
         .name("age")
         .has(Value(min=18, max=120))
         .has(OddOrEven(parity="odd")),
-        interests=ListF().name("interests").item_type(StringF()).has(Length(min=3)),
+        interests=ListF()
+        .name("interests")
+        .item_type(StringF())
+        .has(Length(min=3, err="Select a minimum of 3 interests.")),
         fav_interest=StringF().name("fav_interest"),
         email=StringF().name("email").has(EmailValidator()),
     ).all_optional()
 
-    name = Prompt.text("Enter your name", schema=schema, id="name").ask()
-    age = Prompt.number("Enter your age", schema=schema, id="age").ask()
+    name = Prompt.text("Enter your name", schema, "name").ask()
+    age = Prompt.number("Enter your age", schema, "age").ask()
     interests = Prompt.checkbox(
         "Select your interests",
-        choices=["Reading", "Gaming", "Sports", "Cooking", "Travel"],
-        schema=schema,
-        id="interests",
+        ["Reading", "Gaming", "Sports", "Cooking", "Travel"],
+        schema,
+        "interests",
     ).ask()
     fav_interest = Prompt.choice(
         "Select your favorite interest",
-        choices=interests,
-        schema=schema,
-        id="fav_interest",
+        interests,
+        schema,
+        "fav_interest",
     ).ask()
-    email = Prompt.text("Enter your email", schema=schema, id="email").ask()
+    email = Prompt.text("Enter your email", schema, "email").ask()
 
     print(f"Name: {name}")
     print(f"Age: {age}")

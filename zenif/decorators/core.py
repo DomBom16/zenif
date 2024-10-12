@@ -164,7 +164,7 @@ def deprecated(
                 f"{f.__name__} is deprecated and will be removed in a future version"
             )
             if expected_removal:
-                warning_message += f" (expected removal: {expected_removal})"
+                warning_message += f"\n> Expected to be removed by {expected_removal}"
             logger.warning(warning_message)
             return f(*args, **kwargs)
 

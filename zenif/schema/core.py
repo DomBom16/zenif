@@ -15,7 +15,10 @@ class Condition:
 
 class Validator:
     def __init__(self, err: str | None = None):
-        self.err = f"{err}{"" if err.endswith(".") else "."}"
+        if err:
+            self.err = f"{err}{"" if err.endswith(".") else "."}"
+        else:
+            self.err = ""
 
     def __call__(self, value: any) -> any:
         self.validate(value=value)
@@ -28,6 +31,7 @@ class Validator:
                 raise ValueError(self.err)
             else:
                 raise e
+            raise e
 
     def _validate(self, value: any):
         raise NotImplementedError()

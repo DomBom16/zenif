@@ -115,7 +115,7 @@ print(f"Age: {age}")
 
 In this example, the prompts will enforce the schema rules, ensuring that the name is between 3 and 50 characters, and the age is between 18 and 120.
 
-## Advanced Usage
+## More Usage
 
 ### Nested Schemas
 
