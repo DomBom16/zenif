@@ -458,12 +458,15 @@ class NumberPrompt(BasePrompt):
 
 
 class Prompt:
+    """A factory class for creating prompts."""
+
     @staticmethod
     def text(
         message: str,
         schema: Schema | None = None,
         id: str | None = None,
     ) -> TextPrompt:
+        """Creates a text prompt where the user can input a text string."""
         return TextPrompt(message, schema, id)
 
     @staticmethod
@@ -472,6 +475,7 @@ class Prompt:
         schema: Schema | None = None,
         id: str | None = None,
     ) -> PasswordPrompt:
+        """Creates a password prompt where the user can input a text string masked with '*'."""
         return PasswordPrompt(message, schema, id)
 
     @staticmethod
@@ -480,6 +484,7 @@ class Prompt:
         schema: Schema | None = None,
         id: str | None = None,
     ) -> ConfirmPrompt:
+        """Creates a confirm prompt where the user can confirm an action, either yes or no."""
         return ConfirmPrompt(message, schema, id)
 
     @staticmethod
@@ -489,6 +494,7 @@ class Prompt:
         schema: Schema | None = None,
         id: str | None = None,
     ) -> ChoicePrompt:
+        """Creates a choice prompt where the user can select from a list of choices."""
         return ChoicePrompt(message, choices, schema, id)
 
     @staticmethod
@@ -498,6 +504,7 @@ class Prompt:
         schema: Schema | None = None,
         id: str | None = None,
     ) -> CheckboxPrompt:
+        """Creates a checkbox prompt where the user can select multiple choices from a list of choices."""
         return CheckboxPrompt(message, choices, schema, id)
 
     @staticmethod
@@ -506,4 +513,5 @@ class Prompt:
         schema: Schema | None = None,
         id: str | None = None,
     ) -> NumberPrompt:
+        """Creates a number prompt where the user can input a number."""
         return NumberPrompt(message, schema, id)
