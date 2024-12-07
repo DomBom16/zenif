@@ -193,7 +193,7 @@ class PasswordPrompt(BasePrompt):
         while True:
             error = self.validate(value or "")
             masked_value = "*" * len(value)
-            
+
             if self._peeper and last_char and last_char != " ":
                 masked_value = masked_value[:-1] + last_char
 
@@ -219,8 +219,15 @@ class PasswordPrompt(BasePrompt):
             elif char == "\x7f":  # Backspace
                 value = value[:-1]
                 last_char = ""  # Clear the last typed character on backspace
-            elif char not in ("\x1b[A", "\x1b[B", "\x1b[C", "\x1b[D"):  # Ignore arrow keys
-                last_char = char if char.strip() else ""  # Update last_char only if non-space
+            elif char not in (
+                "\x1b[A",
+                "\x1b[B",
+                "\x1b[C",
+                "\x1b[D",
+            ):  # Ignore arrow keys
+                last_char = (
+                    char if char.strip() else ""
+                )  # Update last_char only if non-space
                 value += char
 
 
@@ -429,6 +436,8 @@ class NumberPrompt(BasePrompt):
         super().__init__(message, schema, id)
         self._default: int | None = None
         self._commas: bool = False
+        self._allow_decimals: bool = False
+        self._allow_negatives: bool = False
 
     def default(self, value: int) -> "NumberPrompt":
         self._default = value
@@ -438,14 +447,34 @@ class NumberPrompt(BasePrompt):
         self._commas = True
         return self
 
+    def allow_decimals(self) -> "NumberPrompt":
+        self._allow_decimals = True
+        return self
+
+    def allow_negatives(self) -> "NumberPrompt":
+        self._allow_negatives = True
+        return self
+
     def ask(self) -> int:
         value = ""
         while True:
             try:
-                int_value = (
-                    int(value) if value else self._default if self._default else 0
+                if self._allow_decimals:
+                    # Parse as float if decimals are allowed
+                    float_value = (
+                        float(value) if value else self._default if self._default else 0
+                    )
+                    int_value = (
+                        int(float_value) if float_value.is_integer() else float_value
+                    )
+                else:
+                    # Parse as integer
+                    int_value = (
+                        int(value) if value else self._default if self._default else 0
+                    )
+                error = self.validate(
+                    float_value if self._allow_decimals else int_value
                 )
-                error = self.validate(int_value)
             except ValueError:
                 error = "Please enter a valid number."
 
@@ -458,7 +487,25 @@ class NumberPrompt(BasePrompt):
                 - (7 if self._default else 5)
                 - (2 if error else 0)
             )
-            formatted_value = f"{int_value:,}" if self._commas and value else str(value)
+
+            if value:
+                if self._allow_decimals and self._commas:
+                    raise ValueError("Cannot use both commas and decimals.")
+
+                if self._allow_decimals:
+                    # Format with at least 1 decimal place but full precision
+                    formatted_value = (
+                        f"{float_value:.0f}{Style.DIM}.{Style.NORMAL}"
+                        if "." not in value
+                        else value
+                    )
+                elif self._commas:
+                    # Format with commas if applicable
+                    formatted_value = f"{int_value:,}"
+                else:
+                    formatted_value = str(value)
+            else:
+                formatted_value = str(value)
             truncated_value = (
                 marker + formatted_value[-(width - len(marker)) :]
                 if len(formatted_value) > width
@@ -466,17 +513,32 @@ class NumberPrompt(BasePrompt):
             )
 
             self._print_prompt(
-                self.message, truncated_value, self._default, error=error
+                self.message, truncated_value, self._default, error=value
             )
             char = self._get_key()
             if char == "\r":  # Enter key
                 if not error and (value or self._default is not None):
                     print()  # Move to next line after input
-                    return float(value) if value else self._default
+                    return (
+                        float(value)
+                        if self._allow_decimals and value
+                        else (int(value) if value else self._default)
+                    )
             elif char == "\x7f":  # Backspace
                 value = value[:-1]
-            elif char.isdigit() or char in ("-"):
+            elif char.isdigit():
                 value += char
+            elif char == "." and self._allow_decimals and "." not in value:
+                value += "."
+            elif char == "-" and self._allow_negatives:
+                # toggle negative sign on/off
+                if value and value[0] == "-":
+                    value = value[1:]
+                else:
+                    value = "-" + value
+
+            if value == "-":
+                value = ""
 
 
 class Prompt:
