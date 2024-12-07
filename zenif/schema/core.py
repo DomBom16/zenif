@@ -94,14 +94,27 @@ class Schema:
         self._all_optional = False
 
     def strict(self, value: bool = True) -> Schema:
+        """Set strict mode to True or False."""
         self._strict = value
         return self
 
     def all_optional(self) -> Schema:
+        """Mark all fields as optional."""
         self._all_optional = True
         return self
 
     def validate(self, data: dict) -> tuple[bool, dict[str, list[str]], dict]:
+        """Validate data against the schema.
+
+        Args:
+            data (dict): The data to validate.
+
+        Raises:
+            SyntaxError: If a field name does not end with "F".
+
+        Returns:
+            tuple[bool, dict[str, list[str]], dict]: A tuple containing a boolean indicating whether the data is valid, a dictionary of field errors, and finally a dictionary of coerced data.
+        """
         is_valid = True
         errors: dict[str, list[str]] = {}
         coerced_data = {}

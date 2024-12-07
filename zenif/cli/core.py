@@ -60,6 +60,6 @@ class CLI:
             print(f"Unknown command: {command_name}")
 
     def echo(self, message: any) -> None:
-        """Print a formatted message to the console."""
+        """Print a formatted message to the console. Works with lists, tuples, and dictionaries. Other formats are printed as is."""
         formatted_output = OutputFormatter.format_output(message)
         print(formatted_output)
