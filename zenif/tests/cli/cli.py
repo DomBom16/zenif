@@ -1,5 +1,5 @@
 from zenif.cli import CLI, arg, kwarg, Prompt, install_setup_command
-from zenif.schema import Schema, StringF, IntegerF, ListF, Length, Value, Email, NotEmpty
+from zenif.schema import Schema, BooleanF, StringF, IntegerF, ListF, Length, Value, Email, NotEmpty
 import os
 
 cli = CLI()
@@ -38,6 +38,7 @@ def test_prompts():
     os.system("cls" if os.name == "nt" else "clear")
 
     schema = Schema(
+        are_you_sure=BooleanF().name("continue"),
         name=StringF().name("name").has(Length(min=3, max=50)),
         password=StringF().name("password").has(NotEmpty()),
         age=IntegerF()
@@ -52,6 +53,8 @@ def test_prompts():
         email=StringF().name("email").has(Email()),
     ).all_optional()
 
+    if not Prompt.confirm("Are you sure you want to continue?", schema, "are_you_sure").default(True).ask():
+        return
     name = Prompt.text("Enter your name", schema, "name").ask()
     password = Prompt.password("Enter your password", schema, "password").peeper().ask()
     age = Prompt.number("Enter your age", schema, "age").ask()
