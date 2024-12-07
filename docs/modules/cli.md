@@ -38,6 +38,37 @@ cli = CLI()
 install_setup_command(cli=cli, script_path=os.path.abspath(__file__))
 ```
 
+## Available Prompt Types
+
+- `Prompt.text()`: For text input (works with String schema fields)
+- `Prompt.password()`: For hidden password input (works with String schema fields)
+- `Prompt.confirm()`: For yes/no questions (works with Boolean schema fields)
+- `Prompt.choice()`: For selecting one item from a list (works *only* with String schema fields)
+- `Prompt.checkbox()`: For selecting multiple items from a list (works with List schema fields)
+- `Prompt.number()`: For numeric input (works with Integer or Float schema fields)
+
+## Special Prompt Methods
+
+### `default()`
+
+Available for the `text`, `confirm`, and `number` types. If a default is given, the user can submit an empty field and the default value will be used as their submission.
+
+### `peeper()`
+
+Available for the `password` type. When enabled, masked inputs will show the last character if it was just typed. If `Space` or `Backspace` are pressed, the last character of the input will not be visible. After submitting, the "peeper" character will not be visible.
+
+### `commas()`
+
+Available for the `number` type. When enabled, the input shown after the prompt will insert commas (Ex: `12345` -> `12,345`). This will not affect the number returned on submit. Cannot be enabled alongside `allow_decimals()`.
+
+### `allow_decimals()`
+
+Available for the `number` type. When enabled, decimal values are able to be inputted. Until the `.` character is typed, a dim `.` character will trail the inputted number. After a `.` character is typed, the `.` will no longer appear dim and no other `.`s can be added to the input until the existing one is removed from the input. Cannot be enabled alongside `commas()`.
+
+### `allow_negatives()`
+
+Available for the `number` type. When enabled, negative values are able to be inputted. Pressing the `-` key will have no effect until at least one digit is inputted. Upon pressed, the sign in front of the value will be toggled (an implicit positive sign is used). If all numeric digits are removed, the `-` sign will dissappear.
+
 ## Interactive Prompts with Schema Validation
 
 The CLI module is now able to be integrated with the Schema module to validate your inputs in real-time:
@@ -72,7 +103,6 @@ def setup():
     """Interactive setup command with schema validation"""
     name = Prompt.text("Enter your name", schema=user_schema, id="name").ask()
     age = Prompt.number("Enter your age", schema=user_schema, id="age").ask()
-    # When the peeper is enabled, you will be able to see the last-typed character
     password = Prompt.password("Enter your password", schema=user_schema, id="password").peeper().ask()
     # .commas() will add commas only visually (not the the returned value). Ex: 12345 -> 12,345
     salary = Prompt.number("What's your salary?", schema=user_schema, id="salary").commas().ask()
@@ -90,16 +120,7 @@ if __name__ == '__main__':
     cli.run()
 ```
 
-When using schemas with the CLI module, make sure that your `Schema` arguments are kebab_cased versions of your prompts (e.g., `"Enter your name"` -> `enter_your_name`).
-
-## Available Prompt Types
-
-- `Prompt.text()`: For text input (works with String schema fields)
-- `Prompt.password()`: For hidden password input (works with String schema fields)
-- `Prompt.confirm()`: For yes/no questions (works with Boolean schema fields)
-- `Prompt.choice()`: For selecting one item from a list (works *only* with String schema fields)
-- `Prompt.checkbox()`: For selecting multiple items from a list (works with List schema fields)
-- `Prompt.number()`: For numeric input (works with Integer or Float schema fields)
+When using schemas with the CLI module, make sure that your `Schema` arguments match the `id` argument passed into the `Prompt` method.
 
 ## Schema Integration
 
