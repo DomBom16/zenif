@@ -166,6 +166,8 @@ class TextPrompt(BasePrompt):
                     return value or self._default
             elif char == "\x7f":  # Backspace
                 value = value[:-1]
+            elif char == "\x1b":  # Escape
+                value = ""
             elif char not in ("\x1b[A", "\x1b[B", "\x1b[C", "\x1b[D"):
                 value += char
 
@@ -178,20 +180,30 @@ class PasswordPrompt(BasePrompt):
         id: str | None = None,
     ):
         super().__init__(message, schema, id)
+        self._peeper: bool = False
+
+    def peeper(self) -> "PasswordPrompt":
+        self._peeper = True
+        return self
 
     def ask(self) -> str:
         value = ""
+        last_char = ""
+
         while True:
             error = self.validate(value or "")
             masked_value = "*" * len(value)
+            
+            if self._peeper and last_char and last_char != " ":
+                masked_value = masked_value[:-1] + last_char
+
             marker = "..."
             width = (
                 shutil.get_terminal_size().columns
                 - len(self.message)
                 - len(error or "")
-                - 2
-                if error
-                else 0 - 4
+                - (2 if error else 0)
+                - 4
             )
             truncated_value = (
                 marker + masked_value[-(width - len(marker)) :]
@@ -206,7 +218,9 @@ class PasswordPrompt(BasePrompt):
                     return value
             elif char == "\x7f":  # Backspace
                 value = value[:-1]
-            elif char not in ("\x1b[A", "\x1b[B", "\x1b[C", "\x1b[D"):
+                last_char = ""  # Clear the last typed character on backspace
+            elif char not in ("\x1b[A", "\x1b[B", "\x1b[C", "\x1b[D"):  # Ignore arrow keys
+                last_char = char if char.strip() else ""  # Update last_char only if non-space
                 value += char
 
 
@@ -279,7 +293,7 @@ class ChoicePrompt(BasePrompt):
         self.choices = choices
 
         # Check if the field is a StringF
-        if not isinstance(self.field, StringF):
+        if schema and not isinstance(self.field, StringF):
             field_type = type(self.field).__name__
             error_message = (
                 f"ChoicePrompt requires a StringF field, but got {field_type}"
@@ -325,9 +339,6 @@ class ChoicePrompt(BasePrompt):
 
 
 class CheckboxPrompt(BasePrompt):
-
-    # TODO: Only show output on Enter like everything else
-
     def __init__(
         self,
         message: str,
@@ -388,6 +399,17 @@ class CheckboxPrompt(BasePrompt):
             )
 
             if key == "\r" and not error:
+                for _ in range(len(self.choices) + 2):
+                    print(f"\033[1A\033[2K", end="")
+                self._print_prompt(
+                    self.message,
+                    (
+                        ", ".join(map(str, result[:-1])) + f", and {result[-1]}"
+                        if len(result) > 1
+                        else str(result[0])
+                    ),
+                )
+                print()  # Move to next line
                 return result
             elif key == "\x1b[A" and current > 0:  # Up arrow
                 current -= 1

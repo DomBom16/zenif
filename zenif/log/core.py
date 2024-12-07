@@ -25,6 +25,12 @@ from .utils import strip_unsafe_objs, strip_repr_id
 
 class Logger:
     def __init__(self, ruleset: dict = {}):
+        """A class for logging messages. Supports multiple output streams and formatting options.
+
+        Args:
+            ruleset (dict, optional): The list of rules that will be overriden, enabling custom behavior. Defaults to {}.
+        """
+
         self.__levels = {
             "debug": {"name": "debug", "level": 1, "color": "\033[34m"},
             "info": {"name": "info", "level": 0, "color": "\033[37m"},

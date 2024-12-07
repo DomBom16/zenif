@@ -1,5 +1,5 @@
 from zenif.cli import CLI, arg, kwarg, Prompt, install_setup_command
-from zenif.schema import Schema, StringF, IntegerF, ListF, Length, Value, EmailValidator
+from zenif.schema import Schema, StringF, IntegerF, ListF, Length, Value, Email, NotEmpty
 import os
 
 cli = CLI()
@@ -30,11 +30,16 @@ def test_prompts():
         def __call__(self, value):
             if value % 2 != self.parity:
                 raise ValueError(
-                    f"Must be an {'even' if self.parity == 0 else 'odd'} number."
+                    f"Must be an {'even' if self.parity ==
+                                  0 else 'odd'} number."
                 )
+            
+    # clear the screen
+    os.system("cls" if os.name == "nt" else "clear")
 
     schema = Schema(
         name=StringF().name("name").has(Length(min=3, max=50)),
+        password=StringF().name("password").has(NotEmpty()),
         age=IntegerF()
         .name("age")
         .has(Value(min=18, max=120))
@@ -44,10 +49,11 @@ def test_prompts():
         .item_type(StringF())
         .has(Length(min=3, err="Select a minimum of 3 interests.")),
         fav_interest=StringF().name("fav_interest"),
-        email=StringF().name("email").has(EmailValidator()),
+        email=StringF().name("email").has(Email()),
     ).all_optional()
 
     name = Prompt.text("Enter your name", schema, "name").ask()
+    password = Prompt.password("Enter your password", schema, "password").peeper().ask()
     age = Prompt.number("Enter your age", schema, "age").ask()
     interests = Prompt.checkbox(
         "Select your interests",
@@ -63,11 +69,12 @@ def test_prompts():
     ).ask()
     email = Prompt.text("Enter your email", schema, "email").ask()
 
-    print(f"Name: {name}")
-    print(f"Age: {age}")
-    print(f"Interests: {', '.join(interests)}")
-    print(f"Favorite Interest: {fav_interest}")
-    print(f"Email: {email}")
+    print(f"{name=}")
+    print(f"{password=}")
+    print(f"{age=}")
+    print(f"{interests=}")
+    print(f"{fav_interest=}")
+    print(f"{email=}")
 
 
 if __name__ == "__main__":

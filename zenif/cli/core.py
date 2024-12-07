@@ -7,6 +7,11 @@ from .exceptions import CLIError
 
 class CLI:
     def __init__(self, name: str = "cli"):
+        """The CLI class for creating interactive command-line applications.
+
+        Args:
+            name (str, optional): The name of the CLI. Will show up in menus like the help menu. Defaults to "cli".
+        """
         self.name = name
         self.commands: dict[str, Callable] = {}
 

@@ -73,7 +73,11 @@ Validators are used to apply specific rules to fields. Zenif's built-in validato
 - `Length(min=None, max=None)`: Ensures a minimum and maximum length for strings or lists
 - `Value(min=None, max=None)`: Ensures a minimum and maximum value for numbers
 - `Regex(pattern)`: Validates strings against a regular expression
-- `EmailValidator()`: Validates email adresses
+- `Email()`: Validates email adresses
+- `Date()`: Ensures the field is in the format YYYY-MM-DD
+- `Alphanumeric()`: Ensures the field only contains letters and numbers
+- `URL()`: Validates URL adresses
+- `NotEmpty()`: Ensures the field is not empty
 
 You can also create custom validators by extending the `Validator` class:
 
@@ -116,10 +120,6 @@ print(f"Age: {age}")
 In this example, the prompts will enforce the schema rules, ensuring that the name is between 3 and 50 characters, and the age is between 18 and 120.
 
 ## More Usage
-
-### Nested Schemas
-
-*Not yet available.*
 
 ### List Validation
 
@@ -179,5 +179,3 @@ is_valid, errors, coerced_data = user_schema.strict().validate(data)
 ```
 
 In strict mode, type mismatches will result in validation errors instead of attempting coercion.
-
-By using the Zenif Schema module, you can ensure data integrity, provide clear feedback on invalid inputs, and create more robust applications. The integration with other Zenif modules, particularly the CLI module, allows for powerful and user-friendly command-line interfaces with built-in data validation.

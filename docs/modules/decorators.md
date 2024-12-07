@@ -276,20 +276,8 @@ def cached_fibonacci(n):
     else:
         return cached_fibonacci(n-1) + cached_fibonacci(n-2)
 
-# Output:
-# Function: fibonacci
-# Time taken:           26.1033 seconds
-# Current memory usage: 0.009442 MB
-# Peak memory usage:    0.010219 MB
-# Profile:
-#          22811546 function calls (4 primitive calls) in 26.103 seconds
-
-# Function: cached_fibonacci
-# Time taken:           0.0005 seconds
-# Current memory usage: 0.015030 MB
-# Peak memory usage:    0.015749 MB
-# Profile:
-#          294 function calls (135 primitive calls) in 0.000 seconds
+# fibonacci took          26.1033 seconds
+# cached_fibonacci took    0.0005 seconds
 ```
 
-For more detailed information on each decorator and advanced usage examples, please refer to the full documentation.
+For more detailed information on each decorator, view each decorator's docstring.

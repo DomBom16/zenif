@@ -28,16 +28,13 @@ if __name__ == '__main__':
 
 ## Setting Up ZSH Commands for Your Users
 
-The CLI module comes with a handy method that let's your users install the given file as a command. By importing and running the `install_setup_command()` method, your users can run `python yourfile.py setup --alias youralias` to simplify the command line interaction.
+The CLI module comes with a handy method that let's your users install the given file as a .zshrc function. By importing and running the `install_setup_command()` method, your users can run `python yourfile.py setup --alias youralias` to simplify the command line interaction.
 
 ```python
 from zenif.cli import CLI, install_setup_command
 import os
 
 cli = CLI()
-
-# Under the hood, the install_setup_command method creates an
-# @cli.command decorated function that runs a shell script.
 install_setup_command(cli=cli, script_path=os.path.abspath(__file__))
 ```
 
@@ -54,7 +51,10 @@ cli = CLI()
 user_schema = Schema({
     name=StringF()
          .name("name")
-         .has(Length(min=3, max=50)),
+         .has(NotEmpty()),
+    password=StringF()
+            .name("password")
+            .has(Length(min=3, max=50))
     age=IntegerF()
         .name("age")
         .has(Value(min=18, max=120)),
@@ -72,9 +72,9 @@ def setup():
     """Interactive setup command with schema validation"""
     name = Prompt.text("Enter your name", schema=user_schema, id="name").ask()
     age = Prompt.number("Enter your age", schema=user_schema, id="age").ask()
-    # By defining .commas() the input will visually show commas but the
-    # returned value will not include commas. This is useful for inputs
-    # that usually include values that are harder to read without commas.
+    # When the peeper is enabled, you will be able to see the last-typed character
+    password = Prompt.password("Enter your password", schema=user_schema, id="password").peeper().ask()
+    # .commas() will add commas only visually (not the the returned value). Ex: 12345 -> 12,345
     salary = Prompt.number("What's your salary?", schema=user_schema, id="salary").commas().ask()
     interests = Prompt.checkbox("Select your interests",
                                 choices=["Reading", "Gaming", "Sports", "Cooking", "Travel"],
@@ -90,22 +90,16 @@ if __name__ == '__main__':
     cli.run()
 ```
 
-When using schemas with the CLI module, make sure that your keys are kebab_cased versions of your prompts (e.g., `"Enter your name"` -> `"enter_your_name"`).
+When using schemas with the CLI module, make sure that your `Schema` arguments are kebab_cased versions of your prompts (e.g., `"Enter your name"` -> `enter_your_name`).
 
 ## Available Prompt Types
 
 - `Prompt.text()`: For text input (works with String schema fields)
 - `Prompt.password()`: For hidden password input (works with String schema fields)
 - `Prompt.confirm()`: For yes/no questions (works with Boolean schema fields)
-- `Prompt.choice()`: For selecting one item from a list (works only with String schema fields)
+- `Prompt.choice()`: For selecting one item from a list (works *only* with String schema fields)
 - `Prompt.checkbox()`: For selecting multiple items from a list (works with List schema fields)
 - `Prompt.number()`: For numeric input (works with Integer or Float schema fields)
-
-Each prompt type now supports schema validation when a schema is provided.
-
-## Type Checking for ChoicePrompt
-
-The `ChoicePrompt` (used by `Prompt.choice()`) now includes type checking to ensure it's only used with String schema fields. If a non-String field is provided, a TypeError will be raised with a clear error message.
 
 ## Schema Integration
 
@@ -116,5 +110,3 @@ When using prompts with schemas:
 - Error messages from the schema validation are displayed inline to the right of the users cursor.
 
 For more detailed information on creating and using schemas, please refer to the `schema.md` documentation.
-
-By using these features of the Zenif CLI module, you can create command-line applications with intuitive argument parsing, interactive prompts, and robust input validation. This allows for more user-friendly, flexible, and reliable command-line interfaces in your Python projects.

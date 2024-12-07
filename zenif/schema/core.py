@@ -87,6 +87,8 @@ class SchemaField(Generic[T]):
 
 class Schema:
     def __init__(self, **fields: SchemaField):
+        """A class for validating and coercing data based on a schema."""
+
         self.fields = fields
         self._strict = False
         self._all_optional = False

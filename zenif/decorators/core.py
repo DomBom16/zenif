@@ -19,10 +19,25 @@ logger = Logger(ruleset={"timestamps": {"always_show": True}})
 
 T = TypeVar("T")
 
-
 def retry(
     max_retries: int = 3, delay: float = 1.0
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
+    """
+    Retry a function a specified number of times with a delay between attempts.
+
+    This decorator takes a function and retries it a specified number of times
+    with a delay between attempts. The delay is specified in seconds and must be
+    a non-negative number.
+
+    The function will be retried up to `max_retries` times. If the function still
+    raises an exception after `max_retries` attempts, the exception will be
+    re-raised.
+
+    :param max_retries: The maximum number of times to retry the function.
+        Defaults to 3.
+    :param delay: The time in seconds to wait between attempts. Defaults to 1.0.
+    """
+
     def decorator_retry(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper_retry(*args: any, **kwargs: any) -> T:
@@ -45,6 +60,23 @@ def retry(
 def retry_expo(
     max_retries: int = 3, initial_delay: float = 1.0
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
+    """
+    Retry a function a specified number of times with an exponential backoff
+    delay between attempts.
+
+    This decorator takes a function and retries it a specified number of times
+    with an exponential backoff delay between attempts. The delay will increase
+    by a factor of two for each attempt, starting from `initial_delay`.
+
+    The function will be retried up to `max_retries` times. If the function still
+    raises an exception after `max_retries` attempts, the exception will be
+    re-raised.
+
+    :param max_retries: The maximum number of times to retry the function.
+        Defaults to 3.
+    :param initial_delay: The time in seconds to wait between the first and
+        second attempts. Defaults to 1.0.
+    """
     def decorator_retry_expo_backoff(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper_retry_expo_backoff(*args: any, **kwargs: any) -> T:
@@ -66,6 +98,21 @@ def retry_expo(
 
 
 def timeout(seconds: float) -> Callable[[Callable[..., T]], Callable[..., T]]:
+    """
+    Set a maximum execution time for a function.
+
+    This decorator takes a function and sets a maximum execution time. If the
+    function takes longer than the specified time to execute, a TimeoutError
+    will be raised.
+
+    The timeout is specified in seconds and must be a non-negative number.
+
+    On Unix-like systems, the SIGALRM signal is used to enforce the timeout. On
+    other systems (e.g., Windows), the function will be executed without any
+    timeout.
+
+    :param seconds: The maximum time in seconds to allow the function to execute.
+    """
     def decorator_timeout(func: Callable[..., T]) -> Callable[..., T]:
         def _handle_timeout(signum: int, frame: Union[any, None]) -> None:
             raise TimeoutError(
@@ -95,6 +142,23 @@ def timeout(seconds: float) -> Callable[[Callable[..., T]], Callable[..., T]]:
 def rate_limiter(
     calls: int, period: float, immediate_fail: bool = True
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
+    """
+    Limits the rate at which the decorated function can be called.
+
+    This decorator takes a function and limits the rate at which it can be
+    called. The rate is specified in terms of the maximum number of calls
+    allowed within a given time period.
+
+    The function will be called immediately if the rate limit is not exceeded.
+    If the rate limit is exceeded and `immediate_fail` is `True`, a
+    `RateLimitError` will be raised. If `immediate_fail` is `False`, the
+    function will block until the rate limit is no longer exceeded.
+
+    :param calls: The maximum number of calls allowed within the given time period.
+    :param period: The time period in which the maximum number of calls is allowed.
+    :param immediate_fail: If `True`, raise a `RateLimitError` if the rate limit is
+        exceeded. If `False`, block until the rate limit is no longer exceeded.
+    """
     def decorator_rate_limiter(func: Callable[..., T]) -> Callable[..., T]:
         call_times: deque = deque(maxlen=calls)
 
@@ -123,6 +187,17 @@ def rate_limiter(
 
 
 def trace(func: Callable[..., T]) -> Callable[..., T]:
+    """
+    A decorator that prints the arguments and return value of the decorated function.
+
+    When the decorated function is called, this decorator will print the name of the
+    function, the arguments passed to it, and the return value. If the function raises
+    an exception, the decorator will print the exception type and message.
+
+    :param func: The function to be decorated.
+    :return: A decorated version of the function that prints the arguments and return
+        value.
+    """
     @wraps(func)
     def wrapper_trace(*args: any, **kwargs: any) -> T:
         args_repr = [repr(a) for a in args]
@@ -141,6 +216,15 @@ def trace(func: Callable[..., T]) -> Callable[..., T]:
 
 
 def suppress_exceptions(func: Callable[..., T | None]) -> Callable[..., T | None]:
+    """
+    Suppresses any exceptions raised by the decorated function.
+
+    When the decorated function raises an exception, this decorator will print the
+    exception type and message, and return None instead of propagating the exception.
+
+    :param func: The function to be decorated.
+    :return: A decorated version of the function that suppresses any exceptions.
+    """
     @wraps(func)
     def wrapper_suppress_exceptions(*args: any, **kwargs: any) -> T | None:
         try:
@@ -157,6 +241,22 @@ def suppress_exceptions(func: Callable[..., T | None]) -> Callable[..., T | None
 def deprecated(
     func: Callable[..., T] | None = None, *, expected_removal: str | None = None
 ) -> Callable[..., T]:
+    """
+    Marks a function as deprecated and issues a warning when it's used.
+
+    This decorator can be used to mark a function as deprecated. When the
+    decorated function is called, a warning message will be logged indicating
+    that the function is deprecated and may be removed in a future version.
+    An optional `expected_removal` parameter can be provided to specify the
+    version in which the function is expected to be removed.
+
+    :param func: The function to be decorated. If None, the decorator is
+        returned for use with a function.
+    :param expected_removal: An optional string specifying the version in
+        which the function is expected to be removed.
+    :return: A decorated version of the function that logs a deprecation
+        warning when called.
+    """
     def decorator(f: Callable[..., T]) -> Callable[..., T]:
         @wraps(f)
         def wrapper_deprecated(*args: any, **kwargs: any) -> T:
@@ -179,6 +279,19 @@ def deprecated(
 def type_check(
     arg_types: tuple[type, ...] | None = None, return_type: type | None = None
 ) -> Callable[[Callable[..., T]], Callable[..., T]]:
+    """
+    Checks the types of arguments and return value against specified types.
+
+    This decorator can be used to ensure that the arguments passed to a function
+    are of the correct type, and that the return value is of the correct type.
+
+    :param arg_types: A tuple of types to check the arguments against. If None,
+        no argument type checking is performed.
+    :param return_type: The type to check the return value against. If None, no
+        return type checking is performed.
+    :return: A decorated version of the function that performs type checking on
+        arguments and return value.
+    """
     def decorator_type_check(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper_type_check(*args: any, **kwargs: any) -> T:
@@ -201,6 +314,15 @@ def type_check(
 
 
 def log_execution_time(func: Callable[..., T]) -> Callable[..., T]:
+    """
+    Logs the execution time of the decorated function.
+
+    This decorator can be used to profile functions and methods. The execution time
+    is printed to the console after the function is called.
+
+    :param func: The function to be decorated.
+    :return: A decorated version of the function that logs the execution time.
+    """
     @wraps(func)
     def wrapper_log_execution_time(*args: any, **kwargs: any) -> T:
         start_time = time.perf_counter()
@@ -217,6 +339,22 @@ def log_execution_time(func: Callable[..., T]) -> Callable[..., T]:
 def cache(
     func: Callable[..., T] | None = None, *, max_size: int | None = None
 ) -> Callable[..., T]:
+    """
+    Caches the result of a function so that it is only computed once.
+
+    The cache is implemented as a least-recently-used (LRU) cache. The cache
+    size can be limited by providing the `max_size` parameter. If the cache
+    size is exceeded, the oldest item will be discarded.
+
+    The cache is stored as an instance variable of the decorated function. The
+    cache can be cleared by calling the `clear_cache` method of the decorated
+    function.
+
+    :param func: The function to be decorated. If None, the decorator is
+        returned for use with a function.
+    :param max_size: The maximum size of the cache. If None, there is no limit.
+    :return: A decorated version of the function that caches its result.
+    """
     def decorator(f: Callable[..., T]) -> Callable[..., T]:
         cache_dict: OrderedDict = OrderedDict()
 
@@ -242,6 +380,17 @@ def cache(
 
 
 def singleton(cls):
+    """
+    Ensures only one instance of a class is created.
+
+    This decorator can be used to turn a class into a singleton. The decorator
+    caches the instance of the class and returns the same instance every time
+    the class is instantiated. The instance is stored in a dictionary with the
+    class as the key.
+
+    :param cls: The class to be decorated.
+    :return: A decorated version of the class that caches its instance.
+    """
     instances = {}
 
     @wraps(cls)
@@ -254,6 +403,18 @@ def singleton(cls):
 
 
 def enforce_types(func):
+    """
+    Enforces type annotations on function arguments and return value.
+
+    This decorator validates the types of arguments passed to a function
+    against its type annotations. If any argument does not match the
+    specified type, a TypeError is raised. It also checks the return
+    value against the function's return type annotation.
+
+    :param func: The function to be decorated.
+    :return: A decorated version of the function that enforces type
+             annotations on its arguments and return value.
+    """
     @wraps(func)
     def wrapper(*args, **kwargs):
         sig = signature(func)
@@ -275,6 +436,22 @@ def enforce_types(func):
 
 
 def retry_on_exception(exceptions, max_retries=3, delay=1):
+    """
+    Retry a function a specified number of times with a delay between attempts.
+
+    This decorator takes a function and retries it a specified number of times
+    with a delay between attempts. The delay is specified in seconds and must be
+    a non-negative number.
+
+    The function will be retried up to `max_retries` times. If the function still
+    raises an exception after `max_retries` attempts, the exception will be
+    re-raised.
+
+    :param exceptions: A tuple of exceptions to catch and retry on.
+    :param max_retries: The maximum number of times to retry the function.
+        Defaults to 3.
+    :param delay: The time in seconds to wait between attempts. Defaults to 1.0.
+    """
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -293,6 +470,13 @@ def retry_on_exception(exceptions, max_retries=3, delay=1):
 
 
 def background_task(func):
+    """
+    Runs the decorated function in a separate thread.
+
+    This decorator takes a function and runs it in a separate thread when called.
+    The return value of the decorated function is a Thread object that can be
+    used to wait for the thread to complete (e.g., by calling join()).
+    """
     @wraps(func)
     def wrapper(*args, **kwargs):
         thread = Thread(target=func, args=args, kwargs=kwargs)
@@ -306,6 +490,18 @@ _profiler_active = False
 
 
 def profile(func):
+    """
+    Profiles the execution of the decorated function, capturing performance metrics.
+
+    This decorator measures the execution time, memory usage, and function call statistics
+    of the decorated function. It handles recursive calls correctly, profiling only the
+    outermost call to avoid duplicating metrics. The profiling results, including a summary
+    of the function calls, are printed to the console.
+
+    :param func: The function to be profiled.
+    :return: A decorated version of the function that logs execution time,
+            memory usage, and profiling statistics.
+    """
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         global _profiler_active
