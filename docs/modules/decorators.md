@@ -20,14 +20,14 @@ def flaky_function():
     # with a 1-second delay between attempts
 ```
 
-### retry_exponential_backoff
+### retry_expo
 
 Similar to `retry`, but with an exponential backoff delay between attempts.
 
 ```python
-from zenif.decorators import retry_exponential_backoff
+from zenif.decorators import retry_expo
 
-@retry_exponential_backoff(max_retries=3, initial_delay=1.0)
+@retry_expo(max_retries=3, initial_delay=1.0)
 def flaky_function():
     # Your code here
     # If an exception is raised, the function will be retried up to 3 times
