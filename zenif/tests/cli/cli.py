@@ -57,7 +57,7 @@ def test_prompts():
         return
     name = Prompt.text("Enter your name", schema, "name").ask()
     password = Prompt.password("Enter your password", schema, "password").peeper().ask()
-    age = Prompt.number("Enter your age", schema, "age").ask()
+    age = Prompt.number("Enter your age", schema, "age").allow_negatives().allow_decimals().ask()
     interests = Prompt.checkbox(
         "Select your interests",
         ["Reading", "Gaming", "Sports", "Cooking", "Travel"],
