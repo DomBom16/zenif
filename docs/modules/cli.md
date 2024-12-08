@@ -79,7 +79,7 @@ from zenif.schema import Schema, StringF, IntegerF, ListF, Length, Value
 
 cli = CLI()
 
-user_schema = Schema({
+user_schema = Schema(
     name=StringF()
          .name("name")
          .has(NotEmpty()),
@@ -96,7 +96,7 @@ user_schema = Schema({
               .name("interests")
               .item_type(StringF())
               .has(Length(min=1, max=5))
-})
+)
 
 @cli.command
 def setup():
