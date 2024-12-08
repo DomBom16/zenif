@@ -317,8 +317,11 @@ class ChoicePrompt(BasePrompt):
 
     def ask(self) -> str:
         current = 0
+
+        controls = "↑/↓ to navigate, Enter to confirm"
+
         print(
-            f"{Fore.GREEN}? {Fore.CYAN}{self.message}:{Fore.RESET}\n{Style.DIM}  Use Up/Down to navigate and Enter to select"
+            f"{Fore.GREEN}? {Fore.CYAN}{self.message}:{Fore.RESET}\n{Style.DIM}  {controls}"
         )
         while True:
             for i, choice in enumerate(self.choices):
@@ -343,7 +346,7 @@ class ChoicePrompt(BasePrompt):
                     self._print_prompt(self.message, error=error)
                     print()
                     print(
-                        f"{Fore.GREEN}? {Fore.CYAN}{self.message}:{Fore.RESET}\n{Style.DIM}  Use Up/Down to navigate and Enter to select"
+                        f"{Fore.GREEN}? {Fore.CYAN}{self.message}:{Fore.RESET}\n{Style.DIM}  {controls}"
                     )
             elif key == "\x1b[A" and current > 0:  # Up arrow
                 current -= 1
@@ -367,9 +370,11 @@ class CheckboxPrompt(BasePrompt):
     def ask(self) -> list[str]:
         selected = [False] * len(self.choices)
         current = 0
-        print(
-            f"{Fore.GREEN}? {Fore.CYAN}{self.message}:{Fore.RESET}\n{Style.DIM}  Use Up/Down to navigate, Space to select, and Enter to confirm"
-        )
+
+        controls = "↑/↓ to navigate, Space to select, Enter to confirm"
+
+        print()
+
         i = True
         while True:
             for i, (choice, is_selected) in enumerate(zip(self.choices, selected)):
@@ -393,7 +398,7 @@ class CheckboxPrompt(BasePrompt):
                 print(f"\033[{len(self.choices) + 2}A", end="")
                 self._print_prompt(self.message, error=f"{error if error else ""}\n")
                 print(
-                    f"\r{Fore.RESET}{Style.DIM}  Use Up/Down to navigate, Space to select, and Enter to confirm\033[{len(self.choices)}B"
+                    f"\r{Fore.RESET}{Style.DIM}  {controls}\033[{len(self.choices)}B"
                 )
 
             key = self._get_key()
@@ -409,9 +414,7 @@ class CheckboxPrompt(BasePrompt):
 
             print(f"\033[{len(self.choices) + 2}A", end="")
             self._print_prompt(self.message, error=f"{error if error else ""}\n")
-            print(
-                f"\r{Fore.RESET}{Style.DIM}  Use Up/Down to navigate, Space to select, and Enter to confirm\033[{len(self.choices)}B"
-            )
+            print(f"\r{Fore.RESET}{Style.DIM}  {controls}\033[{len(self.choices)}B")
 
             if key == "\r" and not error:
                 for _ in range(len(self.choices) + 2):
@@ -521,7 +524,7 @@ class NumberPrompt(BasePrompt):
             )
 
             self._print_prompt(
-                self.message, truncated_value, self._default, error=value
+                self.message, truncated_value, self._default, error=error
             )
             char = self._get_key()
             if char == "\r":  # Enter key
