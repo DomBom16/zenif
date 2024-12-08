@@ -138,7 +138,7 @@ class TextPrompt(BasePrompt):
         value = ""
         while True:
             error = self.validate(value or self._default or "")
-            marker = "..."
+            marker = "…"
             width = (
                 shutil.get_terminal_size().columns
                 - len(self.message)
@@ -197,7 +197,7 @@ class PasswordPrompt(BasePrompt):
             if self._peeper and last_char and last_char != " ":
                 masked_value = masked_value[:-1] + last_char
 
-            marker = "..."
+            marker = "…"
             width = (
                 shutil.get_terminal_size().columns
                 - len(self.message)
@@ -214,6 +214,14 @@ class PasswordPrompt(BasePrompt):
             char = self._get_key()
             if char == "\r":  # Enter key
                 if not error and value:
+                    # On submit, show the password fully masked again
+                    masked_value = "*" * len(value)
+                    truncated_value = (
+                        marker + masked_value[-(width - len(marker)) :]
+                        if len(masked_value) > width
+                        else masked_value
+                    )
+                    self._print_prompt(self.message, truncated_value, error=None)
                     print()  # Move to next line after input
                     return value
             elif char == "\x7f":  # Backspace
@@ -478,7 +486,7 @@ class NumberPrompt(BasePrompt):
             except ValueError:
                 error = "Please enter a valid number."
 
-            marker = "..."
+            marker = "…"
             width = (
                 shutil.get_terminal_size().columns
                 - len(self.message)
@@ -536,6 +544,10 @@ class NumberPrompt(BasePrompt):
                     value = value[1:]
                 else:
                     value = "-" + value
+            elif char == "\x1b[A":  # Up arrow
+                value = str(int(value or 0) + 1)
+            elif char == "\x1b[B":  # Down arrow
+                value = str(int(value or 0) - 1)
 
             if value == "-":
                 value = ""
