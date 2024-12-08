@@ -526,7 +526,7 @@ class NumberPrompt(BasePrompt):
                     )
             elif char == "\x7f":  # Backspace
                 value = value[:-1]
-            elif char.isdigit():
+            elif char.isdigit() and len(value) < 15:
                 value += char
             elif char == "." and self._allow_decimals and "." not in value:
                 value += "."
