@@ -1,4 +1,4 @@
-from zenif.cli import CLI, arg, kwarg, Prompt, install_setup_command
+from zenif.cli import CLI, arg, kwarg, Prompt as p, install_setup_command
 from zenif.schema import Schema, BooleanF, StringF, IntegerF, ListF, Length, Value, Email, NotEmpty
 import os
 
@@ -53,24 +53,24 @@ def test_prompts():
         email=StringF().name("email").has(Email()),
     ).all_optional()
 
-    if not Prompt.confirm("Are you sure you want to continue?", schema, "are_you_sure").default(True).ask():
+    if not p.confirm("Are you sure you want to continue?", schema, "are_you_sure").default(True).ask():
         return
-    name = Prompt.text("Enter your name", schema, "name").ask()
-    password = Prompt.password("Enter your password", schema, "password").peeper().ask()
-    age = Prompt.number("Enter your age", schema, "age").allow_negatives().allow_decimals().ask()
-    interests = Prompt.checkbox(
+    name = p.text("Enter your name", schema, "name").ask()
+    password = p.password("Enter your password", schema, "password").peeper().ask()
+    age = p.number("Enter your age", schema, "age").allow_negatives().allow_decimals().ask()
+    interests = p.checkbox(
         "Select your interests",
         ["Reading", "Gaming", "Sports", "Cooking", "Travel"],
         schema,
         "interests",
     ).ask()
-    fav_interest = Prompt.choice(
+    fav_interest = p.choice(
         "Select your favorite interest",
         interests,
         schema,
         "fav_interest",
     ).ask()
-    email = Prompt.text("Enter your email", schema, "email").ask()
+    email = p.text("Enter your email", schema, "email").ask()
 
     print(f"{name=}")
     print(f"{password=}")
