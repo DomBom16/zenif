@@ -111,23 +111,11 @@ class BaseHandler:
         message_space = terminal_width - self.template_engine.processed.length
         message_indent = self.template_engine.processed.length
 
-        repr_id = "".join(
-            choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-            for _ in range(4)
-        )
-
-        formatted_message = self._format_message(
-            message, ruleset, repr_id, message_space
-        )
         log_metadata = self._generate_metadata(
             metadata, ruleset, message_space, terminal_width
         )
 
-        formatted_message = (
-            formatted_message
-            if ruleset.formatting.ansi
-            else strip_ansi(formatted_message)
-        )
+        formatted_message = message if ruleset.formatting.ansi else strip_ansi(message)
 
         log_line += log_metadata
 
@@ -148,30 +136,6 @@ class BaseHandler:
             return f"\033[{len(timestamp)}C"
         self.previous_timestamp = timestamp
         return timestamp
-
-    def _format_message(
-        self, message: str, ruleset: dict[str, any], repr_id: str, message_space: int
-    ):
-        if ruleset.formatting.pretty_print and isinstance(message, (list, dict, tuple)):
-            formatted = highlight(
-                strip_repr_id(
-                    format_str(
-                        str(strip_unsafe_objs(message, repr_id)),
-                        mode=Mode(
-                            line_length=(
-                                ruleset.formatting.fixed_format_width
-                                if ruleset.formatting.fixed_format_width > 0
-                                else message_space
-                            )
-                        ),
-                    ),
-                    repr_id,
-                ),
-                PythonLexer(),
-                tformatter(style=get_style_by_name("one-dark")),
-            )
-            return formatted
-        return str(message)
 
     def _generate_metadata(
         self,
