@@ -3,6 +3,7 @@ from colorama import init, Fore, Style
 import signal
 from zenif.schema import Schema, StringF
 import shutil
+from datetime import datetime
 
 init(autoreset=True)
 
@@ -397,9 +398,7 @@ class CheckboxPrompt(BasePrompt):
 
                 print(f"\033[{len(self.choices) + 2}A", end="")
                 self._print_prompt(self.message, error=f"{error if error else ""}\n")
-                print(
-                    f"\r{Fore.RESET}{Style.DIM}  {controls}\033[{len(self.choices)}B"
-                )
+                print(f"\r{Fore.RESET}{Style.DIM}  {controls}\033[{len(self.choices)}B")
 
             key = self._get_key()
             if key == " ":  # Space
@@ -556,6 +555,189 @@ class NumberPrompt(BasePrompt):
                 value = ""
 
 
+class DatePrompt(BasePrompt):
+    def __init__(
+        self,
+        message: str,
+        schema: Schema | None = None,
+        id: str | None = None,
+    ):
+        super().__init__(message, schema, id)
+        self._default: tuple[int, int, int] | None = None
+        self._month_first: bool = False  # day-month or month-day
+
+        self._year_range: tuple[int, int] = (1900, 2100)
+
+        self._sep: str = "/"
+
+        self._show_words: bool = False
+
+        self.current_field_idx = 0
+
+        self.day: str = ""
+        self.month: str = ""
+        self.year: str = ""
+
+    def default(self, value: datetime) -> "DatePrompt":
+        self._default = value
+        self.day, self.month, self.year = map(str, self._default)
+        return self
+
+    def month_first(self) -> "DatePrompt":
+        self._month_first = True
+        return self
+
+    def year_range(self, start: int, end: int) -> "DatePrompt":
+        self._year_range = (start, end)
+        return self
+
+    def separator(self, sep: str) -> "DatePrompt":
+        self._sep = sep
+        return self
+
+    def show_words(self) -> "DatePrompt":
+        self._show_words = True
+        return self
+
+    def ask(self) -> datetime:
+        field_order = (
+            ["month", "day", "year"] if self._month_first else ["day", "month", "year"]
+        )
+
+        print("\n")
+
+        while True:
+            controls = f"←/→ to navigate fields, Enter to confirm"
+
+            print("\033[3A")
+            self._print_prompt(self.message)
+            print(f"{Fore.RESET}{Style.DIM}  {controls}")
+
+            formatted_value = (
+                f"  {Fore.YELLOW}{"" if self.current_field_idx == 0 else Style.DIM}"
+            )
+
+            formatted_value += (
+                (self.month or "MM").rjust(2, "0")
+                if self._month_first
+                else (self.day or "DD").rjust(2, "0")
+            )
+
+            formatted_value += f"{Style.DIM}{self._sep}{Style.NORMAL if self.current_field_idx == 1 else ""}"
+
+            formatted_value += (
+                (self.day or "DD").rjust(2, "0")
+                if self._month_first
+                else (self.month or "MM").rjust(2, "0")
+            )
+
+            formatted_value += f"{Style.DIM}{self._sep}{Style.NORMAL if self.current_field_idx == 2 else ""}"
+
+            formatted_value += (self.year or "YYYY").rjust(4, "0")
+
+            formatted_value += f"{Style.RESET_ALL}"
+
+            print(f"{formatted_value}")
+
+            char = self._get_key()
+            if char == "\t" or char == "\x1b[C":  # Tab
+                # move to next field
+                self.current_field_idx = (self.current_field_idx + 1) % 3
+            elif (
+                char == "\x1b[Z" or char == "\x1b[D"
+            ):  # Likely shift+tab (depends on terminal)
+                # move to previous field
+                self.current_field_idx = (self.current_field_idx - 1) % 3
+            elif char == "\r":  # Enter key
+                # check if all fields are filled
+                if (
+                    1 <= int(self.day) <= 31
+                    and 1 <= int(self.month) <= 12
+                    and (self._year_range[0] <= int(self.year) <= self._year_range[1])
+                ):
+                    months = [
+                        "January",
+                        "February",
+                        "March",
+                        "April",
+                        "May",
+                        "June",
+                        "July",
+                        "August",
+                        "September",
+                        "October",
+                        "November",
+                        "December",
+                    ]
+
+                    print("\033[2A", end="")
+                    self._print_prompt(
+                        self.message,
+                        (
+                            f"{months[int(self.month or 0) - 1]} {self.day or ""}, {self.year or ""}"
+                            if self._show_words
+                            else f"{int(self.month if self._month_first else self.day)}{self._sep}{int(self.day if self._month_first else self.month)}{self._sep}{int(self.year)}"
+                        ),
+                    )
+                    print()
+                    return datetime(int(self.year), int(self.month), int(self.day))
+            elif char == "\x7f":  # Backspace
+                if field_order[self.current_field_idx] == "day":
+                    self.day = self.day[:-1]
+                    if self.day == "0":
+                        self.day = ""
+                elif field_order[self.current_field_idx] == "month":
+                    self.month = self.month[:-1]
+                    if self.month == "0":
+                        self.month = ""
+                elif field_order[self.current_field_idx] == "year":
+                    self.year = self.year[:-1]
+                    if self.year == "0":
+                        self.year = ""
+            elif char == "\x1b[A":  # Up arrow
+                if field_order[self.current_field_idx] == "day":
+                    self.day = str((int(self.day or 0) + 1) % 32)
+                elif field_order[self.current_field_idx] == "month":
+                    self.month = str((int(self.month or 0) + 1) % 13)
+                elif field_order[self.current_field_idx] == "year":
+                    self.year = str(int(self.year or str(datetime.now().year)) + 1)
+                    if int(self.year) > self._year_range[1]:
+                        self.year = str(self._year_range[0])  # Wrap around
+            elif char == "\x1b[B":  # Down arrow
+                if field_order[self.current_field_idx] == "day":
+                    self.day = str((int(self.day or 0) - 1) % 32)
+                elif field_order[self.current_field_idx] == "month":
+                    self.month = str((int(self.month or 0) - 1) % 13)
+                elif field_order[self.current_field_idx] == "year":
+                    self.year = str(int(self.year or str(datetime.now().year)) - 1)
+                    if int(self.year) < self._year_range[0]:
+                        self.year = str(self._year_range[1])  # Wrap around
+            elif char.isdigit():
+                if field_order[self.current_field_idx] == "day":
+                    if len(self.day.lstrip("0")) < 2:
+                        self.day = self.day.lstrip("0") + char
+                    if int(self.day) > 31:
+                        self.day = "31"
+                    if len(self.day) == 2 or int(self.day) > 3:
+                        self.current_field_idx = (self.current_field_idx + 1) % 3
+                elif field_order[self.current_field_idx] == "month":
+                    if len(self.month.lstrip("0")) < 2:
+                        self.month = self.month.lstrip("0") + char
+                    if int(self.month) > 12:
+                        self.month = "12"
+                    if len(self.month) == 2 or int(self.month) > 1:
+                        self.current_field_idx = (self.current_field_idx + 1) % 3
+                elif field_order[self.current_field_idx] == "year":
+                    if len(self.year.lstrip("0")) < 4:
+                        self.year = self.year.lstrip("0") + char
+                    if int(self.year) < self._year_range[0]:
+                        self.year = str(self._year_range[0])
+                    if int(self.year) > self._year_range[1]:
+                        self.year = str(self._year_range[1])
+                    if len(self.year) == 4:
+                        self.current_field_idx = (self.current_field_idx + 1) % 3
+
+
 class Prompt:
     """A factory class for creating prompts."""
 
@@ -614,3 +796,12 @@ class Prompt:
     ) -> NumberPrompt:
         """Creates a number prompt where the user can input a number."""
         return NumberPrompt(message, schema, id)
+
+    @staticmethod
+    def date(
+        message: str,
+        schema: Schema | None = None,
+        id: str | None = None,
+    ) -> DatePrompt:
+        """Creates a date prompt where the user can input a date."""
+        return DatePrompt(message, schema, id)
