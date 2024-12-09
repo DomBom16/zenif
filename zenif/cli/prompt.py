@@ -1,5 +1,5 @@
 import sys
-from colorama import init, Fore, Style
+from colorama import init, Fore, Style, Back
 import signal
 from zenif.schema import Schema, StringF
 import shutil
@@ -132,10 +132,12 @@ class TextPrompt(BasePrompt):
         self._default: str | None = None
 
     def default(self, value: str) -> "TextPrompt":
+        """Set the default value for the prompt."""
         self._default = value
         return self
 
     def ask(self) -> str:
+        """Prompt the user for input."""
         value = ""
         while True:
             error = self.validate(value or self._default or "")
@@ -184,16 +186,20 @@ class PasswordPrompt(BasePrompt):
         self._peeper: bool = False
 
     def peeper(self) -> "PasswordPrompt":
+        """Enable password peeper mode. This will show the last character typed unless it is a space or the last keypress was a backspace."""
         self._peeper = True
         return self
 
     def ask(self) -> str:
+        """Prompt the user for input."""
         value = ""
         last_char = ""
 
+        mask_char = "●"
+
         while True:
             error = self.validate(value or "")
-            masked_value = "*" * len(value)
+            masked_value = mask_char * len(value)
 
             if self._peeper and last_char and last_char != " ":
                 masked_value = masked_value[:-1] + last_char
@@ -216,7 +222,7 @@ class PasswordPrompt(BasePrompt):
             if char == "\r":  # Enter key
                 if not error and value:
                     # On submit, show the password fully masked again
-                    masked_value = "*" * len(value)
+                    masked_value = mask_char * len(value)
                     truncated_value = (
                         marker + masked_value[-(width - len(marker)) :]
                         if len(masked_value) > width
@@ -251,10 +257,12 @@ class ConfirmPrompt(BasePrompt):
         self._default: bool | None = None
 
     def default(self, value: bool) -> "ConfirmPrompt":
+        """Set the default value for the prompt."""
         self._default = value
         return self
 
     def ask(self) -> bool:
+        """Prompt the user for input."""
         options = (
             ["y", "N"]
             if self._default is False
@@ -317,6 +325,7 @@ class ChoicePrompt(BasePrompt):
             raise TypeError(error_message)
 
     def ask(self) -> str:
+        """Prompt the user for input."""
         current = 0
 
         controls = "↑/↓ to navigate, Enter to confirm"
@@ -369,6 +378,7 @@ class CheckboxPrompt(BasePrompt):
         self.choices = choices
 
     def ask(self) -> list[str]:
+        """Prompt the user for input."""
         selected = [False] * len(self.choices)
         current = 0
 
@@ -450,22 +460,27 @@ class NumberPrompt(BasePrompt):
         self._allow_negatives: bool = False
 
     def default(self, value: int) -> "NumberPrompt":
+        """Set the default value for the prompt."""
         self._default = value
         return self
 
     def commas(self) -> "NumberPrompt":
+        """Use commas to separate thousands in the prompt. This does not affect the validation or the returned value."""
         self._commas = True
         return self
 
     def allow_decimals(self) -> "NumberPrompt":
+        """Allow decimals in the prompt. If using a schema, you must use the FloatF type."""
         self._allow_decimals = True
         return self
 
     def allow_negatives(self) -> "NumberPrompt":
+        """Allow negative numbers in the prompt."""
         self._allow_negatives = True
         return self
 
     def ask(self) -> int:
+        """Prompt the user for input."""
         value = ""
         while True:
             try:
@@ -578,43 +593,53 @@ class DatePrompt(BasePrompt):
         self.month: str = ""
         self.year: str = ""
 
-    def default(self, value: datetime) -> "DatePrompt":
+    def default(self, value: tuple[int, int, int]) -> "DatePrompt":
+        """Set the default value for the prompt."""
         self._default = value
         self.day, self.month, self.year = map(str, self._default)
         return self
 
     def month_first(self) -> "DatePrompt":
+        """Use month-day-year instead of day-month-year."""
         self._month_first = True
         return self
 
     def year_range(self, start: int, end: int) -> "DatePrompt":
+        """Set the minimum and maximum years for the prompt. Any values that exceed the range will be capped."""
         self._year_range = (start, end)
         return self
 
     def separator(self, sep: str) -> "DatePrompt":
+        """Set the separator between the day, month, and year fields."""
         self._sep = sep
         return self
 
     def show_words(self) -> "DatePrompt":
+        """On submit, display the submitted date in words. Ex: 1/1/2014 -> January 1, 2014"""
         self._show_words = True
         return self
 
     def ask(self) -> datetime:
+        """Prompt the user for input."""
         field_order = (
             ["month", "day", "year"] if self._month_first else ["day", "month", "year"]
         )
 
         print("\n")
 
-        while True:
-            controls = f"←/→ to navigate fields, Enter to confirm"
+        fresh = False
 
-            print("\033[3A")
-            self._print_prompt(self.message)
-            print(f"{Fore.RESET}{Style.DIM}  {controls}")
+        while True:
+            controls = "←/→ to navigate, Tab to highlight, Enter to confirm"
+
+            error = self.validate(f"{self.month or 'MM'}/{self.day or 'DD'}/{self.year or 'YYYY'}")
+
+            print("\033[4A")
+            self._print_prompt(self.message, error=error)
+            print(f"\n{Fore.RESET}{Style.DIM}  {controls}")
 
             formatted_value = (
-                f"  {Fore.YELLOW}{"" if self.current_field_idx == 0 else Style.DIM}"
+                f"  {Fore.YELLOW}{Back.RESET}{"" if self.current_field_idx == 0 else Style.DIM}{f"{Fore.BLACK}{Back.YELLOW}" if self.current_field_idx == 0 and fresh else ''}"
             )
 
             formatted_value += (
@@ -623,7 +648,7 @@ class DatePrompt(BasePrompt):
                 else (self.day or "DD").rjust(2, "0")
             )
 
-            formatted_value += f"{Style.DIM}{self._sep}{Style.NORMAL if self.current_field_idx == 1 else ""}"
+            formatted_value += f"{Fore.YELLOW}{Back.RESET}{Style.DIM}{self._sep}{Style.NORMAL if self.current_field_idx == 1 else ""}{f"{Fore.BLACK}{Back.YELLOW}" if self.current_field_idx == 1 and fresh else ''}"
 
             formatted_value += (
                 (self.day or "DD").rjust(2, "0")
@@ -631,7 +656,7 @@ class DatePrompt(BasePrompt):
                 else (self.month or "MM").rjust(2, "0")
             )
 
-            formatted_value += f"{Style.DIM}{self._sep}{Style.NORMAL if self.current_field_idx == 2 else ""}"
+            formatted_value += f"{Fore.YELLOW}{Back.RESET}{Style.DIM}{self._sep}{Style.NORMAL if self.current_field_idx == 2 else ""}{f"{Fore.BLACK}{Back.YELLOW}" if self.current_field_idx == 2 and fresh else ''}"
 
             formatted_value += (self.year or "YYYY").rjust(4, "0")
 
@@ -643,11 +668,23 @@ class DatePrompt(BasePrompt):
             if char == "\t" or char == "\x1b[C":  # Tab
                 # move to next field
                 self.current_field_idx = (self.current_field_idx + 1) % 3
+                if int(self.year or 0) < self._year_range[0] and self.year:
+                    self.year = str(self._year_range[0])
+                if char == "\t":
+                    fresh = True
+                else:
+                    fresh = False
             elif (
                 char == "\x1b[Z" or char == "\x1b[D"
-            ):  # Likely shift+tab (depends on terminal)
+            ):   # Shift+Tab or Left arrow
                 # move to previous field
                 self.current_field_idx = (self.current_field_idx - 1) % 3
+                if int(self.year or 0) < self._year_range[0] and self.year:
+                    self.year = str(self._year_range[0])
+                if char == "\x1b[Z":
+                    fresh = True
+                else:
+                    fresh = False
             elif char == "\r":  # Enter key
                 # check if all fields are filled
                 if (
@@ -670,7 +707,8 @@ class DatePrompt(BasePrompt):
                         "December",
                     ]
 
-                    print("\033[2A", end="")
+                    for _ in range(3):
+                        print(f"\033[1A\033[2K", end="")
                     self._print_prompt(
                         self.message,
                         (
@@ -684,16 +722,17 @@ class DatePrompt(BasePrompt):
             elif char == "\x7f":  # Backspace
                 if field_order[self.current_field_idx] == "day":
                     self.day = self.day[:-1]
-                    if self.day == "0":
+                    if self.day == "0" or fresh:
                         self.day = ""
                 elif field_order[self.current_field_idx] == "month":
                     self.month = self.month[:-1]
-                    if self.month == "0":
+                    if self.month == "0" or fresh:
                         self.month = ""
                 elif field_order[self.current_field_idx] == "year":
                     self.year = self.year[:-1]
-                    if self.year == "0":
+                    if self.year == "0" or fresh:
                         self.year = ""
+                fresh = False
             elif char == "\x1b[A":  # Up arrow
                 if field_order[self.current_field_idx] == "day":
                     self.day = str((int(self.day or 0) + 1) % 32)
@@ -703,6 +742,7 @@ class DatePrompt(BasePrompt):
                     self.year = str(int(self.year or str(datetime.now().year)) + 1)
                     if int(self.year) > self._year_range[1]:
                         self.year = str(self._year_range[0])  # Wrap around
+                fresh = False
             elif char == "\x1b[B":  # Down arrow
                 if field_order[self.current_field_idx] == "day":
                     self.day = str((int(self.day or 0) - 1) % 32)
@@ -712,34 +752,44 @@ class DatePrompt(BasePrompt):
                     self.year = str(int(self.year or str(datetime.now().year)) - 1)
                     if int(self.year) < self._year_range[0]:
                         self.year = str(self._year_range[1])  # Wrap around
+                fresh = False
             elif char.isdigit():
+                fprev = fresh
+                fresh = False
                 if field_order[self.current_field_idx] == "day":
+                    if fprev:
+                        self.day = ""
                     if len(self.day.lstrip("0")) < 2:
                         self.day = self.day.lstrip("0") + char
                     if int(self.day) > 31:
                         self.day = "31"
                     if len(self.day) == 2 or int(self.day) > 3:
                         self.current_field_idx = (self.current_field_idx + 1) % 3
+                        fresh = True
                 elif field_order[self.current_field_idx] == "month":
+                    if fprev:
+                        self.month = ""
                     if len(self.month.lstrip("0")) < 2:
                         self.month = self.month.lstrip("0") + char
                     if int(self.month) > 12:
                         self.month = "12"
                     if len(self.month) == 2 or int(self.month) > 1:
                         self.current_field_idx = (self.current_field_idx + 1) % 3
+                        fresh = True
                 elif field_order[self.current_field_idx] == "year":
+                    if fprev:
+                        self.year = ""
                     if len(self.year.lstrip("0")) < 4:
                         self.year = self.year.lstrip("0") + char
-                    if int(self.year) < self._year_range[0]:
-                        self.year = str(self._year_range[0])
                     if int(self.year) > self._year_range[1]:
                         self.year = str(self._year_range[1])
                     if len(self.year) == 4:
                         self.current_field_idx = (self.current_field_idx + 1) % 3
+                        fresh = True
 
 
 class Prompt:
-    """A factory class for creating prompts."""
+    """A class for prompting the user for input."""
 
     @staticmethod
     def text(
