@@ -46,6 +46,7 @@ install_setup_command(cli=cli, script_path=os.path.abspath(__file__))
 - `Prompt.choice()`: For selecting one item from a list (works *only* with String schema fields)
 - `Prompt.checkbox()`: For selecting multiple items from a list (works with List schema fields)
 - `Prompt.number()`: For numeric input (works with Integer or Float schema fields)
+- `Prompt.date()`: For dates (works with String schema fields)
 
 ## Special Prompt Methods
 
@@ -68,6 +69,39 @@ Available for the `number` type. When enabled, decimal values are able to be inp
 ### `allow_negatives()`
 
 Available for the `number` type. When enabled, negative values are able to be inputted. Pressing the `-` key will have no effect until at least one digit is inputted. Upon pressed, the sign in front of the value will be toggled (an implicit positive sign is used). If all numeric digits are removed, the `-` sign will dissappear.
+
+### `month_first()`
+
+Available for the `date` type. When enabled, the date will be inputted in the format month-day-year instead of day-month-year.
+
+### `year_range()`
+
+Available for the `date` type. The `year_range` is the defined minimun and maximum values that the year must be in between, inclusive on both ends. By default, the range is from `1900` to `2100`.
+
+### `separator()`
+
+Available for the `date` type. Used as the separator between the day, month, and year fields. By default, the `"/"` seperator is used.
+
+### `show_words()`
+
+Available for the `date` type. When enabled, the date shown beside the prompt upon submission will be displayed in words. Ex: 1/1/2014 -> January 1, 2014
+
+## Getting Used To Input Controls
+
+For the most part, input types that feature somewhat non-trivial controls will have them listed. However, each prompt type comes with it's own nuances that aren't included in the controls list for conciseness.
+
+### Text Inputs
+
+Press `Escape` to clear the current value.
+
+### Number Inputs
+
+Use `↑` to increase and `↓` to decrease the value.
+
+### Date Inputs
+
+Use `↑` to increase and `↓` to decrease the selected field.
+Pressing `Shift` + `Tab` will act like the `Tab` functionality, but highlight fields in the opposite direction.
 
 ## Interactive Prompts with Schema Validation
 
@@ -130,4 +164,4 @@ When using prompts with schemas:
 - Users cannot proceed until they provide valid input according to the schema.
 - Error messages from the schema validation are displayed inline to the right of the users cursor.
 
-For more detailed information on creating and using schemas, please refer to the `schema.md` documentation.
+For more detailed information on creating and using schemas, please refer to the [schema documentation](./schema.md).
