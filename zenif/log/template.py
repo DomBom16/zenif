@@ -447,6 +447,14 @@ def shorthand(shorthand: str) -> str:
             },
             {"type": "static", "value": " "},
         ],
+        "timestamp_only": [
+            {
+                "type": "template",
+                "value": "timestamp",
+                "parameters": [{"color": {"foreground": "default"}}],
+            },
+            {"type": "static", "value": " "},
+        ],
     }
     return shorthands.get(shorthand, "")
 

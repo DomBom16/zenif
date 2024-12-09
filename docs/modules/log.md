@@ -205,7 +205,8 @@ For quick setup, you can use one of the premade formats by setting the Log Line 
 - `"filled"`: A variant with reversed background and foreground colors, creating a box-like view for increased legibility.
 - `"noalign"`: Similar to the default view but without alignment parameters, useful for saving space.
 - `"simple"`: Shows only the timestamp and the level.
-- `"short"`: Shows only the timestamps and 3-letter level abbreviations.
+- `"short"`: Shows only the timestamp and 3-letter level abbreviation.
+- `"timestamp_only"`: Shows only the timestamp.
 
 An example where the sys.stdout stream's Log Line > Format is changed to `"filled"`:
 

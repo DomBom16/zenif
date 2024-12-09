@@ -1,5 +1,15 @@
 from zenif.cli import CLI, arg, kwarg, Prompt as p, install_setup_command
-from zenif.schema import Schema, BooleanF, StringF, IntegerF, ListF, Length, Value, Email, NotEmpty
+from zenif.schema import (
+    Schema,
+    BooleanF,
+    StringF,
+    IntegerF,
+    ListF,
+    Length,
+    Value,
+    Email,
+    NotEmpty,
+)
 import os
 
 cli = CLI()
@@ -33,7 +43,7 @@ def test_prompts():
                     f"Must be an {'even' if self.parity ==
                                   0 else 'odd'} number."
                 )
-            
+
     # clear the screen
     os.system("cls" if os.name == "nt" else "clear")
 
@@ -53,7 +63,11 @@ def test_prompts():
         email=StringF().name("email").has(Email()),
     ).all_optional()
 
-    if not p.confirm("Are you sure you want to continue?", schema, "are_you_sure").default(True).ask():
+    if (
+        not p.confirm("Are you sure you want to continue?", schema, "are_you_sure")
+        .default(True)
+        .ask()
+    ):
         return
     date = p.date("Enter your date of birth").month_first().show_words().ask()
     name = p.text("Enter your name", schema, "name").ask()
