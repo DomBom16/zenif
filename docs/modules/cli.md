@@ -2,6 +2,30 @@
 
 Zenif includes a CLI (Command Line Interface) module that allows you to easily create interactive command-line applications. This module provides tools for building CLIs with argument parsing, command management, and now includes schema integration for robust input validation.
 
+## Table of Contents
+
+- [CLI Module](#cli-module)
+  - [Table of Contents](#table-of-contents)
+  - [Basic Usage](#basic-usage)
+  - [Setting Up ZSH Commands for Your Users](#setting-up-zsh-commands-for-your-users)
+  - [Available Prompt Types](#available-prompt-types)
+  - [Special Prompt Methods](#special-prompt-methods)
+    - [`default()`](#default)
+    - [`peeper()`](#peeper)
+    - [`commas()`](#commas)
+    - [`allow_decimals()`](#allow_decimals)
+    - [`allow_negatives()`](#allow_negatives)
+    - [`month_first()`](#month_first)
+    - [`year_range()`](#year_range)
+    - [`separator()`](#separator)
+    - [`show_words()`](#show_words)
+  - [Getting Used To Input Controls](#getting-used-to-input-controls)
+    - [Text Inputs](#text-inputs)
+    - [Number Inputs](#number-inputs)
+    - [Date Inputs](#date-inputs)
+  - [Interactive Prompts with Schema Validation](#interactive-prompts-with-schema-validation)
+  - [Schema Integration](#schema-integration)
+
 ## Basic Usage
 
 Here's a comprehensive example of how to create a CLI application using Zenif, demonstrating the use of both `@arg` and `@kwarg`:
@@ -43,7 +67,7 @@ install_setup_command(cli=cli, script_path=os.path.abspath(__file__))
 - `Prompt.text()`: For text input (works with String schema fields)
 - `Prompt.password()`: For hidden password input (works with String schema fields)
 - `Prompt.confirm()`: For yes/no questions (works with Boolean schema fields)
-- `Prompt.choice()`: For selecting one item from a list (works *only* with String schema fields)
+- `Prompt.choice()`: For selecting one item from a list (works _only_ with String schema fields)
 - `Prompt.checkbox()`: For selecting multiple items from a list (works with List schema fields)
 - `Prompt.number()`: For numeric input (works with Integer or Float schema fields)
 - `Prompt.date()`: For dates (works with String schema fields)

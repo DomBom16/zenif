@@ -2,6 +2,33 @@
 
 The Log module is the cornerstone of Zenif, offering a powerful and flexible logging system that can be tailored to suit a wide range of needs, from simple console output to complex multi-stream logging with custom formatting.
 
+## Table of Contents
+
+- [Log Module](#log-module)
+  - [Table of Contents](#table-of-contents)
+  - [Initialization](#initialization)
+  - [Logging Functions](#logging-functions)
+    - [Arguments](#arguments)
+  - [Streams and File Handling](#streams-and-file-handling)
+    - [Adding and Removing Streams](#adding-and-removing-streams)
+    - [Stream Groups](#stream-groups)
+    - [Modifying Stream Behavior](#modifying-stream-behavior)
+    - [Resetting Streams](#resetting-streams)
+  - [Rules and Customization](#rules-and-customization)
+    - [Accessing and Modifying Rules](#accessing-and-modifying-rules)
+    - [Viewing Rules](#viewing-rules)
+    - [Rule Categories](#rule-categories)
+  - [Customizing the Log Line](#customizing-the-log-line)
+    - [Premade Formats](#premade-formats)
+    - [Custom Format Definition](#custom-format-definition)
+    - [Segment Types](#segment-types)
+    - [Built-in Templates](#built-in-templates)
+    - [Template Parameters](#template-parameters)
+  - [Advanced Usage](#advanced-usage)
+    - [Multiple Streams with Different Configurations](#multiple-streams-with-different-configurations)
+    - [Dynamic Formatting Based on Terminal Size](#dynamic-formatting-based-on-terminal-size)
+    - [Custom Logging Levels](#custom-logging-levels)
+
 ## Initialization
 
 To start using the Logger, import it from `zenif.log` and create an instance:

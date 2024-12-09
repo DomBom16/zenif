@@ -2,6 +2,21 @@
 
 The Zenif Schema module provides a powerful and flexible way to define data structures and validate input. It allows you to create schemas for your data, validate inputs against these schemas, and integrate with other Zenif modules for robust data handling.
 
+## Table of Contents
+
+- [Schema Module](#schema-module)
+  - [Table of Contents](#table-of-contents)
+  - [Basic Usage](#basic-usage)
+  - [Available Field Types](#available-field-types)
+  - [Validators](#validators)
+  - [Integration with CLI Module](#integration-with-cli-module)
+  - [More Usage](#more-usage)
+    - [List Validation](#list-validation)
+    - [Optional Fields and Default Values](#optional-fields-and-default-values)
+    - [Enum Fields](#enum-fields)
+  - [Error Handling](#error-handling)
+  - [Coercion](#coercion)
+
 ## Basic Usage
 
 Here's a simple example of how to create and use a schema:

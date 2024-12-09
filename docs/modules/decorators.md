@@ -2,6 +2,28 @@
 
 Zenif provides a set of powerful decorators to enhance your Python functions. These decorators offer various functionalities such as retry mechanisms, timeout handling, rate limiting, and more.
 
+## Table of Contents
+
+- [Decorators Module](#decorators-module)
+  - [Table of Contents](#table-of-contents)
+  - [Available Decorators](#available-decorators)
+    - [retry](#retry)
+    - [retry_expo](#retry_expo)
+    - [retry_on_exception](#retry_on_exception)
+    - [timeout](#timeout)
+    - [rate_limiter](#rate_limiter)
+    - [trace](#trace)
+    - [suppress_exceptions](#suppress_exceptions)
+    - [deprecated](#deprecated)
+    - [type_check](#type_check)
+    - [log_execution_time](#log_execution_time)
+    - [cache](#cache)
+    - [singleton](#singleton)
+    - [enforce_types](#enforce_types)
+    - [background_task](#background_task)
+    - [profile](#profile)
+  - [Mixing Decorators](#mixing-decorators)
+
 ## Available Decorators
 
 Below are the available decorators.
@@ -92,7 +114,7 @@ for i in range(5):
         print(f"Call {i} succeeded: {result}")
     except RateLimitError as e:
         print(f"Call {i} failed: {e}")
-    
+
     if i < 4:  # Don't sleep after the last call
         time.sleep(2)  # Wait 2 seconds between calls
 
