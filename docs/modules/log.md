@@ -501,19 +501,17 @@ While Zenif doesn't directly support creating custom logging levels, you can ach
         "type": "template",
         "value": "level",
         "parameters": [
+            {"color": {"foreground": "cyan"}},
             {"if": {
                 "condition": {"type": "matches", "value": ["info"]},
-                "action": {"type": "set", "value": "CUSTOM"}
+                "action": {"type": "set", "value": "[CUSTOM]"}
             }},
-            {"color": {"foreground": "cyan"}},
-            {"affix": {"prefix": "[", "suffix": "]"}}
         ]
     },
     {"type": "static", "value": " "},
-    {"type": "template", "value": "message"}
 ]
 
-logger.info("[CUSTOM] This is a custom level message")
+logger.info("This is a custom level message")
 ```
 
 This approach allows you to create pseudo-custom levels while still using the built-in logging functions.
