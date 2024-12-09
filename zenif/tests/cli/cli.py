@@ -58,7 +58,7 @@ def test_prompts():
     date = p.date("Enter your date of birth").month_first().show_words().ask()
     name = p.text("Enter your name", schema, "name").ask()
     password = p.password("Enter your password", schema, "password").peeper().ask()
-    age = p.number("Enter your age", schema, "age").allow_negatives().allow_decimals().ask()
+    age = p.number("Enter your age", schema, "age").ask()
     interests = p.checkbox(
         "Select your interests",
         ["Reading", "Gaming", "Sports", "Cooking", "Travel"],
