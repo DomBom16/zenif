@@ -91,11 +91,11 @@ def test_prompts():
         "fav_interest",
     ).ask()
 
-    print(f"{name=}")
-    print(f"{email=}")
-    print(f"{password=}")
-    print(f"{date=}")
-    print(f"{age=}")
+    # print(f"{name=}")
+    # print(f"{email=}")
+    # print(f"{password=}")
+    # print(f"{date=}")
+    # print(f"{age=}")
     print(f"{editor=}")
     print(f"{interests=}")
     print(f"{fav_interest=}")
