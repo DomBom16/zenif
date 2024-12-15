@@ -1,6 +1,4 @@
-from .applets.core import CLI
-from .applets.decorators import arg, kwarg
-from .applets.install_command import install_setup_command
+from .applets import CLI, arg, kwarg, install_setup_command
 
 from .prompt import Prompt
 
