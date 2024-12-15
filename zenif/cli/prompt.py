@@ -2,8 +2,19 @@ import sys
 from colorama import init, Fore, Style, Back
 import signal
 from zenif.schema import Schema, StringF
+from zenif.log import Logger
 import shutil
 from datetime import datetime
+
+# For the upcoming EditorPrompt
+from ..utils import wrap, strip_ansi
+from ..constants import Keys
+from pygments import highlight
+from pygments.util import ClassNotFound
+from pygments.lexer import Lexer
+from pygments.lexers import get_lexer_for_filename
+from pygments.styles import get_style_by_name, STYLE_MAP
+from pygments.formatters import Terminal256Formatter as tformatter
 
 init(autoreset=True)
 
@@ -54,7 +65,7 @@ class BasePrompt:
                 while True:
                     if msvcrt.kbhit():
                         char = msvcrt.getch().decode("utf-8")
-                        if char == "\x03":  # Ctrl+C
+                        if char == Keys.CTRLC:  # Ctrl+C
                             raise KeyboardInterrupt()
                         return char
             finally:
@@ -74,14 +85,14 @@ class BasePrompt:
 
                 while True:
                     char = sys.stdin.read(1)
-                    if char == "\x03":  # Ctrl+C
+                    if char == Keys.CTRLC:  # Ctrl+C
                         raise KeyboardInterrupt()
-                    if char == "\x1b":
+                    if char == Keys.ESCAPE:
                         # Handle escape sequences (e.g., arrow keys)
                         next_char = sys.stdin.read(1)
                         if next_char == "[":
                             last_char = sys.stdin.read(1)
-                            return f"\x1b[{last_char}"
+                            return f"\033[{last_char}"
                     return char
             finally:
                 # Reset terminal settings and interrupt handler
@@ -160,18 +171,18 @@ class TextPrompt(BasePrompt):
                 self.message, truncated_value, self._default, error=error
             )
             char = self._get_key()
-            if char == "\r":  # Enter key
+            if char == Keys.ENTER:  # Enter key
                 if not error and (value or self._default):
                     self._print_prompt(
                         self.message, value or self._default, self._default
                     )
                     print()
                     return value or self._default
-            elif char == "\x7f":  # Backspace
+            elif char == Keys.BACKSPACE:  # Backspace
                 value = value[:-1]
-            elif char == "\x1b":  # Escape
+            elif char == Keys.ESCAPE:  # Escape
                 value = ""
-            elif char not in ("\x1b[A", "\x1b[B", "\x1b[C", "\x1b[D"):
+            elif char not in Keys.ARROWS:
                 value += char
 
 
@@ -219,7 +230,7 @@ class PasswordPrompt(BasePrompt):
             )
             self._print_prompt(self.message, truncated_value, error=error)
             char = self._get_key()
-            if char == "\r":  # Enter key
+            if char == Keys.ENTER:  # Enter key
                 if not error and value:
                     # On submit, show the password fully masked again
                     masked_value = mask_char * len(value)
@@ -231,15 +242,10 @@ class PasswordPrompt(BasePrompt):
                     self._print_prompt(self.message, truncated_value, error=None)
                     print()  # Move to next line after input
                     return value
-            elif char == "\x7f":  # Backspace
+            elif char == Keys.BACKSPACE:  # Backspace
                 value = value[:-1]
                 last_char = ""  # Clear the last typed character on backspace
-            elif char not in (
-                "\x1b[A",
-                "\x1b[B",
-                "\x1b[C",
-                "\x1b[D",
-            ):  # Ignore arrow keys
+            elif char not in Keys.ARROWS:  # Ignore arrow keys
                 last_char = (
                     char if char.strip() else ""
                 )  # Update last_char only if non-space
@@ -283,7 +289,9 @@ class ConfirmPrompt(BasePrompt):
                 key == "y"
                 if key in ("y", "n")
                 else (
-                    self._default if key == "\r" and self._default is not None else None
+                    self._default
+                    if key == Keys.ENTER and self._default is not None
+                    else None
                 )
             )
             if result is not None:
@@ -341,7 +349,7 @@ class ChoicePrompt(BasePrompt):
                     print(f"{Fore.YELLOW}{Style.DIM}  {choice}{Fore.RESET}")
 
             key = self._get_key()
-            if key == "\r":  # Enter key
+            if key == Keys.ENTER:  # Enter key
                 result = self.choices[current]
                 error = self.validate(result or "")
                 if not error:
@@ -358,9 +366,9 @@ class ChoicePrompt(BasePrompt):
                     print(
                         f"{Fore.GREEN}? {Fore.CYAN}{self.message}:{Fore.RESET}\n{Style.DIM}  {controls}"
                     )
-            elif key == "\x1b[A" and current > 0:  # Up arrow
+            elif key == Keys.UP and current > 0:  # Up arrow
                 current -= 1
-            elif key == "\x1b[B" and current < len(self.choices) - 1:  # Down arrow
+            elif key == Keys.DOWN and current < len(self.choices) - 1:  # Down arrow
                 current += 1
 
             print(f"\033[{len(self.choices) + 1}A")  # Move cursor up to redraw choices
@@ -425,7 +433,7 @@ class CheckboxPrompt(BasePrompt):
             self._print_prompt(self.message, error=f"{error if error else ""}\n")
             print(f"\r{Fore.RESET}{Style.DIM}  {controls}\033[{len(self.choices)}B")
 
-            if key == "\r" and not error:
+            if key == Keys.ENTER and not error:
                 for _ in range(len(self.choices) + 2):
                     print(f"\033[1A\033[2K", end="")
                 self._print_prompt(
@@ -438,9 +446,9 @@ class CheckboxPrompt(BasePrompt):
                 )
                 print()  # Move to next line
                 return result
-            elif key == "\x1b[A" and current > 0:  # Up arrow
+            elif key == Keys.UP and current > 0:  # Up arrow
                 current -= 1
-            elif key == "\x1b[B" and current < len(self.choices) - 1:  # Down arrow
+            elif key == Keys.DOWN and current < len(self.choices) - 1:  # Down arrow
                 current += 1
 
             print(f"\033[{len(self.choices) + 1}A")  # Move cursor up to redraw choices
@@ -541,7 +549,7 @@ class NumberPrompt(BasePrompt):
                 self.message, truncated_value, self._default, error=error
             )
             char = self._get_key()
-            if char == "\r":  # Enter key
+            if char == Keys.ENTER:  # Enter key
                 if not error and (value or self._default is not None):
                     print()  # Move to next line after input
                     return (
@@ -549,7 +557,7 @@ class NumberPrompt(BasePrompt):
                         if self._allow_decimals and value
                         else (int(value) if value else self._default)
                     )
-            elif char == "\x7f":  # Backspace
+            elif char == Keys.BACKSPACE:  # Backspace
                 value = value[:-1]
             elif char.isdigit() and len(value) < 15:
                 value += char
@@ -561,9 +569,9 @@ class NumberPrompt(BasePrompt):
                     value = value[1:]
                 else:
                     value = "-" + value
-            elif char == "\x1b[A":  # Up arrow
+            elif char == Keys.UP:  # Up arrow
                 value = str(int(value or 0) + 1)
-            elif char == "\x1b[B":  # Down arrow
+            elif char == Keys.DOWN:  # Down arrow
                 value = str(int(value or 0) - 1)
 
             if value == "-":
@@ -625,22 +633,23 @@ class DatePrompt(BasePrompt):
             ["month", "day", "year"] if self._month_first else ["day", "month", "year"]
         )
 
-        print("\n")
+        print("\n\n")
 
         fresh = False
 
         while True:
             controls = "←/→ to navigate, Tab to highlight, Enter to confirm"
 
-            error = self.validate(f"{self.month or 'MM'}/{self.day or 'DD'}/{self.year or 'YYYY'}")
+            error = self.validate(
+                f"{self.month or 'MM'}/{self.day or 'DD'}/{self.year or 'YYYY'}"
+            )
 
-            print("\033[4A")
+            for _ in range(3):
+                print(f"\033[1A\033[2K", end="")
             self._print_prompt(self.message, error=error)
             print(f"\n{Fore.RESET}{Style.DIM}  {controls}")
 
-            formatted_value = (
-                f"  {Fore.YELLOW}{Back.RESET}{"" if self.current_field_idx == 0 else Style.DIM}{f"{Fore.BLACK}{Back.YELLOW}" if self.current_field_idx == 0 and fresh else ''}"
-            )
+            formatted_value = f"  {Fore.YELLOW}{Back.RESET}{"" if self.current_field_idx == 0 else Style.DIM}{f"{Fore.BLACK}{Back.YELLOW}" if self.current_field_idx == 0 and fresh else ''}"
 
             formatted_value += (
                 (self.month or "MM").rjust(2, "0")
@@ -665,27 +674,19 @@ class DatePrompt(BasePrompt):
             print(f"{formatted_value}")
 
             char = self._get_key()
-            if char == "\t" or char == "\x1b[C":  # Tab
+            if char == Keys.TAB or char == Keys.RIGHT:  # Tab
                 # move to next field
                 self.current_field_idx = (self.current_field_idx + 1) % 3
                 if int(self.year or 0) < self._year_range[0] and self.year:
                     self.year = str(self._year_range[0])
-                if char == "\t":
-                    fresh = True
-                else:
-                    fresh = False
-            elif (
-                char == "\x1b[Z" or char == "\x1b[D"
-            ):   # Shift+Tab or Left arrow
+                fresh = char == Keys.TAB
+            elif char == Keys.STAB or char == Keys.LEFT:  # Shift+Tab or Left arrow
                 # move to previous field
                 self.current_field_idx = (self.current_field_idx - 1) % 3
                 if int(self.year or 0) < self._year_range[0] and self.year:
                     self.year = str(self._year_range[0])
-                if char == "\x1b[Z":
-                    fresh = True
-                else:
-                    fresh = False
-            elif char == "\r":  # Enter key
+                fresh = char == Keys.STAB
+            elif char == Keys.ENTER:  # Enter key
                 # check if all fields are filled
                 if (
                     1 <= int(self.day) <= 31
@@ -719,7 +720,7 @@ class DatePrompt(BasePrompt):
                     )
                     print()
                     return datetime(int(self.year), int(self.month), int(self.day))
-            elif char == "\x7f":  # Backspace
+            elif char == Keys.BACKSPACE:  # Backspace
                 if field_order[self.current_field_idx] == "day":
                     self.day = self.day[:-1]
                     if self.day == "0" or fresh:
@@ -733,7 +734,7 @@ class DatePrompt(BasePrompt):
                     if self.year == "0" or fresh:
                         self.year = ""
                 fresh = False
-            elif char == "\x1b[A":  # Up arrow
+            elif char == Keys.UP:  # Up arrow
                 if field_order[self.current_field_idx] == "day":
                     self.day = str((int(self.day or 0) + 1) % 32)
                 elif field_order[self.current_field_idx] == "month":
@@ -743,7 +744,7 @@ class DatePrompt(BasePrompt):
                     if int(self.year) > self._year_range[1]:
                         self.year = str(self._year_range[0])  # Wrap around
                 fresh = False
-            elif char == "\x1b[B":  # Down arrow
+            elif char == Keys.DOWN:  # Down arrow
                 if field_order[self.current_field_idx] == "day":
                     self.day = str((int(self.day or 0) - 1) % 32)
                 elif field_order[self.current_field_idx] == "month":
@@ -786,6 +787,114 @@ class DatePrompt(BasePrompt):
                     if len(self.year) == 4:
                         self.current_field_idx = (self.current_field_idx + 1) % 3
                         fresh = True
+
+
+class EditorPrompt(BasePrompt):
+    def __init__(
+        self,
+        message: str,
+        schema: Schema | None = None,
+        id: str | None = None,
+    ):
+        super().__init__(message, schema, id)
+        self._language: str = "txt"
+
+    def language(self, language: str) -> "EditorPrompt":
+        """Set the file language for the prompt."""
+        self._language = language
+        return self
+
+    def _get_lexer(self, ext: str) -> Lexer | None:
+        try:
+            return get_lexer_for_filename(f"dummy.{ext}")
+        except ClassNotFound:
+            return None
+
+    def _insert_char(self, value: str, char: str, cidx: int) -> str:
+        cidx += value.count("\n")
+        return value[:cidx] + char + value[cidx:]
+
+    def _remove_char(self, value: str, cidx: int) -> str:
+        return value[: cidx - 1] + value[cidx:]
+
+    def ask(self) -> str:
+        """Prompt the user for input."""
+
+        Logger({"log_line": {"format": "simple"}}).warning("EditorPrompt is in a very experimental state. Use at your own risk. Issues can be reported at https://github.com/DomBom16/zenif/issues.")
+
+        # Prompt and error on first line
+        # Controls on second line
+        # Editor on third line and extends downward
+        # After editor, language and other metrics (words, lines, etc.)
+
+        buffer = [""]
+        cx, cy = 0, 0
+
+        print("\n")
+
+        while True:
+            error = self.validate("\n".join(buffer) or "")
+
+            for _ in range(len(buffer) + 1):
+                print(f"\033[1A\033[2K", end="")
+
+            self._print_prompt(self.message, error=error)
+            print(
+                f"\n{Fore.RESET}{Style.DIM}  {(cx, cy)}{Style.RESET_ALL}",
+                end="",
+            )
+
+            for line in buffer:
+                print(
+                    f"\n\033[2K{' ' * 2}{Fore.YELLOW}{strip_ansi(line)}{Style.RESET_ALL}",
+                    end="",
+                )
+
+            char = self._get_key()
+            if char == Keys.UP:  # Move cursor up
+                if cy > 0:
+                    cy -= 1
+                    cx = min(cx, len(buffer[cy]))
+                elif cy == 0:
+                    cx = 0
+            elif char == Keys.DOWN:  # Move cursor down
+                if cy < len(buffer) - 1:
+                    cy += 1
+                    cx = min(cx, len(buffer[cy]))
+                elif cy == len(buffer) - 1:
+                    cx = len(buffer[cy])
+            elif char == Keys.LEFT:  # Move cursor left
+                if cx > 0:
+                    cx -= 1
+                elif cy > 0:
+                    cy -= 1
+                    cx = len(buffer[cy])
+            elif char == Keys.RIGHT:  # Move cursor right
+                if cx < len(buffer[cy]):
+                    cx += 1
+                elif cy < len(buffer) - 1:
+                    cy += 1
+                    cx = 0
+            elif char == Keys.BACKSPACE:  # Handle backspace
+                if cx > 0:
+                    buffer[cy] = buffer[cy][: cx - 1] + buffer[cy][cx:]
+                    cx -= 1
+                elif cy > 0:
+                    prev_line = buffer.pop(cy)
+                    cy -= 1
+                    cx = len(buffer[cy])
+                    buffer[cy] += prev_line
+            elif char == Keys.ENTER:  # Handle Enter (newline)
+                new_line = buffer[cy][cx:]
+                buffer[cy] = buffer[cy][:cx]
+                buffer.insert(cy + 1, new_line)
+                cy += 1
+                cx = 0
+            elif char == Keys.CTRLD:
+                break
+            else:
+                buffer[cy] = buffer[cy][:cx] + char + buffer[cy][cx:]
+                cx += 1
 
 
 class Prompt:
@@ -855,3 +964,12 @@ class Prompt:
     ) -> DatePrompt:
         """Creates a date prompt where the user can input a date."""
         return DatePrompt(message, schema, id)
+
+    @staticmethod
+    def editor(
+        message: str,
+        schema: Schema | None = None,
+        id: str | None = None,
+    ) -> EditorPrompt:
+        """Creates an editor prompt where the user can input multiple lines of text, along with syntax highlighting if specified."""
+        return EditorPrompt(message, schema, id)
