@@ -1,18 +1,11 @@
 from datetime import datetime, UTC
 from shutil import get_terminal_size as tsize
 from threading import current_thread
-from random import choice
-from black import format_str, Mode
 from io import StringIO
 from re import sub
 from copy import deepcopy
 
-from pygments import highlight
-from pygments.lexers import PythonLexer
-from pygments.formatters import Terminal256Formatter as tformatter
-from pygments.styles import get_style_by_name
-
-from .utils import strip_ansi, strip_unsafe_objs, strip_repr_id, wrap
+from ..utils import strip_ansi, wrap
 from .template import TemplateEngine
 
 
