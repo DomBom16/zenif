@@ -63,16 +63,21 @@ def test_prompts():
         email=StringF().name("email").has(Email()),
     ).all_optional()
 
+    for i in range(16):
+        print(i)
+
     if (
         not p.confirm("Are you sure you want to continue?", schema, "are_you_sure")
         .default(True)
         .ask()
     ):
         return
-    date = p.date("Enter your date of birth").month_first().show_words().ask()
-    name = p.text("Enter your name", schema, "name").ask()
-    password = p.password("Enter your password", schema, "password").peeper().ask()
-    age = p.number("Enter your age", schema, "age").ask()
+    # name = p.text("Enter your name", schema, "name").ask()
+    # email = p.text("Enter your email", schema, "email").ask()
+    # password = p.password("Enter your password", schema, "password").peeper().ask()
+    # date = p.date("Enter your date of birth").month_first().show_words().ask()
+    # age = p.number("Enter your age", schema, "age").ask()
+    editor = p.editor("Enter your hacker code").language("py").ask()
     interests = p.checkbox(
         "Select your interests",
         ["Reading", "Gaming", "Sports", "Cooking", "Travel"],
@@ -85,15 +90,15 @@ def test_prompts():
         schema,
         "fav_interest",
     ).ask()
-    email = p.text("Enter your email", schema, "email").ask()
 
-    print(f"{date=}")
     print(f"{name=}")
+    print(f"{email=}")
     print(f"{password=}")
+    print(f"{date=}")
     print(f"{age=}")
+    print(f"{editor=}")
     print(f"{interests=}")
     print(f"{fav_interest=}")
-    print(f"{email=}")
 
 
 if __name__ == "__main__":
