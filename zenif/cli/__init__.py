@@ -1,7 +1,8 @@
-from .core import CLI
-from .decorators import arg, kwarg
+from .applets.core import CLI
+from .applets.decorators import arg, kwarg
+from .applets.install_command import install_setup_command
+
 from .prompt import Prompt
-from .install_command import install_setup_command
 
 
 __all__ = [
@@ -10,8 +11,8 @@ __all__ = [
     # CLI().command decorators
     "arg",
     "kwarg",
-    # interactive prompt utils
-    "Prompt",
     # setup command installer
     "install_setup_command",
+    # interactive prompt utils
+    "Prompt",
 ]

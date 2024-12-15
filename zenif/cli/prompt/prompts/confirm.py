@@ -1,0 +1,63 @@
+from ..base import BasePrompt
+from zenif.schema import Schema
+from ....constants import Keys
+
+class ConfirmPrompt(BasePrompt):
+    def __init__(
+        self,
+        message: str,
+        schema: Schema | None = None,
+        id: str | None = None,
+    ):
+        super().__init__(message, schema, id)
+        self._default: bool | None = None
+
+    def default(self, value: bool) -> "ConfirmPrompt":
+        """Set the default value for the prompt."""
+        self._default = value
+        return self
+
+    def ask(self) -> bool:
+        """Prompt the user for input."""
+        options = (
+            ["y", "N"]
+            if self._default is False
+            else ["Y", "n"] if self._default is True else ["y", "n"]
+        )
+        while True:
+            self._print_prompt(
+                self.message,
+                options=options,
+                default_option=(
+                    "Y"
+                    if self._default is True
+                    else "N" if self._default is False else None
+                ),
+            )
+            key = self._get_key().lower()
+            result = (
+                key == "y"
+                if key in ("y", "n")
+                else (
+                    self._default
+                    if key == Keys.ENTER and self._default is not None
+                    else None
+                )
+            )
+            if result is not None:
+                error = self.validate(result or "")
+                if not error:
+                    self._print_prompt(
+                        self.message,
+                        value="Yes" if result else "No",
+                        options=options,
+                        default_option=(
+                            "Y"
+                            if self._default is True
+                            else "N" if self._default is False else None
+                        ),
+                    )
+                    print()
+                    return result
+                else:
+                    self._print_prompt(self.message, error=error)
