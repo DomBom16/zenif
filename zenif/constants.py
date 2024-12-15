@@ -1,18 +1,21 @@
 class Keys:
     # Arrow keys
-    UP = "\033[A"
-    DOWN = "\033[B"
-    LEFT = "\033[D"
-    RIGHT = "\033[C"
+    UP = "\x1b[A"
+    DOWN = "\x1b[B"
+    LEFT = "\x1b[D"
+    RIGHT = "\x1b[C"
 
     ARROWS = (UP, DOWN, LEFT, RIGHT)
 
     # Special keys
     BACKSPACE = "\x7f"
     ENTER = "\r"
-    ESCAPE = "\033"
+    ESCAPE = "\x1b"
     TAB = "\t"
-    STAB = "\033[Z"  # Shift+Tab
+    STAB = "\x1b[Z"  # Shift+Tab
+
+    # Control keys
+    # ****E*G**J*LMN*P******W***
 
     # Selection
     CTRLA = "\x01"  # Select all
@@ -28,7 +31,6 @@ class Keys:
 
     # Search
     CTRLF = "\x06"  # Find
-    CTRLH = "\x08"  # Replace
 
     # Formatting
     CTRLB = "\x02"  # Bold
@@ -39,3 +41,24 @@ class Keys:
     # Version control
     CTRLY = "\x15"  # Redo
     CTRLZ = "\x1a"  # Undo
+
+    # Other
+    CTRLH = "\x08"  # Help/About
+    CTRLQ = "\x10"  # Quit
+    CTRLR = "\x12"  # Redraw
+    CTRLT = "\x14"  # Toggle
+    CTRLO = "\x0f"  # Open
+
+    # Function keys
+    F1 = "\x1bOP"
+    F2 = "\x1bOQ"
+    F3 = "\x1bOR"
+    F4 = "\x1bOS"
+    F5 = "\x1b[15~"
+    F6 = "\x1b[17~"
+    F7 = "\x1b[18~"
+    F8 = "\x1b[19~"
+    F9 = "\x1b[20~"
+    F10 = "\x1b[21~"
+    F11 = "\x1b[23~"
+    F12 = "\x1b[24~"

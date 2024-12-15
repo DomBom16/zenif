@@ -92,7 +92,7 @@ class BasePrompt:
                         next_char = sys.stdin.read(1)
                         if next_char == "[":
                             last_char = sys.stdin.read(1)
-                            return f"\033[{last_char}"
+                            return f"\x1b[{last_char}"
                     return char
             finally:
                 # Reset terminal settings and interrupt handler
@@ -108,7 +108,7 @@ class BasePrompt:
         default_option: str | None = None,
         error: str | None = None,
     ):
-        sys.stdout.write(f"\033[2K\r{Fore.GREEN}? {Fore.CYAN}{prompt}{Fore.RESET}")
+        sys.stdout.write(f"\x1b[2K\r{Fore.GREEN}? {Fore.CYAN}{prompt}{Fore.RESET}")
         if default and not options:
             sys.stdout.write(f" {Fore.CYAN}{Style.DIM}({default}){Style.RESET_ALL}")
         if options:
@@ -128,7 +128,7 @@ class BasePrompt:
                 )
         sys.stdout.write(f"{Fore.CYAN}: {Fore.YELLOW}{value}")
         if error:
-            sys.stdout.write(f"  {Fore.RED}{error}\033[{2 + len(error)}D")
+            sys.stdout.write(f"  {Fore.RED}{error}\x1b[{2 + len(error)}D")
         sys.stdout.flush()
 
 
@@ -354,13 +354,13 @@ class ChoicePrompt(BasePrompt):
                 error = self.validate(result or "")
                 if not error:
                     for _ in range(len(self.choices) + 2):
-                        print(f"\033[1A\033[2K", end="")
+                        print(f"\x1b[1A\x1b[2K", end="")
                     self._print_prompt(self.message, result)
                     print()  # Move to next line
                     return result
                 else:
                     for _ in range(len(self.choices) + 2):
-                        print(f"\033[1A\033[2K", end="")
+                        print(f"\x1b[1A\x1b[2K", end="")
                     self._print_prompt(self.message, error=error)
                     print()
                     print(
@@ -371,7 +371,7 @@ class ChoicePrompt(BasePrompt):
             elif key == Keys.DOWN and current < len(self.choices) - 1:  # Down arrow
                 current += 1
 
-            print(f"\033[{len(self.choices) + 1}A")  # Move cursor up to redraw choices
+            print(f"\x1b[{len(self.choices) + 1}A")  # Move cursor up to redraw choices
 
 
 class CheckboxPrompt(BasePrompt):
@@ -402,7 +402,7 @@ class CheckboxPrompt(BasePrompt):
                 else:
                     print(f"{Fore.YELLOW} ", end="")
                 print(
-                    f"\r{f"{Fore.YELLOW}{"\033[4m" if i == current else ""}X\033[0m" if is_selected else '\033[1C'} {Fore.YELLOW}{Style.DIM}{choice}{Fore.RESET}"
+                    f"\r{f"{Fore.YELLOW}{"\x1b[4m" if i == current else ""}X\x1b[0m" if is_selected else '\x1b[1C'} {Fore.YELLOW}{Style.DIM}{choice}{Fore.RESET}"
                 )
 
             if i:
@@ -414,9 +414,9 @@ class CheckboxPrompt(BasePrompt):
                 ]
                 error = self.validate(result)
 
-                print(f"\033[{len(self.choices) + 2}A", end="")
+                print(f"\x1b[{len(self.choices) + 2}A", end="")
                 self._print_prompt(self.message, error=f"{error if error else ""}\n")
-                print(f"\r{Fore.RESET}{Style.DIM}  {controls}\033[{len(self.choices)}B")
+                print(f"\r{Fore.RESET}{Style.DIM}  {controls}\x1b[{len(self.choices)}B")
 
             key = self._get_key()
             if key == " ":  # Space
@@ -429,13 +429,13 @@ class CheckboxPrompt(BasePrompt):
             ]
             error = self.validate(result)
 
-            print(f"\033[{len(self.choices) + 2}A", end="")
+            print(f"\x1b[{len(self.choices) + 2}A", end="")
             self._print_prompt(self.message, error=f"{error if error else ""}\n")
-            print(f"\r{Fore.RESET}{Style.DIM}  {controls}\033[{len(self.choices)}B")
+            print(f"\r{Fore.RESET}{Style.DIM}  {controls}\x1b[{len(self.choices)}B")
 
             if key == Keys.ENTER and not error:
                 for _ in range(len(self.choices) + 2):
-                    print(f"\033[1A\033[2K", end="")
+                    print(f"\x1b[1A\x1b[2K", end="")
                 self._print_prompt(
                     self.message,
                     (
@@ -451,7 +451,7 @@ class CheckboxPrompt(BasePrompt):
             elif key == Keys.DOWN and current < len(self.choices) - 1:  # Down arrow
                 current += 1
 
-            print(f"\033[{len(self.choices) + 1}A")  # Move cursor up to redraw choices
+            print(f"\x1b[{len(self.choices) + 1}A")  # Move cursor up to redraw choices
 
 
 class NumberPrompt(BasePrompt):
@@ -645,7 +645,7 @@ class DatePrompt(BasePrompt):
             )
 
             for _ in range(3):
-                print(f"\033[1A\033[2K", end="")
+                print(f"\x1b[1A\x1b[2K", end="")
             self._print_prompt(self.message, error=error)
             print(f"\n{Fore.RESET}{Style.DIM}  {controls}")
 
@@ -709,7 +709,7 @@ class DatePrompt(BasePrompt):
                     ]
 
                     for _ in range(3):
-                        print(f"\033[1A\033[2K", end="")
+                        print(f"\x1b[1A\x1b[2K", end="")
                     self._print_prompt(
                         self.message,
                         (
@@ -836,7 +836,7 @@ class EditorPrompt(BasePrompt):
             error = self.validate("\n".join(buffer) or "")
 
             for _ in range(len(buffer) + 1):
-                print(f"\033[1A\033[2K", end="")
+                print(f"\x1b[1A\x1b[2K", end="")
 
             self._print_prompt(self.message, error=error)
             print(
@@ -846,7 +846,7 @@ class EditorPrompt(BasePrompt):
 
             for line in buffer:
                 print(
-                    f"\n\033[2K{' ' * 2}{Fore.YELLOW}{strip_ansi(line)}{Style.RESET_ALL}",
+                    f"\n\x1b[2K{' ' * 2}{Fore.YELLOW}{strip_ansi(line)}{Style.RESET_ALL}",
                     end="",
                 )
 

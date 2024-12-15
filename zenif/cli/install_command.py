@@ -32,12 +32,12 @@ if [[ -f ~/.zshrc ]]; then
         echo '{alias}() {{' >> ~/.zshrc
         echo '    python {script_path} "$@"' >> ~/.zshrc
         echo '}}' >> ~/.zshrc
-        echo "Command \033[44m\033[30m {alias} \033[0m has been added to your .zshrc file."
+        echo "Command \x1b[44m\x1b[30m {alias} \x1b[0m has been added to your .zshrc file."
         echo "Run the following to get started:"
-        echo "\nsource ~/.zshrc   \033[90mupdate your configuration\033[0m"
-        echo   "{alias} -h{(13-len(alias))*" "}  \033[90mdisplay help information\033[0m"
+        echo "\nsource ~/.zshrc   \x1b[90mupdate your configuration\x1b[0m"
+        echo   "{alias} -h{(13-len(alias))*" "}  \x1b[90mdisplay help information\x1b[0m"
     else
-        echo "The command \033[44m\033[30m {alias} \033[0m is already in your .zshrc file."
+        echo "The command \x1b[44m\x1b[30m {alias} \x1b[0m is already in your .zshrc file."
     fi
 else
     echo "Error: ~/.zshrc file not found."

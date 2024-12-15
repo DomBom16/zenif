@@ -98,7 +98,7 @@ class BaseHandler:
         log_line = self.template_engine.process(
             ruleset.log_line.format, context, level["name"]
         )
-        log_line = sub(r"\033\[(\d+)C", lambda m: " " * int(m.group(1)), log_line)
+        log_line = sub(r"\x1b\[(\d+)C", lambda m: " " * int(m.group(1)), log_line)
         log_line = log_line if ruleset.formatting.ansi else strip_ansi(log_line)
 
         message_space = terminal_width - self.template_engine.processed.length
@@ -117,7 +117,7 @@ class BaseHandler:
         log_output = StringIO()
 
         log_output.write(
-            f"{log_line}{''.join([f'{line}\n' if i == 0 else f'\033[{message_indent}C{line}\033[0m\n' for i, line in enumerate(lines)])}"
+            f"{log_line}{''.join([f'{line}\n' if i == 0 else f'\x1b[{message_indent}C{line}\x1b[0m\n' for i, line in enumerate(lines)])}"
         )
 
         return log_output.getvalue()
@@ -126,7 +126,7 @@ class BaseHandler:
         now = datetime.now(UTC if ruleset.timestamps.use_utc else None)
         timestamp = now.strftime("%H:%M:%S")
         if timestamp == self.previous_timestamp and not ruleset.timestamps.always_show:
-            return f"\033[{len(timestamp)}C"
+            return f"\x1b[{len(timestamp)}C"
         self.previous_timestamp = timestamp
         return timestamp
 
@@ -160,7 +160,7 @@ class BaseHandler:
 
         metadata_str = " ".join(metadata_items)
         metadata_space = terminal_width - message_space - len(strip_ansi(metadata_str))
-        return f"\033[0m\033[2m{metadata_str.rjust(metadata_space)}\033[0m"
+        return f"\x1b[0m\x1b[2m{metadata_str.rjust(metadata_space)}\x1b[0m"
 
 
 class StreamHandler(BaseHandler):

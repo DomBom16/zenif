@@ -66,7 +66,7 @@ def strip_ansi(text: str) -> str:
 
 def rgb_to_ansi(r: int = 255, g: int = 255, b: int = 255, fg: bool = True) -> str:
     color_code = 16 + 36 * int(r / 255 * 5) + 6 * int(g / 255 * 5) + int(b / 255 * 5)
-    return f'\033[{"38" if fg else "48"};5;{color_code}m'
+    return f'\x1b[{"38" if fg else "48"};5;{color_code}m'
 
 
 def colorize(string: str, color: dict[str, tuple | str]) -> str:
@@ -94,7 +94,7 @@ def colorize(string: str, color: dict[str, tuple | str]) -> str:
         else (getattr(Back, bg_color.upper(), "") if isinstance(bg_color, str) else "")
     )
 
-    return f"{fg_code}{bg_code}{string}\033[0m"
+    return f"{fg_code}{bg_code}{string}\x1b[0m"
 
 
 def strip_unsafe_objs(

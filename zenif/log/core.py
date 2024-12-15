@@ -32,12 +32,12 @@ class Logger:
         """
 
         self.__levels = {
-            "debug": {"name": "debug", "level": 1, "color": "\033[34m"},
-            "info": {"name": "info", "level": 0, "color": "\033[37m"},
-            "success": {"name": "success", "level": 2, "color": "\033[32m"},
-            "warning": {"name": "warning", "level": 3, "color": "\033[33m"},
-            "error": {"name": "error", "level": 4, "color": "\033[31m"},
-            "lethal": {"name": "lethal", "level": 5, "color": "\033[35m"},
+            "debug": {"name": "debug", "level": 1, "color": "\x1b[34m"},
+            "info": {"name": "info", "level": 0, "color": "\x1b[37m"},
+            "success": {"name": "success", "level": 2, "color": "\x1b[32m"},
+            "warning": {"name": "warning", "level": 3, "color": "\x1b[33m"},
+            "error": {"name": "error", "level": 4, "color": "\x1b[31m"},
+            "lethal": {"name": "lethal", "level": 5, "color": "\x1b[35m"},
         }
 
         self.defaults = {

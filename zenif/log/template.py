@@ -517,7 +517,7 @@ class TemplateEngine:
             result += value
 
             if segment.get("value", "") == "timestamp":
-                self.__length += len(strip_ansi(value.replace("\033[8C", 8 * "#")))
+                self.__length += len(strip_ansi(value.replace("\x1b[8C", 8 * "#")))
             else:
                 self.__length += len(strip_ansi(value))
 
@@ -741,16 +741,16 @@ class TemplateEngine:
         )
         style = []
         if pvalue["bold"]:
-            style.append("\033[1m")
+            style.append("\x1b[1m")
         if pvalue["italic"]:
-            style.append("\033[3m")
+            style.append("\x1b[3m")
         if pvalue["underline"]:
-            style.append("\033[4m")
+            style.append("\x1b[4m")
         if pvalue["blink"]:
-            style.append("\033[5m")
+            style.append("\x1b[5m")
         if pvalue["reverse"]:
-            style.append("\033[7m")
-        return f"{''.join(style)}{value}\033[0m" if style else value
+            style.append("\x1b[7m")
+        return f"{''.join(style)}{value}\x1b[0m" if style else value
 
     def __process_color(self, value: str, pvalue: dict[str, any]) -> str:
         pvalue = self.__process_pvalue(
