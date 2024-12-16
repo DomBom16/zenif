@@ -112,3 +112,111 @@ class Keys:
 
     _a("CKEYS", CTRLKEYS)
     _a("FKEYS", FUNCKEYS)
+
+
+class Cursor:
+    @staticmethod
+    def clear() -> str:
+        """Clear the current line"""
+        return "\x1b[2K"
+
+    @staticmethod
+    def cmove(x: int, y: int) -> str:
+        """Move the cursor relative to the current position
+
+        Args:
+            x (int): The number of columns to move right
+            y (int): The number of rows to move down
+
+        Returns:
+            str: Ansi code to move the cursor
+        """
+        return f"\x1b[{y};{x}H"
+
+    @staticmethod
+    def cup(y: int) -> str:
+        """Move the cursor up
+
+        Args:
+            y (int): The number of rows to move up
+
+        Returns:
+            str: Ansi code to move the cursor up
+        """
+        return f"\x1b[{y}A"
+
+    @staticmethod
+    def cdown(y: int) -> str:
+        """Move the cursor down
+
+        Args:
+            y (int): The number of rows to move down
+
+        Returns:
+            str: Ansi code to move the cursor down
+        """
+        return f"\x1b[{y}B"
+
+    @staticmethod
+    def cright(x: int) -> str:
+        """Move the cursor right
+
+        Args:
+            x (int): The number of columns to move right
+
+        Returns:
+            str: Ansi code to move the cursor right
+        """
+        return f"\x1b[{x}C"
+
+    @staticmethod
+    def cleft(x: int) -> str:
+        """Move the cursor left
+
+        Args:
+            x (int): The number of columns to move left
+
+        Returns:
+            str: Ansi code to move the cursor left
+        """
+        return f"\x1b[{x}D"
+
+    @staticmethod
+    def cset(x: int, y: int) -> str:
+        """Set the cursor position on the screen
+
+        Args:
+            x (int): The number of columns to move right
+            y (int): The number of rows to move down
+
+        Returns:
+            str: Ansi code to set the cursor
+        """
+        return f"\x1b[{y};{x}f"
+
+    @staticmethod
+    def cget() -> str:
+        """Get the cursor position on the screen
+
+        Returns:
+            str: Ansi code to get the cursor
+        """
+        return "\x1b[6n"
+
+    @staticmethod
+    def chide() -> str:
+        """Hide the cursor
+
+        Returns:
+            str: Ansi code to hide the cursor
+        """
+        return "\x1b[?25l"
+
+    @staticmethod
+    def cshow() -> str:
+        """Show the cursor
+
+        Returns:
+            str: Ansi code to show the cursor
+        """
+        return "\x1b[?25h"
