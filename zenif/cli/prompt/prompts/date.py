@@ -1,10 +1,11 @@
 from ..base import BasePrompt
 from zenif.schema import Schema
-from ....constants import Keys
+from ....constants import Keys, Cursor
 from colorama import init, Fore, Back, Style
 from datetime import datetime
 
 init(autoreset=True)
+
 
 class DatePrompt(BasePrompt):
     def __init__(
@@ -73,7 +74,7 @@ class DatePrompt(BasePrompt):
             )
 
             for _ in range(3):
-                print(f"\x1b[1A\x1b[2K", end="")
+                print(Cursor.cup(1) + Cursor.clear(), end="")
             self._print_prompt(self.message, error=error)
             print(f"\n{Fore.RESET}{Style.DIM}  {controls}")
 
@@ -137,7 +138,7 @@ class DatePrompt(BasePrompt):
                     ]
 
                     for _ in range(3):
-                        print(f"\x1b[1A\x1b[2K", end="")
+                        print(Cursor.cup(1) + Cursor.clear(), end="")
                     self._print_prompt(
                         self.message,
                         (

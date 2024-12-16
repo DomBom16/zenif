@@ -1,9 +1,10 @@
 from ..base import BasePrompt
 from zenif.schema import Schema, StringF
-from ....constants import Keys
+from ....constants import Keys, Cursor
 from colorama import init, Fore, Style
 
 init(autoreset=True)
+
 
 class ChoicePrompt(BasePrompt):
     def __init__(
@@ -46,13 +47,13 @@ class ChoicePrompt(BasePrompt):
                 error = self.validate(result or "")
                 if not error:
                     for _ in range(len(self.choices) + 2):
-                        print(f"\x1b[1A\x1b[2K", end="")
+                        print(Cursor.cup(1) + Cursor.clear(), end="")
                     self._print_prompt(self.message, result)
                     print()  # Move to next line
                     return result
                 else:
                     for _ in range(len(self.choices) + 2):
-                        print(f"\x1b[1A\x1b[2K", end="")
+                        print(Cursor.cup(1) + Cursor.clear(), end="")
                     self._print_prompt(self.message, error=error)
                     print()
                     print(
@@ -63,4 +64,4 @@ class ChoicePrompt(BasePrompt):
             elif key == Keys.DOWN and current < len(self.choices) - 1:  # Down arrow
                 current += 1
 
-            print(f"\x1b[{len(self.choices) + 1}A")  # Move cursor up to redraw choices
+            print(Cursor.cup(len(self.choices) + 1))  # Move cursor up to redraw choices

@@ -1,10 +1,11 @@
 from zenif.schema import Schema
 import signal
 import sys
-from ...constants import Keys
+from ...constants import Keys, Cursor
 from colorama import init, Fore, Style
 
 init(autoreset=True)
+
 
 class BasePrompt:
     def __init__(
@@ -95,7 +96,9 @@ class BasePrompt:
         default_option: str | None = None,
         error: str | None = None,
     ):
-        sys.stdout.write(f"\x1b[2K\r{Fore.GREEN}? {Fore.CYAN}{prompt}{Fore.RESET}")
+        sys.stdout.write(
+            f"{Cursor.clear()}\r{Fore.GREEN}? {Fore.CYAN}{prompt}{Fore.RESET}"
+        )
         if default and not options:
             sys.stdout.write(f" {Fore.CYAN}{Style.DIM}({default}){Style.RESET_ALL}")
         if options:
@@ -115,5 +118,6 @@ class BasePrompt:
                 )
         sys.stdout.write(f"{Fore.CYAN}: {Fore.YELLOW}{value}")
         if error:
-            sys.stdout.write(f"  {Fore.RED}{error}\x1b[{2 + len(error)}D")
+            sys.stdout.write(f"  {Fore.RED}{error}{Cursor.cleft(2 + len(error))}")
+
         sys.stdout.flush()

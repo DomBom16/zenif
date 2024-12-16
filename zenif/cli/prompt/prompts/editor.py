@@ -1,11 +1,10 @@
 from ..base import BasePrompt
 from zenif.schema import Schema
 from zenif.log import Logger
-from ....constants import Keys
+from ....constants import Keys, Cursor
 from colorama import init, Fore, Style
 
 from ....utils import wrap, strip_ansi
-from ....constants import Keys
 from pygments import highlight
 from pygments.util import ClassNotFound
 from pygments.lexer import Lexer
@@ -14,6 +13,7 @@ from pygments.styles import get_style_by_name, STYLE_MAP
 from pygments.formatters import Terminal256Formatter as tformatter
 
 init(autoreset=True)
+
 
 class EditorPrompt(BasePrompt):
     def __init__(
@@ -64,7 +64,7 @@ class EditorPrompt(BasePrompt):
             error = self.validate("\n".join(buffer) or "")
 
             for _ in range(len(buffer) + 1):
-                print(f"\x1b[1A\x1b[2K", end="")
+                print(Cursor.cup(1) + Cursor.clear(), end="")
 
             self._print_prompt(self.message, error=error)
             print(
@@ -74,7 +74,7 @@ class EditorPrompt(BasePrompt):
 
             for line in buffer:
                 print(
-                    f"\n\x1b[2K{' ' * 2}{Fore.YELLOW}{strip_ansi(line)}{Style.RESET_ALL}",
+                    f"\n{Cursor.clear()}{' ' * 2}{Fore.YELLOW}{strip_ansi(line)}{Style.RESET_ALL}",
                     end="",
                 )
 
