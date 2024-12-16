@@ -16,7 +16,7 @@ Zenif requires Python 3.12 or higher. To install the latest version, install wit
 pip install zenif
 ```
 
-This command will download and install Zenif along with its dependencies.
+This command will download and install Zenif along with its dependencies. If you want to view the code that was packaged for this launch, head to this [branch](https://github.com/DomBom16/zenif/tree/31b8c532aa82640870cd0771f2998af13002a27d).
 
 ## Documentation
 
