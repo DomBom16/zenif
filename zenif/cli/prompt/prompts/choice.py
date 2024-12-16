@@ -47,13 +47,13 @@ class ChoicePrompt(BasePrompt):
                 error = self.validate(result or "")
                 if not error:
                     for _ in range(len(self.choices) + 2):
-                        print(Cursor.cup(1) + Cursor.clear(), end="")
+                        print(Cursor.up(1) + Cursor.clear(), end="")
                     self._print_prompt(self.message, result)
                     print()  # Move to next line
                     return result
                 else:
                     for _ in range(len(self.choices) + 2):
-                        print(Cursor.cup(1) + Cursor.clear(), end="")
+                        print(Cursor.up(1) + Cursor.clear(), end="")
                     self._print_prompt(self.message, error=error)
                     print()
                     print(
@@ -64,4 +64,4 @@ class ChoicePrompt(BasePrompt):
             elif key == Keys.DOWN and current < len(self.choices) - 1:  # Down arrow
                 current += 1
 
-            print(Cursor.cup(len(self.choices) + 1))  # Move cursor up to redraw choices
+            print(Cursor.up(len(self.choices) + 1))  # Move cursor up to redraw choices

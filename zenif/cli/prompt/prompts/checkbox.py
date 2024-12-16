@@ -34,7 +34,7 @@ class CheckboxPrompt(BasePrompt):
                 else:
                     print(f"{Fore.YELLOW} ", end="")
                 print(
-                    f"\r{f"{Fore.YELLOW}{"\x1b[4m" if i == current else ""}X\x1b[0m" if is_selected else Cursor.cright(1)} {Fore.YELLOW}{Style.DIM}{choice}{Fore.RESET}"
+                    f"\r{f"{Fore.YELLOW}{"\x1b[4m" if i == current else ""}X\x1b[0m" if is_selected else Cursor.right(1)} {Fore.YELLOW}{Style.DIM}{choice}{Fore.RESET}"
                 )
 
             if i:
@@ -46,10 +46,10 @@ class CheckboxPrompt(BasePrompt):
                 ]
                 error = self.validate(result)
 
-                print(Cursor.cup(len(self.choices) + 2), end="")
+                print(Cursor.up(len(self.choices) + 2), end="")
                 self._print_prompt(self.message, error=f"{error if error else ""}\n")
                 print(
-                    f"\r{Fore.RESET}{Style.DIM}  {controls}{Cursor.cdown(len(self.choices))}"
+                    f"\r{Fore.RESET}{Style.DIM}  {controls}{Cursor.down(len(self.choices))}"
                 )
 
             key = self._get_key()
@@ -63,15 +63,15 @@ class CheckboxPrompt(BasePrompt):
             ]
             error = self.validate(result)
 
-            print(Cursor.cup(len(self.choices) + 2), end="")
+            print(Cursor.up(len(self.choices) + 2), end="")
             self._print_prompt(self.message, error=f"{error if error else ""}\n")
             print(
-                f"\r{Fore.RESET}{Style.DIM}  {controls}{Cursor.cdown(len(self.choices))}"
+                f"\r{Fore.RESET}{Style.DIM}  {controls}{Cursor.down(len(self.choices))}"
             )
 
             if key == Keys.ENTER and not error:
                 for _ in range(len(self.choices) + 2):
-                    print(Cursor.cup(1) + Cursor.clear(), end="")
+                    print(Cursor.up(1) + Cursor.clear(), end="")
                 self._print_prompt(
                     self.message,
                     (
@@ -87,4 +87,4 @@ class CheckboxPrompt(BasePrompt):
             elif key == Keys.DOWN and current < len(self.choices) - 1:  # Down arrow
                 current += 1
 
-            print(Cursor.cup(len(self.choices) + 1))  # Move cursor up to redraw choices
+            print(Cursor.up(len(self.choices) + 1))  # Move cursor up to redraw choices

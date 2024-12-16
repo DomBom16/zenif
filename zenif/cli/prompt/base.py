@@ -118,6 +118,6 @@ class BasePrompt:
                 )
         sys.stdout.write(f"{Fore.CYAN}: {Fore.YELLOW}{value}")
         if error:
-            sys.stdout.write(f"  {Fore.RED}{error}{Cursor.cleft(2 + len(error))}")
+            sys.stdout.write(f"  {Fore.RED}{error}{Cursor.left(2 + len(error))}")
 
         sys.stdout.flush()

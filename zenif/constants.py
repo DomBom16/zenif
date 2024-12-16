@@ -121,7 +121,7 @@ class Cursor:
         return "\x1b[2K"
 
     @staticmethod
-    def cmove(x: int, y: int) -> str:
+    def move(x: int, y: int) -> str:
         """Move the cursor relative to the current position
 
         Args:
@@ -134,7 +134,7 @@ class Cursor:
         return f"\x1b[{y};{x}H"
 
     @staticmethod
-    def cup(y: int) -> str:
+    def up(y: int) -> str:
         """Move the cursor up
 
         Args:
@@ -146,7 +146,7 @@ class Cursor:
         return f"\x1b[{y}A"
 
     @staticmethod
-    def cdown(y: int) -> str:
+    def down(y: int) -> str:
         """Move the cursor down
 
         Args:
@@ -158,7 +158,7 @@ class Cursor:
         return f"\x1b[{y}B"
 
     @staticmethod
-    def cright(x: int) -> str:
+    def right(x: int) -> str:
         """Move the cursor right
 
         Args:
@@ -170,7 +170,7 @@ class Cursor:
         return f"\x1b[{x}C"
 
     @staticmethod
-    def cleft(x: int) -> str:
+    def left(x: int) -> str:
         """Move the cursor left
 
         Args:
@@ -182,7 +182,7 @@ class Cursor:
         return f"\x1b[{x}D"
 
     @staticmethod
-    def cset(x: int, y: int) -> str:
+    def set(x: int, y: int) -> str:
         """Set the cursor position on the screen
 
         Args:
@@ -195,7 +195,7 @@ class Cursor:
         return f"\x1b[{y};{x}f"
 
     @staticmethod
-    def cget() -> str:
+    def get() -> str:
         """Get the cursor position on the screen
 
         Returns:
@@ -204,7 +204,7 @@ class Cursor:
         return "\x1b[6n"
 
     @staticmethod
-    def chide() -> str:
+    def hide() -> str:
         """Hide the cursor
 
         Returns:
@@ -213,7 +213,7 @@ class Cursor:
         return "\x1b[?25l"
 
     @staticmethod
-    def cshow() -> str:
+    def show() -> str:
         """Show the cursor
 
         Returns:

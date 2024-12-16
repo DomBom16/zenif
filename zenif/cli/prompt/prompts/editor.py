@@ -64,7 +64,7 @@ class EditorPrompt(BasePrompt):
             error = self.validate("\n".join(buffer) or "")
 
             for _ in range(len(buffer) + 1):
-                print(Cursor.cup(1) + Cursor.clear(), end="")
+                print(Cursor.up(1) + Cursor.clear(), end="")
 
             self._print_prompt(self.message, error=error)
             print(
