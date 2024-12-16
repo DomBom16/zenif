@@ -1,53 +1,65 @@
 class Keys:
+    """
+    A set of common keys used in the terminal.
+
+        - Up, Down, Right, Left
+        - Backspace, Insert, Delete, Enter, Escape, Tab, Shift+Tab
+        - Ctrl+A to Ctrl+Z
+        - F1 to F12
+
+    For more information, see https://en.wikipedia.org/wiki/ANSI_escape_code
+    """
+
+    def _a(alias: str, value: any) -> None:
+        """Set an alias for a key"""
+        setattr(Keys, alias, value)
+
     # Arrow keys
     UP = "\x1b[A"
     DOWN = "\x1b[B"
-    LEFT = "\x1b[D"
     RIGHT = "\x1b[C"
-
-    ARROWS = (UP, DOWN, LEFT, RIGHT)
+    LEFT = "\x1b[D"
 
     # Special keys
     BACKSPACE = "\x7f"
+    INSERT = "\x1b[2~"
+    _a("INS", INSERT)
+    DELETE = "\x1b[3~"
+    _a("DEL", DELETE)
     ENTER = "\r"
     ESCAPE = "\x1b"
+    _a("ESC", ESCAPE)
     TAB = "\t"
     STAB = "\x1b[Z"  # Shift+Tab
+    _a("SHIFTTAB", STAB)
 
     # Control keys
-    # ****E*G**J*LMN*P******W***
-
-    # Selection
-    CTRLA = "\x01"  # Select all
-
-    # Edit commands
-    CTRLC = "\x03"  # Copy
-    CTRLV = "\x16"  # Paste
-    CTRLX = "\x18"  # Cut
-
-    # File commands
-    CTRLD = "\x04"  # Done
-    CTRLS = "\x1f"  # Save
-
-    # Search
-    CTRLF = "\x06"  # Find
-
-    # Formatting
-    CTRLB = "\x02"  # Bold
-    CTRLI = "\x09"  # Italic
-    CTRLU = "\x1d"  # Underline
-    CTRLK = "\x0b"  # Strike
-
-    # Version control
-    CTRLY = "\x15"  # Redo
-    CTRLZ = "\x1a"  # Undo
-
-    # Other
-    CTRLH = "\x08"  # Help/About
-    CTRLQ = "\x10"  # Quit
-    CTRLR = "\x12"  # Redraw
-    CTRLT = "\x14"  # Toggle
-    CTRLO = "\x0f"  # Open
+    CTRLA = "\x01"  # ASCII 1
+    CTRLB = "\x02"  # ASCII 2
+    CTRLC = "\x03"  # ASCII 3
+    CTRLD = "\x04"  # ASCII 4
+    CTRLE = "\x05"  # ASCII 5
+    CTRLF = "\x06"  # ASCII 6
+    CTRLG = "\x07"  # ASCII 7
+    CTRLH = "\x08"  # ASCII 8 (\b)
+    CTRLI = "\x09"  # ASCII 9 (\t)
+    CTRLJ = "\x0A"  # ASCII 10 (\n)
+    CTRLK = "\x0B"  # ASCII 11
+    CTRLL = "\x0C"  # ASCII 12 (\f)
+    CTRLM = "\x0D"  # ASCII 13 (\r)
+    CTRLN = "\x0E"  # ASCII 14
+    CTRLO = "\x0F"  # ASCII 15
+    CTRLP = "\x10"  # ASCII 16
+    CTRLQ = "\x11"  # ASCII 17
+    CTRLR = "\x12"  # ASCII 18
+    CTRLS = "\x13"  # ASCII 19
+    CTRLT = "\x14"  # ASCII 20
+    CTRLU = "\x15"  # ASCII 21
+    CTRLV = "\x16"  # ASCII 22
+    CTRLW = "\x17"  # ASCII 23
+    CTRLX = "\x18"  # ASCII 24
+    CTRLY = "\x19"  # ASCII 25
+    CTRLZ = "\x1A"  # ASCII 26
 
     # Function keys
     F1 = "\x1bOP"
@@ -62,3 +74,41 @@ class Keys:
     F10 = "\x1b[21~"
     F11 = "\x1b[23~"
     F12 = "\x1b[24~"
+
+    # Groups
+    # Useful for elimatation of key detection,
+    # e.g. "if key in Keys.ARROWS" vs. "if key in [Keys.UP, Keys.DOWN, Keys.RIGHT, Keys.LEFT]"
+
+    ARROWS = (UP, DOWN, RIGHT, LEFT)
+    CTRLKEYS = (
+        CTRLA,
+        CTRLB,
+        CTRLC,
+        CTRLD,
+        CTRLE,
+        CTRLF,
+        CTRLG,
+        CTRLH,
+        CTRLI,
+        CTRLJ,
+        CTRLK,
+        CTRLL,
+        CTRLM,
+        CTRLN,
+        CTRLO,
+        CTRLP,
+        CTRLQ,
+        CTRLR,
+        CTRLS,
+        CTRLT,
+        CTRLU,
+        CTRLV,
+        CTRLW,
+        CTRLX,
+        CTRLY,
+        CTRLZ,
+    )
+    FUNCKEYS = (F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12)
+
+    _a("CKEYS", CTRLKEYS)
+    _a("FKEYS", FUNCKEYS)
