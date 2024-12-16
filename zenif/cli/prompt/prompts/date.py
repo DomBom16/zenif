@@ -3,6 +3,8 @@ from zenif.schema import Schema
 from ....constants import Keys, Cursor
 from colorama import init, Fore, Back, Style
 from datetime import datetime
+from math import floor
+from zenif.decorators import enforce_types
 
 init(autoreset=True)
 
@@ -41,6 +43,7 @@ class DatePrompt(BasePrompt):
         self._month_first = True
         return self
 
+    @enforce_types
     def year_range(self, start: int, end: int) -> "DatePrompt":
         """Set the minimum and maximum years for the prompt. Any values that exceed the range will be capped."""
         self._year_range = (start, end)
@@ -213,6 +216,12 @@ class DatePrompt(BasePrompt):
                         self.year = self.year.lstrip("0") + char
                     if int(self.year) > self._year_range[1]:
                         self.year = str(self._year_range[1])
-                    if len(self.year) == 4:
+                    # Check if the year is valid
+                    # If the year is reaching the point where adding more digits will overflow the max, go to the next field
+                    # For example, if the cap was 3000 skip to the next field if the year is >300.
+                    # If the cap was 2500, skip to the next field if the year is >250
+                    if len(self.year) == 4 or int(self.year) > floor(
+                        self._year_range[1] / 10
+                    ):
                         self.current_field_idx = (self.current_field_idx + 1) % 3
                         fresh = True
