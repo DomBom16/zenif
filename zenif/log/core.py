@@ -1,3 +1,6 @@
+from .handlers import Ruleset, Streams, FHGroup, SHGroup
+from ..utils import strip_unsafe_objs, strip_repr_id
+
 from inspect import currentframe, getmodule
 import sys
 from black import format_str, Mode
@@ -6,8 +9,6 @@ from pygments.lexers import PythonLexer
 from pygments.formatters import Terminal256Formatter as tformatter
 from pygments.styles import get_style_by_name
 from random import choice
-from .handlers import Ruleset, Streams, FHGroup, SHGroup
-from ..utils import strip_unsafe_objs, strip_repr_id
 
 # > File "demo.py", line 21, in <module>
 #     main(1, 2, z)  # Oops...

@@ -1,7 +1,8 @@
 from os import stat, chmod, path, unlink
 from stat import S_IEXEC
 from typing import Callable
-from zenif.cli import CLI, kwarg
+from .core import CLI
+from .decorators import kwarg
 from subprocess import run, CalledProcessError
 from tempfile import NamedTemporaryFile
 

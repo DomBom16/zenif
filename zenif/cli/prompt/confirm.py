@@ -1,6 +1,6 @@
-from ..base import BasePrompt
-from zenif.schema import Schema
-from ....constants import Keys
+from .base import BasePrompt
+from ...schema import Schema
+from ...constants import Keys
 
 class ConfirmPrompt(BasePrompt):
     def __init__(

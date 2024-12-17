@@ -1,10 +1,11 @@
-from ..base import BasePrompt
-from zenif.schema import Schema
-from ....constants import Keys, Cursor
+from .base import BasePrompt
+from ...schema import Schema
+from ...constants import Keys, Cursor
+from ...decorators import enforce_types
+
 from colorama import init, Fore, Back, Style
 from datetime import datetime
 from math import floor
-from zenif.decorators import enforce_types
 
 init(autoreset=True)
 

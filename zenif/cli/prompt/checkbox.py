@@ -1,6 +1,7 @@
-from ..base import BasePrompt
-from zenif.schema import Schema
-from ....constants import Keys, Cursor
+from .base import BasePrompt
+from ...schema import Schema
+from ...constants import Keys, Cursor
+
 from colorama import init, Fore, Style
 
 init(autoreset=True)
@@ -14,6 +15,7 @@ class CheckboxPrompt(BasePrompt):
         schema: Schema | None = None,
         id: str | None = None,
     ):
+        
         super().__init__(message, schema, id)
         self.choices = choices
 

@@ -58,6 +58,8 @@ Each logging function accepts the following parameters:
 - `sep` (optional): A string inserted between values. Defaults to None.
 - `rich` (optional): When set to `True`, formats the values for easier readability with syntax highlighting and other enhancements. The default value is `True`.
 
+
+
 ### Arguments
 
 The `*values` argument allows you to log multiple objects in a single call, similar to Python's built-in `print` function. There's no need to put your objects in a list or tuple. All unnamed arguments are treated as values and will be joined together using the `sep` value.

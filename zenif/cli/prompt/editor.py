@@ -1,16 +1,17 @@
-from ..base import BasePrompt
-from zenif.schema import Schema
-from zenif.log import Logger
-from ....constants import Keys, Cursor
+from .base import BasePrompt
+from ...schema import Schema
+from ...log import Logger
+from ...constants import Keys, Cursor
+from ...utils import wrap, strip_ansi
+
 from colorama import init, Fore, Style
 
-from ....utils import wrap, strip_ansi
-from pygments import highlight
+# from pygments import highlight
 from pygments.util import ClassNotFound
 from pygments.lexer import Lexer
 from pygments.lexers import get_lexer_for_filename
-from pygments.styles import get_style_by_name, STYLE_MAP
-from pygments.formatters import Terminal256Formatter as tformatter
+# from pygments.styles import get_style_by_name, STYLE_MAP
+# from pygments.formatters import Terminal256Formatter as tformatter
 
 init(autoreset=True)
 

@@ -1,12 +1,12 @@
+from ..utils import strip_ansi, wrap
+from .template import TemplateEngine
+
 from datetime import datetime, UTC
 from shutil import get_terminal_size as tsize
 from threading import current_thread
 from io import StringIO
 from re import sub
 from copy import deepcopy
-
-from ..utils import strip_ansi, wrap
-from .template import TemplateEngine
 
 
 class Ruleset:

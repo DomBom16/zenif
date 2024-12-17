@@ -1,7 +1,9 @@
 from __future__ import annotations
+
+from .core import Validator
+
 from typing import Any
 from re import match
-from .core import Validator
 
 inf = float("inf")
 

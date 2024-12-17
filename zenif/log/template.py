@@ -1,8 +1,8 @@
+from ..utils import strip_ansi, colorize
+
 from copy import deepcopy
 from shutil import get_terminal_size as tsize
 from math import inf
-
-from ..utils import strip_ansi, colorize
 
 
 def shorthand(shorthand: str) -> str:

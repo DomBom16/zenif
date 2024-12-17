@@ -1,3 +1,6 @@
+from ..log import Logger
+from .exceptions import TimeoutError, RateLimitError
+
 import time
 from functools import wraps
 import signal
@@ -12,8 +15,6 @@ import cProfile
 import pstats
 import io
 import tracemalloc
-from .exceptions import TimeoutError, RateLimitError
-from ..log import Logger
 
 logger = Logger(ruleset={"timestamps": {"always_show": True}})
 

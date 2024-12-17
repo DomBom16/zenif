@@ -10,10 +10,6 @@ class Keys:
     For more information, see https://en.wikipedia.org/wiki/ANSI_escape_code
     """
 
-    def _a(alias: str, value: any) -> None:
-        """Set an alias for a key"""
-        setattr(Keys, alias, value)
-
     # Arrow keys
     UP = "\x1b[A"
     DOWN = "\x1b[B"
@@ -23,15 +19,11 @@ class Keys:
     # Special keys
     BACKSPACE = "\x7f"
     INSERT = "\x1b[2~"
-    _a("INS", INSERT)
     DELETE = "\x1b[3~"
-    _a("DEL", DELETE)
     ENTER = "\r"
     ESCAPE = "\x1b"
-    _a("ESC", ESCAPE)
     TAB = "\t"
     STAB = "\x1b[Z"  # Shift+Tab
-    _a("SHIFTTAB", STAB)
 
     # Control keys
     CTRLA = "\x01"  # ASCII 1
@@ -109,9 +101,6 @@ class Keys:
         CTRLZ,
     )
     FUNCKEYS = (F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12)
-
-    _a("CKEYS", CTRLKEYS)
-    _a("FKEYS", FUNCKEYS)
 
 
 class Cursor:

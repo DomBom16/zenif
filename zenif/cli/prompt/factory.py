@@ -1,13 +1,13 @@
-from zenif.schema import Schema
+from ...schema import Schema
 
-from .prompts.text import TextPrompt
-from .prompts.password import PasswordPrompt
-from .prompts.confirm import ConfirmPrompt
-from .prompts.choice import ChoicePrompt
-from .prompts.checkbox import CheckboxPrompt
-from .prompts.number import NumberPrompt
-from .prompts.date import DatePrompt
-from .prompts.editor import EditorPrompt
+from .text import TextPrompt
+from .password import PasswordPrompt
+from .confirm import ConfirmPrompt
+from .choice import ChoicePrompt
+from .checkbox import CheckboxPrompt
+from .number import NumberPrompt
+from .date import DatePrompt
+from .editor import EditorPrompt
 
 class Prompt:
     """A class for prompting the user for input."""

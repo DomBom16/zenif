@@ -1,7 +1,8 @@
-from ..base import BasePrompt
-from zenif.schema import Schema
+from .base import BasePrompt
+from ...schema import Schema
+from ...constants import Keys
+
 import shutil
-from ....constants import Keys
 from colorama import init, Style
 
 init(autoreset=True)

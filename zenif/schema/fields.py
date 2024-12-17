@@ -1,8 +1,10 @@
 from __future__ import annotations
+
+from .core import SchemaField
+
 from enum import Enum
 from datetime import datetime
 from ast import literal_eval
-from .core import SchemaField
 
 
 class StringF(SchemaField[str]):

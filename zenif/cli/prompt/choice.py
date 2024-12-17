@@ -1,6 +1,7 @@
-from ..base import BasePrompt
-from zenif.schema import Schema, StringF
-from ....constants import Keys, Cursor
+from .base import BasePrompt
+from ...schema import Schema, StringF
+from ...constants import Keys, Cursor
+
 from colorama import init, Fore, Style
 
 init(autoreset=True)

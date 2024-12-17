@@ -1,7 +1,8 @@
-from ..base import BasePrompt
-from zenif.schema import Schema
+from .base import BasePrompt
+from ...schema import Schema
+from ...constants import Keys
+
 import shutil
-from ....constants import Keys
 
 class PasswordPrompt(BasePrompt):
     def __init__(

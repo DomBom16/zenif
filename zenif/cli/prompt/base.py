@@ -1,7 +1,8 @@
-from zenif.schema import Schema
+from ...schema import Schema
+from ...constants import Keys, Cursor
+
 import signal
 import sys
-from ...constants import Keys, Cursor
 from colorama import init, Fore, Style
 
 init(autoreset=True)
@@ -91,7 +92,7 @@ class BasePrompt:
     def _print_prompt(
         prompt: str = "",
         value: str = "",
-        default: any = None,
+        default: str | None = None,
         options: list[str] | None = None,
         default_option: str | None = None,
         error: str | None = None,
