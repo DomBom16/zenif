@@ -25,12 +25,12 @@ from random import choice
 
 
 class Logger:
-    def __init__(self, ruleset: dict = {}):
-        """A class for logging messages. Supports multiple output streams and formatting options.
+    """A class for logging messages. Supports multiple output streams and formatting options.
 
-        Args:
-            ruleset (dict, optional): The list of rules that will be overriden, enabling custom behavior. Defaults to {}.
-        """
+    Args:
+        ruleset (dict, optional): The list of rules that will be overriden, enabling custom behavior. Defaults to {}.
+    """
+    def __init__(self, ruleset: dict = {}):
 
         self.__levels = {
             "debug": {"name": "debug", "level": 1, "color": "\x1b[34m"},
