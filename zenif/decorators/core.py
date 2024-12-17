@@ -5,7 +5,7 @@ import time
 from functools import wraps
 import signal
 from collections import deque
-from typing import Callable, TypeVar, Union
+from typing import Callable, TypeVar
 from inspect import signature
 from threading import Thread
 from collections import OrderedDict
@@ -16,7 +16,7 @@ import pstats
 import io
 import tracemalloc
 
-logger = Logger(ruleset={"timestamps": {"always_show": True}})
+logger = Logger(ruleset={"timestamps": {"always_show": True}, "log_line": {"format": "simple"}})
 
 T = TypeVar("T")
 
@@ -115,7 +115,7 @@ def timeout(seconds: float) -> Callable[[Callable[..., T]], Callable[..., T]]:
     :param seconds: The maximum time in seconds to allow the function to execute.
     """
     def decorator_timeout(func: Callable[..., T]) -> Callable[..., T]:
-        def _handle_timeout(signum: int, frame: Union[any, None]) -> None:
+        def _handle_timeout(signum: int, frame: any | None) -> None:
             raise TimeoutError(
                 f"Function {func.__name__} timed out after {seconds} seconds"
             )
@@ -529,10 +529,10 @@ def profile(func):
             ps = pstats.Stats(profiler, stream=s).sort_stats("cumulative")
             ps.print_stats(10)  # Print top 10 lines
 
-            print(f"Function: {func.__name__}")
-            print(f"{"Time taken:".ljust(21)} {end_time - start_time:.4f} seconds")
-            print(f"Current memory usage: {current / 10**6:.6f} MB")
-            print(f"{"Peak memory usage:".ljust(21)} {peak / 10**6:.6f} MB")
+            print(f"{"Function:".ljust(25)} {func.__name__}")
+            print(f"{"Time taken:".ljust(25)} {end_time - start_time:.4f} seconds")
+            print(f"{"Current memory usage:".ljust(25)} {current / 10**6:.6f} MB")
+            print(f"{"Peak memory usage:".ljust(25)} {peak / 10**6:.6f} MB")
             print("Profile:")
             print(s.getvalue())
         else:
