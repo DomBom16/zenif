@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from .core import Validator
 
-from typing import Any
 from re import match
 
 inf = float("inf")
@@ -18,7 +17,7 @@ class Length(Validator):
         self.min = min if min is not None else -inf
         self.max = max if max is not None else inf
 
-    def _validate(self, value: Any):
+    def _validate(self, value: any):
         if value is None:
             raise ValueError(f"Value is of None type.")
         if len(value) < self.min:
@@ -37,7 +36,7 @@ class Value(Validator):
         self.min = min if min is not None else -inf
         self.max = max if max is not None else inf
 
-    def _validate(self, value: Any):
+    def _validate(self, value: any):
         if value is None:
             raise ValueError(f"Value is of None type.")
         if value < self.min:
@@ -53,7 +52,7 @@ class Regex(Validator):
         super().__init__(err)
         self.pattern = pattern
 
-    def _validate(self, value: Any):
+    def _validate(self, value: any):
         if not match(self.pattern, str(value)):
             raise ValueError(f"Value does not match pattern.")
 
@@ -103,6 +102,6 @@ class NotEmpty(Validator):
     def __init__(self, err: str | None = None):
         super().__init__(err)
 
-    def _validate(self, value: Any):
+    def _validate(self, value: any):
         if not value:
             raise ValueError("Value cannot be empty.")
