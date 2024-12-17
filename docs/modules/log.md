@@ -8,6 +8,7 @@ The Log module is the cornerstone of Zenif, offering a powerful and flexible log
   - [Table of Contents](#table-of-contents)
   - [Initialization](#initialization)
   - [Logging Functions](#logging-functions)
+    - [`StructuredLogger`](#structuredlogger)
     - [Arguments](#arguments)
   - [Streams and File Handling](#streams-and-file-handling)
     - [Adding and Removing Streams](#adding-and-removing-streams)
@@ -43,7 +44,7 @@ By default, the Logger is configured with sensible defaults, but you can customi
 
 ## Logging Functions
 
-The `Logger` class provides several logging functions to help with debugging and conveying information:
+The `Logger` and `StructuredLogger` classes provides several logging functions to help with debugging and conveying information:
 
 - `info`: For general information messages
 - `debug`: For detailed debugging information
@@ -58,7 +59,16 @@ Each logging function accepts the following parameters:
 - `sep` (optional): A string inserted between values. Defaults to None.
 - `rich` (optional): When set to `True`, formats the values for easier readability with syntax highlighting and other enhancements. The default value is `True`.
 
+### `StructuredLogger`
 
+The `StructuredLogger` class acts very similar to the default `Logger` class. The only thing that separates it is its ability to take in `**kwargs` into each of the logging functions.
+
+```python
+slogger.info("User's Info", user="bob", ip="192.3.56.82")
+
+# User's Info
+# {'user': 'bob', 'ip': '192.3.56.82'}
+```
 
 ### Arguments
 
