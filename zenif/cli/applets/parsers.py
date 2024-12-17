@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Callable
+from typing import Callable
 import argparse
 from .exceptions import CLIError
 
@@ -33,7 +33,7 @@ class CommandParser:
 
         self.parser.add_argument(*args, **kwargs)
 
-    def parse_args(self, args: List[str]) -> Dict[str, Any]:
+    def parse_args(self, args: list[str]) -> dict[str, any]:
         try:
             parsed_args = self.parser.parse_args(args)
             return vars(parsed_args)
@@ -43,6 +43,6 @@ class CommandParser:
             return {}
 
 
-def parse_command_args(command: Callable, args: List[str]) -> Dict[str, Any]:
+def parse_command_args(command: Callable, args: list[str]) -> dict[str, any]:
     parser = CommandParser(command)
     return parser.parse_args(args)
