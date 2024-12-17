@@ -117,7 +117,7 @@ class BasePrompt:
                 sys.stdout.write(
                     f" {Fore.CYAN}{Style.DIM}[{"".join(options)}]{Style.RESET_ALL}"
                 )
-        sys.stdout.write(f"{Fore.CYAN}: {Fore.YELLOW}{value}")
+        sys.stdout.write(f"{Fore.CYAN} {Fore.YELLOW}{value}")
         if error:
             sys.stdout.write(f"  {Fore.RED}{error}{Cursor.left(2 + len(error))}")
 
