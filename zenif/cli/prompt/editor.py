@@ -48,7 +48,7 @@ class EditorPrompt(BasePrompt):
         """Prompt the user for input."""
 
         Logger({"log_line": {"format": "simple"}}).warning(
-            "EditorPrompt is in a very experimental state. Use at your own risk. Issues can be reported at https://github.com/DomBom16/zenif/issues."
+            "EditorPrompt is in a very experimental state. Use at your own risk. Known issues can be found at https://github.com/DomBom16/zenif/docs/extra/editor-prompt-known-issues.md."
         )
 
         # Prompt and error on first line
@@ -58,18 +58,18 @@ class EditorPrompt(BasePrompt):
 
         buffer = [""]
         cx, cy = 0, 0
+        pcx, pcy = 0, 0
 
-        print("\n")
+        # lexer = self._get_lexer(self._language)
+
+        controls = "Enter for newline, Ctrl+D to confirm"
 
         while True:
             error = self.validate("\n".join(buffer) or "")
 
-            for _ in range(len(buffer) + 1):
-                print(Cursor.up(1) + Cursor.clear(), end="")
-
             self._print_prompt(self.message, error=error)
             print(
-                f"\n{Fore.RESET}{Style.DIM}  {(cx, cy)}{Style.RESET_ALL}",
+                f"\n{Fore.RESET}{Style.DIM}  {controls}{Style.RESET_ALL}",
                 end="",
             )
 
@@ -78,6 +78,19 @@ class EditorPrompt(BasePrompt):
                     f"\n{Cursor.clear()}{' ' * 2}{Fore.YELLOW}{strip_ansi(line)}{Style.RESET_ALL}",
                     end="",
                 )
+
+            if len(buffer[-1]) > 0:
+                print(Cursor.left(len(buffer[-1])), end="")
+            if len(buffer) > 1:
+                print(Cursor.up(len(buffer) - 1), end="")
+
+            # Move to cursor position
+            if cx > 0:
+                print(Cursor.right(cx), end="")
+            if cy > 0:
+                print(Cursor.down(cy), end="")
+
+            pcx, pcy = cx, cy
 
             char = self._get_key()
             if char == Keys.UP:  # Move cursor up
@@ -120,7 +133,15 @@ class EditorPrompt(BasePrompt):
                 cy += 1
                 cx = 0
             elif char == Keys.CTRLD:
-                break
+                if not error and buffer:
+                    self._print_prompt(
+                        self.message, buffer[-1]
+                    )
+                    print()
+                    return "\n".join(buffer)
             else:
                 buffer[cy] = buffer[cy][:cx] + char + buffer[cy][cx:]
                 cx += 1
+
+            print(Cursor.left(pcx), end="")
+            print(Cursor.up(pcy + 2), end="")
