@@ -1,4 +1,4 @@
-from zenif.cli import CLI, arg, kwarg, Prompt, install_setup_command
+from zenif.cli import CLI, req, opt, Prompt, install_setup
 from zenif.log import Logger
 from zenif.decorators import retry, cache
 import os
@@ -8,12 +8,12 @@ cli = CLI(name="zenif-demo")
 logger = Logger(ruleset={"log_line": {"format": "simple"}})
 
 # Add the install command to your CLI
-install_setup_command(cli, os.path.abspath(__file__))
+install_setup(cli, os.path.abspath(__file__))
 
 
 @cli.command
-@arg("name", help="Your name")
-@kwarg("--greeting", default="Hello", help="Greeting to use")
+@req("name", help="Your name")
+@opt("--greeting", default="Hello", help="Greeting to use")
 def greet(name: str, greeting: str):
     """Greet the user"""
     logger.info(f"{greeting}, {name}!")
@@ -31,7 +31,7 @@ def flaky_operation():
 
 
 @cli.command
-@arg("n", help="Calculate the nth Fibonacci number")
+@req("n", help="Calculate the nth Fibonacci number")
 @cache
 def fibonacci(n: int):
     """Calculate the nth Fibonacci number"""
@@ -62,7 +62,7 @@ def interactive_prompt():
 
 
 @cli.command
-@kwarg("--verbose", is_flag=True, help="Enable verbose logging")
+@opt("--verbose", is_flag=True, help="Enable verbose logging")
 def log_demo(verbose: bool):
     """Demonstrate different log levels"""
     if verbose:
