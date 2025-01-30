@@ -78,7 +78,7 @@ class DatePrompt(BasePrompt):
             )
 
             for _ in range(3):
-                print(Cursor.up(1) + Cursor.clear(), end="")
+                print(Cursor.up(1) + Cursor.lclear(), end="")
             self._print_prompt(self.message, error=error)
             print(f"\n{Fore.RESET}{Style.DIM}  {controls}")
 
@@ -142,7 +142,7 @@ class DatePrompt(BasePrompt):
                     ]
 
                     for _ in range(3):
-                        print(Cursor.up(1) + Cursor.clear(), end="")
+                        print(Cursor.up(1) + Cursor.lclear(), end="")
                     self._print_prompt(
                         self.message,
                         (

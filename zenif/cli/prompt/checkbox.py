@@ -15,7 +15,7 @@ class CheckboxPrompt(BasePrompt):
         schema: Schema | None = None,
         id: str | None = None,
     ):
-        
+
         super().__init__(message, schema, id)
         self.choices = choices
 
@@ -73,7 +73,7 @@ class CheckboxPrompt(BasePrompt):
 
             if key == Keys.ENTER and not error:
                 for _ in range(len(self.choices) + 2):
-                    print(Cursor.up(1) + Cursor.clear(), end="")
+                    print(Cursor.up(1) + Cursor.lclear(), end="")
                 self._print_prompt(
                     self.message,
                     (

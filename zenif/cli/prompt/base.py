@@ -98,7 +98,7 @@ class BasePrompt:
         error: str | None = None,
     ):
         sys.stdout.write(
-            f"{Cursor.clear()}\r{Fore.GREEN}? {Fore.CYAN}{prompt}{Fore.RESET}"
+            f"{Cursor.lclear()}\r{Fore.GREEN}? {Fore.CYAN}{prompt}{Fore.RESET}"
         )
         if default and not options:
             sys.stdout.write(f" {Fore.CYAN}{Style.DIM}({default}){Style.RESET_ALL}")
