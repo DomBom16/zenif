@@ -28,7 +28,7 @@ Available for the `date` type. When enabled, the date will be inputted in the fo
 
 ### `year_range()`
 
-Available for the `date` type. The `year_range` is the defined minimun and maximum values that the year must be in between, inclusive on both ends. By default, the range is from `1900` to `2100`.
+Available for the `date` type. The `year_range` is the defined minimum and maximum values that the year must be in between, inclusive on both ends. By default, the range is from `1900` to `2100`.
 
 ### `separator()`
 
