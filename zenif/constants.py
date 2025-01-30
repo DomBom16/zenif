@@ -105,58 +105,83 @@ class Keys:
 
 class Cursor:
     @staticmethod
-    def clear() -> str:
+    def sclear() -> str:
+        """Clear the screen"""
+        return "\x1b[2J"
+
+    @staticmethod
+    def lclear() -> str:
         """Clear the current line"""
         return "\x1b[2K"
 
     @staticmethod
-    def move(x: int, y: int) -> str:
+    def move(dx: int, dy: int) -> str:
         """Move the cursor relative to the current position
 
         Args:
-            x (int): The number of columns to move right
-            y (int): The number of rows to move down
+            dx (int): The number of columns to move right
+            dy (int): The number of rows to move down
 
         Returns:
             str: Ansi code to move the cursor
         """
-        return f"\x1b[{y};{x}H"
+        return f"\x1b[{dy};{dx}H"
 
     @staticmethod
-    def up(y: int) -> str:
+    def up(dy: int) -> str:
         """Move the cursor up
 
         Args:
-            y (int): The number of rows to move up
+            dy (int): The number of rows to move up
 
         Returns:
             str: Ansi code to move the cursor up
         """
-        return f"\x1b[{y}A"
+        return f"\x1b[{dy}A"
 
     @staticmethod
-    def down(y: int) -> str:
+    def down(dy: int) -> str:
         """Move the cursor down
 
         Args:
-            y (int): The number of rows to move down
+            dy (int): The number of rows to move down
 
         Returns:
             str: Ansi code to move the cursor down
         """
-        return f"\x1b[{y}B"
+        return f"\x1b[{dy}B"
 
     @staticmethod
-    def right(x: int) -> str:
+    def right(dx: int) -> str:
         """Move the cursor right
 
         Args:
-            x (int): The number of columns to move right
+            dx (int): The number of columns to move right
 
         Returns:
             str: Ansi code to move the cursor right
         """
-        return f"\x1b[{x}C"
+        return f"\x1b[{dx}C"
+    
+    @staticmethod
+    def cright(x: int, dx: int, w: int) -> str:
+        """Move the cursor right continuously, advancing to the next line if necessary
+
+        Args:
+            x (int): The current position of the cursor
+            dx (int): The number of columns to move right
+            w (int): The width of the terminal
+
+        Returns:
+            str: Ansi code to move the cursor right
+        """
+        fx, fy = x, 0
+        for _ in range(dx):
+            fx += 1
+            if fx >= w:
+                fx = 0
+                fy += 1
+        return f"\x1b[{fx-x}C" + (f"\x1b[{fy}B" if fy > 0 else "")
 
     @staticmethod
     def left(x: int) -> str:
@@ -182,15 +207,6 @@ class Cursor:
             str: Ansi code to set the cursor
         """
         return f"\x1b[{y};{x}f"
-
-    @staticmethod
-    def get() -> str:
-        """Get the cursor position on the screen
-
-        Returns:
-            str: Ansi code to get the cursor
-        """
-        return "\x1b[6n"
 
     @staticmethod
     def hide() -> str:
