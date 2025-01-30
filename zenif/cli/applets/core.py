@@ -4,13 +4,17 @@ from .parsers import parse_command_args
 from .formatters import HelpFormatter, OutputFormatter
 from .exceptions import CLIError
 
+from ...log import Logger
+from ...decorators import deprecated
+
+logger = Logger({"log_line": {"format": []}})
 
 class CLI:
     def __init__(self, name: str = "cli"):
         """The CLI class for creating interactive command-line applications.
 
         Args:
-            name (str, optional): The name of the CLI. Will show up in menus like the help menu. Defaults to "cli".
+            name (str, optional): The name of the CLI. Defaults to "cli".
         """
         self.name = name
         self.commands: dict[str, Callable] = {}
@@ -32,11 +36,16 @@ class CLI:
         command_name = args[0]
         if command_name in self.commands:
             try:
+                # fetch command
                 command = self.commands[command_name]
+                # parse arguments
                 parsed_args = parse_command_args(command, args[1:])
+                # change terminal title
+                print(f"\x1b]0;{self.name} {command_name}\x7", end="")
+                # run command
                 result = command(**parsed_args)
                 if result is not None:
-                    self.echo(result)
+                    logger.info(result)
             except CLIError as e:
                 print(f"Error: {str(e)}")
                 self.print_command_help(command_name)
@@ -59,6 +68,7 @@ class CLI:
         else:
             print(f"Unknown command: {command_name}")
 
+    @deprecated(expected_removal="v1.0.0")
     def echo(self, message: any) -> None:
         """Print a formatted message to the console. Works with lists, tuples, and dictionaries. Other formats are printed as is."""
         formatted_output = OutputFormatter.format_output(message)
