@@ -35,8 +35,8 @@ if [[ -f ~/.zshrc ]]; then
         echo '}}' >> ~/.zshrc
         echo "Command \x1b[44m\x1b[30m {alias} \x1b[0m has been added to your .zshrc file.\n"
         echo "Run the following to finish the installation:"
-        echo "\nsource ~/.zshrc   \x1b[90mupdate your configuration\x1b[0m"
-        echo   "{alias} -h{(13-len(alias))*" "}  \x1b[90mdisplay help information\x1b[0m"
+        echo "\nsource ~/.zshrc  \x1b[90mupdate your configuration\x1b[0m"
+        echo "{alias} -h{(12-len(alias))*" "}  \x1b[90mdisplay help information\x1b[0m"
     else
         echo "The command \x1b[44m\x1b[30m {alias} \x1b[0m is already in your .zshrc file."
     fi
