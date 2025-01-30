@@ -1,4 +1,4 @@
-from zenif.cli import CLI, arg, kwarg, Prompt as p, install_setup_command
+from zenif.cli import CLI, req, opt, Prompt as p, install_setup
 from zenif.schema import (
     Schema,
     BooleanF,
@@ -12,15 +12,15 @@ from zenif.schema import (
 )
 import os
 
-cli = CLI()
+cli = CLI(name="cli")
 
-install_setup_command(cli, os.path.abspath(__file__))
+install_setup(cli, os.path.abspath(__file__))
 
 
 @cli.command
-@arg("name", help="Name to greet")
-@kwarg("--greeting", default="Hello", help="Greeting to use")
-@kwarg("--shout", is_flag=True, help="Print in uppercase")
+@req("name", help="Name to greet")
+@opt("--greeting", default="Hello", help="Greeting to use")
+@opt("--shout", is_flag=True, help="Print in uppercase")
 def greet(name: str, greeting: str, shout: bool = False):
     """Greet a person."""
     message = f"{greeting}, {name}!"
@@ -63,8 +63,8 @@ def test_prompts():
         email=StringF().name("email").has(Email()),
     ).all_optional()
 
-    for i in range(16):
-        print(i)
+    for i in range(4):
+        print(i + 1)
 
     if (
         not p.confirm("Are you sure you want to continue?", schema, "are_you_sure")
