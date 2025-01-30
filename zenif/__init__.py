@@ -7,5 +7,5 @@
 
 from . import log, decorators, cli, schema
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 __all__ = ["log", "decorators", "cli", "schema"]
