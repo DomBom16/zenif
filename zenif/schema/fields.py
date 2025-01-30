@@ -24,8 +24,6 @@ class FloatF(SchemaField[float]):
 
 class BooleanF(SchemaField[bool]):
     def coerce(self, value: any) -> bool:
-        if isinstance(value, str):
-            return value.lower() in ("true", "1", "yes", "on")
         return bool(value)
 
 
