@@ -20,7 +20,7 @@ Available for the `number` type. When enabled, decimal values are able to be inp
 
 ### `allow_negatives()`
 
-Available for the `number` type. When enabled, negative values are able to be inputted. Pressing the `-` key will have no effect until at least one digit is inputted. Upon pressed, the sign in front of the value will be toggled (an implicit positive sign is used). If all numeric digits are removed, the `-` sign will dissappear.
+Available for the `number` type. When enabled, negative values are able to be inputted. Pressing the `-` key will have no effect until at least one digit is inputted. Upon pressed, the sign in front of the value will be toggled (an implicit positive sign is used). If all numeric digits are removed, the `-` sign will disappear.
 
 ### `month_first()`
 
