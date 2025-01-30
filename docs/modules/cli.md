@@ -160,7 +160,7 @@ if __name__ == '__main__':
 - `Prompt.number()`: For numeric input (works with Integer or Float schema fields)
 - `Prompt.date()`: For dates (works with String schema fields)
 
-Find more about different types of prompts by checking out [Special Prompt Methods](../extra/special-prompt-methods.md)
+Find more about different types of prompts and how they work, check out [More About Prompts](../extra/more-about-prompts.md)
 
 ## Interactive Prompts with Schema Validation
 
