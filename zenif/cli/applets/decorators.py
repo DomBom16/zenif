@@ -1,8 +1,8 @@
 from typing import Callable
 
 
-def arg(*args, **kwargs):
-    """Decorator to add an argument to a CLI command."""
+def req(*args, **kwargs):
+    """Decorator to add a required argument to a CLI command."""
 
     # for each arg and kwarg, set the help to lowercase
     kwargs["help"] = kwargs.get("help", "").lower()
@@ -16,7 +16,7 @@ def arg(*args, **kwargs):
     return decorator
 
 
-def kwarg(*args, **kwargs):
-    """Decorator to add a keyword argument to a CLI command."""
+def opt(*args, **kwargs):
+    """Decorator to add an optional argument or flag to a CLI command."""
     kwargs["is_option"] = True
-    return arg(*args, **kwargs)
+    return req(*args, **kwargs)

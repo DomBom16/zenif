@@ -1,4 +1,4 @@
-from .applets import CLI, arg, kwarg, install_setup_command
+from .applets import CLI, req, opt, install_setup
 
 from .prompt import Prompt
 
@@ -7,10 +7,10 @@ __all__ = [
     # CLI()
     "CLI",
     # CLI().command decorators
-    "arg",
-    "kwarg",
+    "req",
+    "opt",
     # setup command installer
-    "install_setup_command",
+    "install_setup",
     # interactive prompt utils
     "Prompt",
 ]

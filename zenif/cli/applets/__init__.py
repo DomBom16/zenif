@@ -1,10 +1,10 @@
 from .core import CLI
-from .decorators import arg, kwarg
-from .install_command import install_setup_command
+from .decorators import req, opt
+from .installer import install_setup
 
 __all__ = [
     "CLI",
-    "arg",
-    "kwarg",
-    "install_setup_command",
+    "req",
+    "opt",
+    "install_setup",
 ]
