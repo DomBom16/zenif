@@ -11,13 +11,13 @@ logger = Logger({"log_line": {"format": []}})
 
 
 class CLI:
-    def __init__(self, name: str = "cli"):
+    def __init__(self, name: str | None = None):
         """The CLI class for creating interactive command-line applications.
 
         Args:
-            name (str, optional): The name of the CLI. Defaults to "cli".
+            name (str, optional): The name of the CLI.
         """
-        self.name = name
+        self.name = name or "zenif-cli"
         self.commands: dict[str, Callable] = {}
 
     def command(self, func: Callable) -> Callable:
