@@ -5,11 +5,13 @@ from ...constants import Keys, Cursor
 from ...utils import wrap, strip_ansi
 
 from colorama import init, Fore, Style
+from shutil import get_terminal_size
 
 # from pygments import highlight
 from pygments.util import ClassNotFound
 from pygments.lexer import Lexer
 from pygments.lexers import get_lexer_for_filename
+
 # from pygments.styles import get_style_by_name, STYLE_MAP
 # from pygments.formatters import Terminal256Formatter as tformatter
 
@@ -33,16 +35,48 @@ class EditorPrompt(BasePrompt):
 
     def _get_lexer(self, ext: str) -> Lexer | None:
         try:
-            return get_lexer_for_filename(f"dummy.{ext}")
+            return get_lexer_for_filename(
+                f"editor.{ext}"
+            )  # Filename doesn't matter, just the extension
         except ClassNotFound:
             return None
 
-    def _insert_char(self, value: str, char: str, cidx: int) -> str:
-        cidx += value.count("\n")
-        return value[:cidx] + char + value[cidx:]
-
-    def _remove_char(self, value: str, cidx: int) -> str:
-        return value[: cidx - 1] + value[cidx:]
+    def _update_cursor(
+        self, cx: int, cy: int, char: str, columns: int, buffer: list[str]
+    ) -> tuple:
+        if char == Keys.UP:
+            wrap_condition = cx > columns
+            if cy > 0 or wrap_condition:
+                if wrap_condition:
+                    cx -= columns
+                else:
+                    cy -= 1
+                cx = min(cx, len(buffer[cy]))
+            elif cy == 0:
+                cx = 0
+        elif char == Keys.DOWN:
+            wrap_condition = cx < columns and len(buffer[cy]) > columns
+            if cy < len(buffer) - 1 or wrap_condition:
+                if wrap_condition:
+                    cx += columns
+                else:
+                    cy += 1
+                cx = min(cx, len(buffer[cy]))
+            elif cy == len(buffer) - 1:
+                cx = len(buffer[cy])
+        elif char == Keys.LEFT:
+            if cx > 0:
+                cx -= 1
+            elif cy > 0:
+                cy -= 1
+                cx = len(buffer[cy])
+        elif char == Keys.RIGHT:
+            if cx < len(buffer[cy]):
+                cx += 1
+            elif cy < len(buffer) - 1:
+                cy += 1
+                cx = 0
+        return cx, cy
 
     def ask(self) -> str:
         """Prompt the user for input."""
@@ -56,28 +90,37 @@ class EditorPrompt(BasePrompt):
         # Editor on third line and extends downward
         # After editor, language and other metrics (words, lines, etc.)
 
-        buffer = [""]
-        cx, cy = 0, 0
-        pcx, pcy = 0, 0
+        buffer: list[str] = [""]
+        output: str = ""
+
+        cx: int = 0
+        cy: int = 0
+        pcx: int = 0
+        pcy: int = 0
+
+        indent: int = 2
 
         # lexer = self._get_lexer(self._language)
 
-        controls = "Enter for newline, Ctrl+D to confirm"
+        controls: str = "Enter for newline, Ctrl+D to confirm"
 
         while True:
-            error = self.validate("\n".join(buffer) or "")
+            error: str | None = self.validate("\n".join(buffer) or "")
+
+            columns: int = get_terminal_size().columns
 
             self._print_prompt(self.message, error=error)
             print(
-                f"\n{Fore.RESET}{Style.DIM}  {controls}{Style.RESET_ALL}",
+                f"\n{Cursor.lclear()}{Fore.RESET}{Style.DIM}  {controls}{Style.RESET_ALL}",
                 end="",
             )
 
-            for line in buffer:
-                print(
-                    f"\n{Cursor.clear()}{' ' * 2}{Fore.YELLOW}{strip_ansi(line)}{Style.RESET_ALL}",
-                    end="",
-                )
+            output = ""
+                    
+            for line in buffer:    
+                output += f"\n{Cursor.lclear()}{' ' * indent}{Fore.YELLOW}{line}{Style.RESET_ALL}"
+
+            print(output, end="")
 
             if len(buffer[-1]) > 0:
                 print(Cursor.left(len(buffer[-1])), end="")
@@ -86,38 +129,16 @@ class EditorPrompt(BasePrompt):
 
             # Move to cursor position
             if cx > 0:
-                print(Cursor.right(cx), end="")
+                print(Cursor.cright(0, cx, columns), end="")
             if cy > 0:
                 print(Cursor.down(cy), end="")
 
             pcx, pcy = cx, cy
 
             char = self._get_key()
-            if char == Keys.UP:  # Move cursor up
-                if cy > 0:
-                    cy -= 1
-                    cx = min(cx, len(buffer[cy]))
-                elif cy == 0:
-                    cx = 0
-            elif char == Keys.DOWN:  # Move cursor down
-                if cy < len(buffer) - 1:
-                    cy += 1
-                    cx = min(cx, len(buffer[cy]))
-                elif cy == len(buffer) - 1:
-                    cx = len(buffer[cy])
-            elif char == Keys.LEFT:  # Move cursor left
-                if cx > 0:
-                    cx -= 1
-                elif cy > 0:
-                    cy -= 1
-                    cx = len(buffer[cy])
-            elif char == Keys.RIGHT:  # Move cursor right
-                if cx < len(buffer[cy]):
-                    cx += 1
-                elif cy < len(buffer) - 1:
-                    cy += 1
-                    cx = 0
-            elif char == Keys.BACKSPACE:  # Handle backspace
+            if char in Keys.ARROWS:
+                cx, cy = self._update_cursor(cx, cy, char, columns, buffer)
+            elif char == Keys.BACKSPACE:
                 if cx > 0:
                     buffer[cy] = buffer[cy][: cx - 1] + buffer[cy][cx:]
                     cx -= 1
@@ -126,22 +147,20 @@ class EditorPrompt(BasePrompt):
                     cy -= 1
                     cx = len(buffer[cy])
                     buffer[cy] += prev_line
-            elif char == Keys.ENTER:  # Handle Enter (newline)
-                new_line = buffer[cy][cx:]
+            elif char == Keys.ENTER:
                 buffer[cy] = buffer[cy][:cx]
-                buffer.insert(cy + 1, new_line)
+                buffer.insert(cy + 1, buffer[cy][cx:])
                 cy += 1
                 cx = 0
             elif char == Keys.CTRLD:
                 if not error and buffer:
-                    self._print_prompt(
-                        self.message, buffer[-1]
-                    )
+                    self._print_prompt(self.message, buffer[-1])
                     print()
                     return "\n".join(buffer)
             else:
                 buffer[cy] = buffer[cy][:cx] + char + buffer[cy][cx:]
                 cx += 1
 
+            # Reset the cursor position to prepare for the next render
             print(Cursor.left(pcx), end="")
             print(Cursor.up(pcy + 2), end="")
