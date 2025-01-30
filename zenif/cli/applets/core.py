@@ -9,6 +9,7 @@ from ...decorators import deprecated
 
 logger = Logger({"log_line": {"format": []}})
 
+
 class CLI:
     def __init__(self, name: str = "cli"):
         """The CLI class for creating interactive command-line applications.
@@ -41,7 +42,7 @@ class CLI:
                 # parse arguments
                 parsed_args = parse_command_args(command, args[1:])
                 # change terminal title
-                print(f"\x1b]0;{self.name} {command_name}\x7", end="")
+                print(f"\x1b]2;{self.name} {command_name}\x07", end="")
                 # run command
                 result = command(**parsed_args)
                 if result is not None:
