@@ -66,6 +66,8 @@ def test_prompts():
     for i in range(4):
         print(i + 1)
 
+    p.keypress("Press a, b, or c").keys("a", "b", "c").ask()
+
     if (
         not p.confirm("Are you sure you want to continue?", schema, "are_you_sure")
         .default(True)

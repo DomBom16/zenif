@@ -8,6 +8,8 @@ from .checkbox import CheckboxPrompt
 from .number import NumberPrompt
 from .date import DatePrompt
 from .editor import EditorPrompt
+from .key import KeyPrompt
+
 
 class Prompt:
     """A class for prompting the user for input."""
@@ -85,3 +87,10 @@ class Prompt:
     ) -> EditorPrompt:
         """Creates an editor prompt where the user can input multiple lines of text, along with syntax highlighting if specified."""
         return EditorPrompt(message, schema, id)
+
+    @staticmethod
+    def keypress(
+        message: str,
+    ) -> KeyPrompt:
+        """Creates a keypress prompt where the user can input multiple keys. Unlike other prompts, this prompt does not have a schema or id."""
+        return KeyPrompt(message)
