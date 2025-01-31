@@ -103,6 +103,7 @@ class BasePrompt:
         if default and not options:
             sys.stdout.write(f" {Fore.CYAN}{Style.DIM}({default}){Style.RESET_ALL}")
         if options:
+            options = [option.lower() for option in options]
             if default_option:
                 options[
                     [option.lower() for option in options].index(default_option.lower())
@@ -117,7 +118,7 @@ class BasePrompt:
                 sys.stdout.write(
                     f" {Fore.CYAN}{Style.DIM}[{"".join(options)}]{Style.RESET_ALL}"
                 )
-        sys.stdout.write(f"{Fore.CYAN} {Fore.YELLOW}{value}")
+        sys.stdout.write(f" {Fore.YELLOW}{value}")
         if error:
             sys.stdout.write(f"  {Fore.RED}{error}{Cursor.left(2 + len(error))}")
 
