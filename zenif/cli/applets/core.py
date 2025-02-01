@@ -30,7 +30,7 @@ class CLI:
 
     def root(self, func: Callable = None) -> Callable:
         """
-        Decorator: Set a callback to run when no subcommand is passed.
+        Set a callback to run when no subcommand is passed.
         The return value will be logged if not None.
         Can be used with or without parentheses.
         """
@@ -45,7 +45,7 @@ class CLI:
 
     def before(self, func: Callable = None) -> Callable:
         """
-        Decorator: Set a callback to run before any subcommand is executed.
+        Set a callback to run before any subcommand is executed.
         The callback receives the command name and the remaining arguments.
         Its return value will be logged if not None.
         Can be used with or without parentheses.
@@ -61,7 +61,7 @@ class CLI:
 
     def help(self, func: Callable = None) -> Callable:
         """
-        Decorator: Set a callback to run whenever help is shown.
+        Set a callback to run whenever help is shown.
         This is triggered when '-h'/'--help' is passed, or when an unknown command is used.
         Its return value will be logged if not None.
         Can be used with or without parentheses.
@@ -134,6 +134,43 @@ class CLI:
                 result = self.help_callback()
                 if result is not None:
                     logger.info(result)
+            print(f"Unknown command: {command_name}")
+            self.print_help()
+
+    def execute(self, command_name: str, args: list[str] | None = None) -> None:
+        """Programatically execute a registered command.
+
+        Args:
+            command_name (str): The name of the command to execute.
+            args (list[str] | None, optional): The arguments to pass to the command. Defaults to None.
+        """
+        if args is None:
+            args = []
+        # Check for help flags in the provided arguments.
+        if any(arg in ("-h", "--help") for arg in args):
+            if self.help_callback:
+                result = self.help_callback()
+                if result is not None:
+                    logger.info(result)
+            self.print_command_help(command_name)
+            return
+
+        if command_name in self.commands:
+            if self.before_command_callback:
+                result = self.before_command_callback(command_name, args)
+                if result is not None:
+                    logger.info(result)
+            try:
+                command = self.commands[command_name]
+                parsed_args = parse_command_args(command, args)
+                print(f"\x1b]2;{self.name} {command_name}\x07", end="")
+                result = command(**parsed_args)
+                if result is not None:
+                    logger.info(result)
+            except CLIError as e:
+                print(f"Error: {str(e)}")
+                self.print_command_help(command_name)
+        else:
             print(f"Unknown command: {command_name}")
             self.print_help()
 
