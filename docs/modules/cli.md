@@ -17,6 +17,8 @@ Zenif includes a CLI (Command Line Interface) module that allows you to easily c
 
 ## Applets
 
+Within the CLI module, the Applets submodule is designed to facilitate the creation of lightweight yet functional CLI applications. These applications can be executed directly from the command line, providing a streamlined way to interact with the system or perform specific tasks.
+
 ### Getting Started with Applets
 
 Here's a comprehensive example of how to create a CLI application using Zenif, demonstrating the basic capabilites of Zenif's CLI applets.
@@ -190,11 +192,11 @@ if __name__ == '__main__':
 
 ## Prompts
 
-Zenif provides a flexible prompting system for interactive CLI applications. Prompts allow you to collect user input dynamically with built-in validation and formatting.
+Zenif's CLI module also provides a flexible prompting system for interactive CLI applications. Prompts allow you to collect user input dynamically with built-in validation, intuitive controls, and beautiful graphics.
 
 ### Getting Started With Prompts
 
-To use prompts in your CLI application, import the `Prompt` class and set up a CLI command like we did earlier:
+To use prompts in your CLI application, import the `Prompt` class and set up a CLI command [like we did earlier](#getting-started-with-applets):
 
 ```python
 from zenif.cli import CLI, Prompt
