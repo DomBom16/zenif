@@ -1,3 +1,3 @@
-from .factory import Prompt
+from .prompt import Prompt
 
 __all__ = ["Prompt"]
