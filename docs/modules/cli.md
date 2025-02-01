@@ -6,15 +6,18 @@ Zenif includes a CLI (Command Line Interface) module that allows you to easily c
 
 - [CLI Module](#cli-module)
   - [Table of Contents](#table-of-contents)
-  - [Getting Started with Applets](#getting-started-with-applets)
+  - [Applets](#applets)
+    - [Getting Started with Applets](#getting-started-with-applets)
     - [Setting Up ZSH Commands for Your Users](#setting-up-zsh-commands-for-your-users)
-  - [Getting Started with Prompts](#getting-started-with-prompts)
-    - [Basic Usage](#basic-usage)
+    - [Special Callback Decorators](#special-callback-decorators)
+  - [Prompts](#prompts)
+    - [Getting Started With Prompts](#getting-started-with-prompts)
     - [Types of Prompts](#types-of-prompts)
   - [Interactive Prompts with Schema Validation](#interactive-prompts-with-schema-validation)
-  - [Special Callback Decorators](#special-callback-decorators)
 
-## Getting Started with Applets
+## Applets
+
+### Getting Started with Applets
 
 Here's a comprehensive example of how to create a CLI application using Zenif, demonstrating the basic capabilites of Zenif's CLI applets.
 
@@ -80,7 +83,7 @@ if __name__ == "__main__":
     cli.run()
 ```
 
-Now that the CLI is set up, users can interact with it as follows:
+So far, our users can interact with the `greet` command like so:
 
 ```bash
 python script.py greet Alice
@@ -89,6 +92,21 @@ python script.py greet Alice --greeting "Hi"
 # Output: Hi, Alice!
 python script.py greet Alice --shout
 # Output: HELLO, ALICE!
+```
+
+However, using a subcommand name can sometimes be redundant. To fix this, we can employ the `@cli.root` decorator and the `cli.execute()` method.
+
+`@cli.root` is one of the [three special callback decorators](#special-callback-decorators) that can help make workflows with the CLI module easier. The function that follows this decorator is run when no subcommand is passed in.
+
+The `cli.execute()` method runs whichever registered command it's told to. You can optionally pass in parameters to it.
+
+In this example, we'll make the file run the `greet` command with default parameters:
+
+```python
+@cli.root
+def root():
+    # Programatically runs 'greet "Alice" --greeting "Hi"'
+    cli.execute("greet", ["Alice", "--greeting", "Hi"])
 ```
 
 Here's the code put together.
@@ -125,11 +143,56 @@ cli = CLI()
 install_setup(cli=cli, script_path=os.path.abspath(__file__))
 ```
 
-## Getting Started with Prompts
+### Special Callback Decorators
+
+Zenif’s CLI now supports additional callback decorators that allow you to define special behaviors in your CLI:
+
+- Root Callback (`@cli.root`):
+  Runs when no subcommand is passed to the CLI. If this callback returns a value, it is logged to the terminal.
+- Before Command Callback (`@cli.before`):
+  Runs just before a subcommand is executed. The callback receives the subcommand name and its arguments, and any returned value is logged.
+- Help Callback (`@cli.help`):
+  Runs whenever help is shown—whether the user explicitly passes `-h/--help` or an unknown command is invoked. Its return value is logged as well.
+
+Below is an example demonstrating these new additions:
+
+```python
+from zenif.cli import CLI, req, opt
+
+cli = CLI(name="demo")
+
+@cli.root
+def root():
+    return "No subcommand provided. Displaying help..." # This return value is logged.
+
+@cli.before
+def before_command(cmd_name, args):
+    return f"About to execute command '{cmd_name}' with arguments: {args}" # Logged before the command runs.
+
+@cli.help
+def on_help():
+    return "Help is being shown." # This is logged when help is triggered.
+
+@cli.command
+@req("name", help="Name to greet")
+@opt("--greeting", default="Hello", help="Greeting to use")
+@opt("--shout", is_flag=True, help="Print in uppercase")
+def greet(name: str, greeting: str, shout: bool = False):
+    """Greet a person."""
+    message = f"{greeting}, {name}!"
+    if shout:
+        message = message.upper()
+    return message # The result is logged after command execution.
+
+if __name__ == '__main__':
+    cli.run()
+```
+
+## Prompts
 
 Zenif provides a flexible prompting system for interactive CLI applications. Prompts allow you to collect user input dynamically with built-in validation and formatting.
 
-### Basic Usage
+### Getting Started With Prompts
 
 To use prompts in your CLI application, import the `Prompt` class and set up a CLI command like we did earlier:
 
@@ -211,48 +274,3 @@ When using prompts with schemas:
 - Error messages from the schema validation are displayed inline to the right of the user's cursor.
 
 For more detailed information on creating and using schemas, please refer to the [schema documentation](schema.md).
-
-## Special Callback Decorators
-
-Zenif’s CLI now supports additional callback decorators that allow you to define special behaviors in your CLI:
-
-- Root Callback (`@cli.root`):
-  Runs when no subcommand is passed to the CLI. If this callback returns a value, it is logged to the terminal.
-- Before Command Callback (`@cli.before`):
-  Runs just before a subcommand is executed. The callback receives the subcommand name and its arguments, and any returned value is logged.
-- Help Callback (`@cli.help`):
-  Runs whenever help is shown—whether the user explicitly passes `-h/--help` or an unknown command is invoked. Its return value is logged as well.
-
-Below is an example demonstrating these new additions:
-
-```python
-from zenif.cli import CLI, req, opt
-
-cli = CLI(name="demo")
-
-@cli.root
-def root():
-    return "No subcommand provided. Displaying help..." # This return value is logged.
-
-@cli.before
-def before_command(cmd_name, args):
-    return f"About to execute command '{cmd_name}' with arguments: {args}" # Logged before the command runs.
-
-@cli.help
-def on_help():
-    return "Help is being shown." # This is logged when help is triggered.
-
-@cli.command
-@req("name", help="Name to greet")
-@opt("--greeting", default="Hello", help="Greeting to use")
-@opt("--shout", is_flag=True, help="Print in uppercase")
-def greet(name: str, greeting: str, shout: bool = False):
-    """Greet a person."""
-    message = f"{greeting}, {name}!"
-    if shout:
-        message = message.upper()
-    return message # The result is logged after command execution.
-
-if __name__ == '__main__':
-    cli.run()
-```
