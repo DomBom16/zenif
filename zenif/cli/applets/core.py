@@ -19,31 +19,110 @@ class CLI:
         """
         self.name = name or "zenif-cli"
         self.commands: dict[str, Callable] = {}
+        self.root_callback: Callable[[], any] | None = None
+        self.before_command_callback: Callable[[str, list[str]], any] | None = None
+        self.help_callback: Callable[[], any] | None = None
 
     def command(self, func: Callable) -> Callable:
-        """Decorator to register a function as a CLI command."""
+        """Register a function as a CLI command."""
         self.commands[func.__name__] = func
         return func
+
+    def root(self, func: Callable = None) -> Callable:
+        """
+        Decorator: Set a callback to run when no subcommand is passed.
+        The return value will be logged if not None.
+        Can be used with or without parentheses.
+        """
+
+        def decorator(f: Callable) -> Callable:
+            self.root_callback = f
+            return f
+
+        if func is None:
+            return decorator
+        return decorator(func)
+
+    def before(self, func: Callable = None) -> Callable:
+        """
+        Decorator: Set a callback to run before any subcommand is executed.
+        The callback receives the command name and the remaining arguments.
+        Its return value will be logged if not None.
+        Can be used with or without parentheses.
+        """
+
+        def decorator(f: Callable) -> Callable:
+            self.before_command_callback = f
+            return f
+
+        if func is None:
+            return decorator
+        return decorator(func)
+
+    def help(self, func: Callable = None) -> Callable:
+        """
+        Decorator: Set a callback to run whenever help is shown.
+        This is triggered when '-h'/'--help' is passed, or when an unknown command is used.
+        Its return value will be logged if not None.
+        Can be used with or without parentheses.
+        """
+
+        def decorator(f: Callable) -> Callable:
+            self.help_callback = f
+            return f
+
+        if func is None:
+            return decorator
+        return decorator(func)
 
     def run(self, args: list[str] = None) -> None:
         """Run the CLI application."""
         if not args:
             args = sys.argv[1:]
 
-        if not args or args[0] in ("-h", "--help"):
+        # If no arguments are provided, invoke the root callback if set.
+        if not args:
+            if self.root_callback:
+                result = self.root_callback()
+                if result is not None:
+                    logger.info(result)
+            else:
+                self.print_help()
+            return
+
+        # If the first argument is a help flag, process global help.
+        if args[0] in ("-h", "--help"):
+            if self.help_callback:
+                result = self.help_callback()
+                if result is not None:
+                    logger.info(result)
             self.print_help()
             return
 
         command_name = args[0]
         if command_name in self.commands:
+            # Check if any help flag is present among the subcommand arguments.
+            if any(arg in ("-h", "--help") for arg in args[1:]):
+                if self.help_callback:
+                    result = self.help_callback()
+                    if result is not None:
+                        logger.info(result)
+                self.print_command_help(command_name)
+                return
+
+            # Run the before_command callback (if registered) before executing the subcommand.
+            if self.before_command_callback:
+                result = self.before_command_callback(command_name, args[1:])
+                if result is not None:
+                    logger.info(result)
             try:
-                # fetch command
+                # Fetch command
                 command = self.commands[command_name]
-                # parse arguments
+                # Parse arguments
                 parsed_args = parse_command_args(command, args[1:])
-                # change terminal title
+                # Change terminal title
                 print(f"\x1b]2;{self.name} {command_name}\x07", end="")
-                # run command
+                # Run command
                 result = command(**parsed_args)
                 if result is not None:
                     logger.info(result)
@@ -51,6 +130,10 @@ class CLI:
                 print(f"Error: {str(e)}")
                 self.print_command_help(command_name)
         else:
+            if self.help_callback:
+                result = self.help_callback()
+                if result is not None:
+                    logger.info(result)
             print(f"Unknown command: {command_name}")
             self.print_help()
 
@@ -71,6 +154,9 @@ class CLI:
 
     @deprecated(expected_removal="v1.0.0")
     def echo(self, message: any) -> None:
-        """Print a formatted message to the console. Works with lists, tuples, and dictionaries. Other formats are printed as is."""
+        """
+        Print a formatted message to the console.
+        Works with lists, tuples, and dictionaries. Other formats are printed as is.
+        """
         formatted_output = OutputFormatter.format_output(message)
         print(formatted_output)

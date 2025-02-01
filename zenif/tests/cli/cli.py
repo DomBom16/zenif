@@ -103,5 +103,20 @@ def test_prompts():
     print(f"{fav_interest=}")
 
 
+@cli.root
+def root():
+    return "This is the root command"
+
+
+@cli.help
+def help():
+    return "This is the help command"
+
+
+@cli.before
+def before(command: str, args: list[str]):
+    return f"Command: {command}, Args: {args}"
+
+
 if __name__ == "__main__":
     cli.run()

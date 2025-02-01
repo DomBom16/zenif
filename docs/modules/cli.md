@@ -12,6 +12,7 @@ Zenif includes a CLI (Command Line Interface) module that allows you to easily c
     - [Basic Usage](#basic-usage)
     - [Types of Prompts](#types-of-prompts)
   - [Interactive Prompts with Schema Validation](#interactive-prompts-with-schema-validation)
+  - [Special Callback Decorators](#special-callback-decorators)
 
 ## Getting Started with Applets
 
@@ -19,7 +20,7 @@ Here's a comprehensive example of how to create a CLI application using Zenif, d
 
 First, import the required modules from the Zenif library and initialize an instance.
 
-```python
+```py
 from zenif.cli import CLI, req, opt
 
 cli = CLI(name="applets-demo")
@@ -29,7 +30,7 @@ The `CLI` class is the core component that defines the command-line interface. T
 
 Register a function as a command within the CLI using the `@cli.command` decorator. This tells Zenif that the function below will be a CLI command. In this case, the function name greet becomes the command name that users will invoke.
 
-```python
+```py
 @cli.command()
 def greet():
     ...
@@ -81,7 +82,7 @@ if __name__ == "__main__":
 
 Now that the CLI is set up, users can interact with it as follows:
 
-```zsh
+```bash
 python script.py greet Alice
 # Output: Hello, Alice!
 python script.py greet Alice --greeting "Hi"
@@ -207,6 +208,51 @@ When using prompts with schemas:
 
 - The schema validates the input in real-time, providing immediate feedback to the user.
 - Users cannot proceed until they provide valid input according to the schema.
-- Error messages from the schema validation are displayed inline to the right of the users cursor.
+- Error messages from the schema validation are displayed inline to the right of the user's cursor.
 
-For more detailed information on creating and using schemas, please refer to the [schema documentation](./schema.md).
+For more detailed information on creating and using schemas, please refer to the [schema documentation](schema.md).
+
+## Special Callback Decorators
+
+Zenif’s CLI now supports additional callback decorators that allow you to define special behaviors in your CLI:
+
+- Root Callback (`@cli.root`):
+  Runs when no subcommand is passed to the CLI. If this callback returns a value, it is logged to the terminal.
+- Before Command Callback (`@cli.before`):
+  Runs just before a subcommand is executed. The callback receives the subcommand name and its arguments, and any returned value is logged.
+- Help Callback (`@cli.help`):
+  Runs whenever help is shown—whether the user explicitly passes `-h/--help` or an unknown command is invoked. Its return value is logged as well.
+
+Below is an example demonstrating these new additions:
+
+```python
+from zenif.cli import CLI, req, opt
+
+cli = CLI(name="demo")
+
+@cli.root
+def root():
+    return "No subcommand provided. Displaying help..." # This return value is logged.
+
+@cli.before
+def before_command(cmd_name, args):
+    return f"About to execute command '{cmd_name}' with arguments: {args}" # Logged before the command runs.
+
+@cli.help
+def on_help():
+    return "Help is being shown." # This is logged when help is triggered.
+
+@cli.command
+@req("name", help="Name to greet")
+@opt("--greeting", default="Hello", help="Greeting to use")
+@opt("--shout", is_flag=True, help="Print in uppercase")
+def greet(name: str, greeting: str, shout: bool = False):
+    """Greet a person."""
+    message = f"{greeting}, {name}!"
+    if shout:
+        message = message.upper()
+    return message # The result is logged after command execution.
+
+if __name__ == '__main__':
+    cli.run()
+```
