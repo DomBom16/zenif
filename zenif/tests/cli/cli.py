@@ -105,7 +105,7 @@ def test_prompts():
 
 @cli.root
 def root():
-    return "This is the root command"
+    cli.execute("test_prompts")
 
 
 @cli.help
