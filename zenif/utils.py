@@ -1,5 +1,8 @@
 import re
 from colorama import Fore, Back
+import sys
+import signal
+from .constants import Keys
 
 
 def wrap(text: str, width: int) -> list:
@@ -147,3 +150,52 @@ def if_space(string: str, space: int = 0) -> str:
         str: The original string if space permits, otherwise "".
     """
     return string if space >= len(string) else ""
+
+
+def get_key() -> str:
+    def handle_interrupt(signum, frame):
+        raise KeyboardInterrupt()
+
+    if sys.platform.startswith("win"):
+        import msvcrt
+
+        # Set up the interrupt handler
+        signal.signal(signal.SIGINT, handle_interrupt)
+
+        try:
+            while True:
+                if msvcrt.kbhit():
+                    char = msvcrt.getch().decode("utf-8")
+                    if char == Keys.CTRLC:  # Ctrl+C
+                        raise KeyboardInterrupt()
+                    return char
+        finally:
+            # Reset the interrupt handler
+            signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+    else:
+        import termios
+        import tty
+
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(fd)
+            # Set up the interrupt handler
+            signal.signal(signal.SIGINT, handle_interrupt)
+
+            while True:
+                char = sys.stdin.read(1)
+                if char == Keys.CTRLC:  # Ctrl+C
+                    raise KeyboardInterrupt()
+                if char == Keys.ESCAPE:
+                    # Handle escape sequences (e.g., arrow keys)
+                    next_char = sys.stdin.read(1)
+                    if next_char == "[":
+                        last_char = sys.stdin.read(1)
+                        return f"\x1b[{last_char}"
+                return char
+        finally:
+            # Reset terminal settings and interrupt handler
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+            signal.signal(signal.SIGINT, signal.SIG_DFL)

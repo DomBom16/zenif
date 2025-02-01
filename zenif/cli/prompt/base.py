@@ -1,7 +1,7 @@
 from ...schema import Schema
-from ...constants import Keys, Cursor
+from ...constants import Cursor
+from ...utils import get_key
 
-import signal
 import sys
 from colorama import init, Fore, Style
 
@@ -40,53 +40,8 @@ class BasePrompt:
             return str(e)
 
     @staticmethod
-    def _get_key():
-        def handle_interrupt(signum, frame):
-            raise KeyboardInterrupt()
-
-        if sys.platform.startswith("win"):
-            import msvcrt
-
-            # Set up the interrupt handler
-            signal.signal(signal.SIGINT, handle_interrupt)
-
-            try:
-                while True:
-                    if msvcrt.kbhit():
-                        char = msvcrt.getch().decode("utf-8")
-                        if char == Keys.CTRLC:  # Ctrl+C
-                            raise KeyboardInterrupt()
-                        return char
-            finally:
-                # Reset the interrupt handler
-                signal.signal(signal.SIGINT, signal.SIG_DFL)
-
-        else:
-            import termios
-            import tty
-
-            fd = sys.stdin.fileno()
-            old_settings = termios.tcgetattr(fd)
-            try:
-                tty.setraw(fd)
-                # Set up the interrupt handler
-                signal.signal(signal.SIGINT, handle_interrupt)
-
-                while True:
-                    char = sys.stdin.read(1)
-                    if char == Keys.CTRLC:  # Ctrl+C
-                        raise KeyboardInterrupt()
-                    if char == Keys.ESCAPE:
-                        # Handle escape sequences (e.g., arrow keys)
-                        next_char = sys.stdin.read(1)
-                        if next_char == "[":
-                            last_char = sys.stdin.read(1)
-                            return f"\x1b[{last_char}"
-                    return char
-            finally:
-                # Reset terminal settings and interrupt handler
-                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-                signal.signal(signal.SIGINT, signal.SIG_DFL)
+    def _get_key() -> str:
+        return get_key()
 
     @staticmethod
     def _print_prompt(
