@@ -21,7 +21,7 @@ class CommandParser:
 
     def _add_argument(self, *args, **kwargs):
         # Remove custom parameters that argparse doesn't understand
-        is_flag = kwargs.pop("is_flag", False)
+        is_flag = kwargs.pop("flag", False)
         is_option = kwargs.pop("is_option", False)
 
         if is_flag:

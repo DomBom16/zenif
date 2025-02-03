@@ -57,10 +57,10 @@ Similarly, we can use `@opt` to define an optional argument.
 
 This optional argument `--greeting` allows the user to specify a custom greeting. If no greeting is provided, it defaults to `"Hello"`.
 
-`@opt` can also be used to create flags. Use `@opt` with `is_flag=True` to define a flag that enables a specific behavior.
+`@opt` can also be used to create flags. Use `@opt` with `flag=True` to define a flag that enables a specific behavior.
 
 ```python
-@opt("--shout", is_flag=True, help="Print in uppercase")
+@opt("--shout", flag=True, help="Print in uppercase")
 ```
 
 Unlike regular options, this flag does not require a value. If `--shout` is included in the command, its value is `True`; otherwise, it remains `False`.
@@ -78,7 +78,7 @@ def greet(name: str, greeting: str, shout: bool = False):
 
 The function takes in the `name`, `greeting`, and `shout` parameters. It constructs a greeting message and converts it to uppercase if the `--shout` flag is set to `True`. The return value is automatically displayed in the terminal. It's also good to use docstrings for all your commands as they are used to provide insightful information for the `--help` command.
 
-However, running this script won't activite our function yet. We need to pass the `cli.run()` method to activite the CLI.
+However, running this script won't activate our function yet since it's not being called anywhere. In order to call this from the command line, we need to pass the `cli.run()` method to activate the CLI.
 
 ```python
 if __name__ == "__main__":
@@ -89,11 +89,11 @@ So far, our users can interact with the `greet` command like so:
 
 ```bash
 python script.py greet Alice
-# Output: Hello, Alice!
+# Hello, Alice!
 python script.py greet Alice --greeting "Hi"
-# Output: Hi, Alice!
+# Hi, Alice!
 python script.py greet Alice --shout
-# Output: HELLO, ALICE!
+# HELLO, ALICE!
 ```
 
 However, using a subcommand name can sometimes be redundant. To fix this, we can employ the `@cli.root` decorator and the `cli.execute()` method.
@@ -111,26 +111,37 @@ def root():
     cli.execute("greet", ["Alice", "--greeting", "Hi"])
 ```
 
+Now when we run the script by itself, we still get an output:
+
+```bash
+python script.py
+# Hi, Alice!
+```
+
 Here's the code put together.
 
 ```python
 from zenif.cli import CLI, req, opt
 
-cli = CLI(name="demo")  # Create a CLI instance, optionally with a name
+cli = CLI(name="demo")
 
 @cli.command
-@req("name", help="Name to greet")  # Required positional argument
-@opt("--greeting", default="Hello", help="Greeting to use")  # Optional option with default
-@opt("--shout", is_flag=True, help="Print in uppercase")  # Optional flag
+@req("name", help="Name to greet")
+@opt("--greeting", default="Hello", help="Greeting to use")
+@opt("--shout", flag=True, help="Print in uppercase")
 def greet(name: str, greeting: str, shout: bool = False):
     """Greet a person."""
     message = f"{greeting}, {name}!"
     if shout:
         message = message.upper()
-    return message  # Logged to the terminal
+    return message
+
+@cli.root
+def root():
+    cli.execute("greet", ["Alice", "--greeting", "Hi"])
 
 if __name__ == '__main__':
-    cli.run()  # Activate the CLI when the file is run
+    cli.run()
 ```
 
 ### Setting Up ZSH Commands for Your Users
@@ -178,7 +189,7 @@ def on_help():
 @cli.command
 @req("name", help="Name to greet")
 @opt("--greeting", default="Hello", help="Greeting to use")
-@opt("--shout", is_flag=True, help="Print in uppercase")
+@opt("--shout", flag=True, help="Print in uppercase")
 def greet(name: str, greeting: str, shout: bool = False):
     """Greet a person."""
     message = f"{greeting}, {name}!"
