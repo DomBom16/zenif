@@ -26,12 +26,12 @@ Here's a comprehensive example of how to create a CLI application using Zenif, d
 First, import the required modules from the Zenif library and initialize an instance.
 
 ```py
-from zenif.cli import CLI, req, opt
+from zenif.cli import CLI
 
 cli = CLI(name="applets-demo")
 ```
 
-The `CLI` class is the core component that defines the command-line interface. The `req` and `opt` decorators are used to specify required and optional arguments.
+The `CLI` class is a command-line interface (CLI) framework for defining and executing commands, providing functionality to register commands, set callbacks, and handle command-line arguments.
 
 Register a function as a command within the CLI using the `@cli.command` decorator. This tells Zenif that the function below will be a CLI command. In this case, the function name greet becomes the command name that users will invoke.
 
@@ -41,29 +41,38 @@ def greet():
     ...
 ```
 
-Use `@req` to define a required argument that the user must provide.
+Use `@cli.arg` to define a required positional arguments that the user must provide.
 
 ```python
-@req("name", help="Name to greet")
+@cli.arg("name", help="Name to greet")
 ```
 
-Here, `"name"` is the required argument, meaning the user must enter a name when running the command. The help parameter provides a description for --help output.
+Here, `"name"` is the required argument, meaning the user must enter a name when running the command. The help argument provides useful insight to the user when they run `applets-demo greet --help`
 
-Similarly, we can use `@opt` to define an optional argument.
+Similarly, we can use `@cli.opt` to define an option, an optional argument that accepts a value.
 
 ```python
-@opt("--greeting", default="Hello", help="Greeting to use")
+@cli.opt("greeting", default="Hello", help="Greeting to use")
 ```
 
 This optional argument `--greeting` allows the user to specify a custom greeting. If no greeting is provided, it defaults to `"Hello"`.
 
-`@opt` can also be used to create flags. Use `@opt` with `flag=True` to define a flag that enables a specific behavior.
+While `@cli.opt` can be great for optional values, `@cli.flag` can be extremely useful in providing boolean switches. Unlike regular options, this flag does not require a value. If `--shout` is included in the command, its value is `True`; otherwise, it remains `False`.
 
 ```python
-@opt("--shout", flag=True, help="Print in uppercase")
+@cli.flag("shout", help="Print in uppercase")
 ```
 
 Unlike regular options, this flag does not require a value. If `--shout` is included in the command, its value is `True`; otherwise, it remains `False`.
+
+While this is all well and nifty, typing commands over and over can get pretty tedious. We can help mitigate this by using `@cli.alias` to define parameter shortands.
+
+```python
+@cli.alias("greeting", "g")
+@cli.alias("shout", "s")
+```
+
+Instead of using `--greeting` and `--shout`, we can now simply use `-g` and `-s`. Much faster to type.
 
 Now, implement the actual function that processes user input.
 
@@ -73,12 +82,12 @@ def greet(name: str, greeting: str, shout: bool = False):
     message = f"{greeting}, {name}!"
     if shout:
         message = message.upper()
-    return message # This will be printed to the terminal.
+    return message # This will be printed to the terminal
 ```
 
-The function takes in the `name`, `greeting`, and `shout` parameters. It constructs a greeting message and converts it to uppercase if the `--shout` flag is set to `True`. The return value is automatically displayed in the terminal. It's also good to use docstrings for all your commands as they are used to provide insightful information for the `--help` command.
+Docstrings used in your commands are used as help descriptions.
 
-However, running this script won't activate our function yet since it's not being called anywhere. In order to call this from the command line, we need to pass the `cli.run()` method to activate the CLI.
+Unfortuneately, we can't run this script just yet since our function isn't being called anywhere. In order to call this from the command line, we need to pass the `cli.run()` method to activate the CLI.
 
 ```python
 if __name__ == "__main__":
@@ -90,19 +99,15 @@ So far, our users can interact with the `greet` command like so:
 ```bash
 python script.py greet Alice
 # Hello, Alice!
-python script.py greet Alice --greeting "Hi"
-# Hi, Alice!
-python script.py greet Alice --shout
-# HELLO, ALICE!
+python script.py greet Alice --greeting "Hi" -s
+# HI, ALICE!
+python script.py greet "Super Bob" --shout
+# HELLO, SUPER BOB!
 ```
 
 However, using a subcommand name can sometimes be redundant. To fix this, we can employ the `@cli.root` decorator and the `cli.execute()` method.
 
-`@cli.root` is one of the [three special callback decorators](#special-callback-decorators) that can help make workflows with the CLI module easier. The function that follows this decorator is run when no subcommand is passed in.
-
-The `cli.execute()` method runs whichever registered command it's told to. You can optionally pass in parameters to it.
-
-In this example, we'll make the file run the `greet` command with default parameters:
+`@cli.root` is one of the [three special callback decorators](#special-callback-decorators) that can help make workflows with the CLI module easier. If you want the `CLI` to run a default command when no subcommand is provided, use the `@cli.root` decorator. This function is executed when the script is run without a subcommand:
 
 ```python
 @cli.root
@@ -121,14 +126,16 @@ python script.py
 Here's the code put together.
 
 ```python
-from zenif.cli import CLI, req, opt
+from zenif.cli import CLI
 
 cli = CLI(name="demo")
 
 @cli.command
-@req("name", help="Name to greet")
-@opt("--greeting", default="Hello", help="Greeting to use")
-@opt("--shout", flag=True, help="Print in uppercase")
+@cli.arg("name", help="Name to greet")
+@cli.opt("greeting", default="Hello", help="Greeting to use")
+@cli.flag("shout", help="Print in uppercase")
+@cli.alias("greeting", "g")
+@cli.alias("shout", "s")
 def greet(name: str, greeting: str, shout: bool = False):
     """Greet a person."""
     message = f"{greeting}, {name}!"
@@ -138,6 +145,7 @@ def greet(name: str, greeting: str, shout: bool = False):
 
 @cli.root
 def root():
+    # Programmatically execute the 'greet' command.
     cli.execute("greet", ["Alice", "--greeting", "Hi"])
 
 if __name__ == '__main__':
@@ -146,7 +154,7 @@ if __name__ == '__main__':
 
 ### Setting Up ZSH Commands for Your Users
 
-The CLI module comes with a handy method that let's your users install the given file as a .zshrc function. By importing and running the `install_setup()` method, your users can run `python yourfile.py setup --alias youralias` to simplify the command line interaction, creating an alias within their `~/.zshrc` configuration.
+The CLI module comes with a handy method that let's your users install the given file as a .zshrc function. By running the `install_setup()` method, your users can create an alias in their `~/.zshrc` configuration.
 
 ```python
 from zenif.cli import CLI, install_setup
@@ -156,46 +164,37 @@ cli = CLI()
 install_setup(cli=cli, script_path=os.path.abspath(__file__))
 ```
 
+Users can now run `python yourfile.py setup --alias youralias` so insteand of running `python yourfile.py` they can run `youralias`.
+
 ### Special Callback Decorators
 
 Zenif’s CLI now supports additional callback decorators that allow you to define special behaviors in your CLI:
 
-- Root Callback (`@cli.root`):
-  Runs when no subcommand is passed to the CLI. If this callback returns a value, it is logged to the terminal.
-- Before Command Callback (`@cli.before`):
-  Runs just before a subcommand is executed. The callback receives the subcommand name and its arguments, and any returned value is logged.
-- Help Callback (`@cli.help`):
-  Runs whenever help is shown—whether the user explicitly passes `-h/--help` or an unknown command is invoked. Its return value is logged as well.
+- Root Callback (`@cli.root`)
+  Runs when no subcommand is passed. If the callback returns a value, it is logged to the terminal.
+- Before Command Callback (`@cli.before`)
+  Runs just before a subcommand is executed. It receives the subcommand name and its arguments; any returned value is logged.
+- Help Callback (`@cli.help`)
+  Runs whenever help is shown. Its return value is logged as well.
 
 Below is an example demonstrating these new additions:
 
 ```python
-from zenif.cli import CLI, req, opt
+from zenif.cli import CLI
 
-cli = CLI(name="demo")
+cli = CLI()
 
 @cli.root
 def root():
     return "No subcommand provided. Displaying help..." # This return value is logged.
 
 @cli.before
-def before_command(cmd_name, args):
-    return f"About to execute command '{cmd_name}' with arguments: {args}" # Logged before the command runs.
+def before_command(cmd: str, args: list[str]):
+    return f"About to execute command '{cmd}' with arguments: {args}" # Logged before the command runs.
 
 @cli.help
 def on_help():
     return "Help is being shown." # This is logged when help is triggered.
-
-@cli.command
-@req("name", help="Name to greet")
-@opt("--greeting", default="Hello", help="Greeting to use")
-@opt("--shout", flag=True, help="Print in uppercase")
-def greet(name: str, greeting: str, shout: bool = False):
-    """Greet a person."""
-    message = f"{greeting}, {name}!"
-    if shout:
-        message = message.upper()
-    return message # The result is logged after command execution.
 
 if __name__ == '__main__':
     cli.run()
@@ -203,7 +202,7 @@ if __name__ == '__main__':
 
 ## Prompts
 
-Zenif's CLI module also provides a flexible prompting system for interactive CLI applications. Prompts allow you to collect user input dynamically with built-in validation, intuitive controls, and beautiful graphics.
+Zenif's CLI module also provides a flexible prompting system for interactive CLI applications. Prompts let you collect user input dynamically with built-in validation and beautiful output formatting.
 
 ### Getting Started With Prompts
 

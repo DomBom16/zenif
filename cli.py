@@ -1,4 +1,4 @@
-from zenif.cli import CLI, req, opt, Prompt as p, install_setup
+from zenif.cli import CLI, Prompt as p, install_setup
 from zenif.schema import (
     Schema,
     BooleanF,
@@ -18,15 +18,30 @@ install_setup(cli, os.path.abspath(__file__))
 
 
 @cli.command
-@req("name", help="Name to greet")
-@opt("--greeting", default="Hello", help="Greeting to use")
-@opt("--shout", is_flag=True, help="Print in uppercase")
-def greet(name: str, greeting: str, shout: bool = False):
-    """Greet a person."""
-    message = f"{greeting}, {name}!"
-    if shout:
-        message = message.upper()
-    return message
+@cli.arg("branch", help="The branch to fetch")
+@cli.opt("depth", default=10, help="The depth to use")
+@cli.alias("depth", "d")
+def fetch(branch, depth):
+    """
+    Fetch a branch with a specified depth.
+    
+    Usage examples:
+      fetch main --depth=10
+      fetch feature -d=10
+    """
+    return f"Fetching branch '{branch}' with depth={depth}"
+
+
+@cli.command
+@cli.arg("path", help="The folder path")
+@cli.flag("all", help="Show all")
+def ls(path, all):
+    """
+    List directory contents.
+
+    Usage example: ls /my-path --all
+    """
+    return f"Listing {path} with all={all}"
 
 
 @cli.command
@@ -110,12 +125,14 @@ def root():
 
 @cli.help
 def help():
-    return "This is the help command"
+    # return "This is the help command"
+    pass
 
 
 @cli.before
 def before(command: str, args: list[str]):
-    return f"Command: {command}, Args: {args}"
+    # return f"Command: {command}, Args: {args}"
+    pass
 
 
 if __name__ == "__main__":

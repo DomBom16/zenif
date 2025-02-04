@@ -1,6 +1,11 @@
 from typing import Callable
 import argparse
 from .exceptions import CLIError
+from .decorators import CLIParameter
+from .formatters import HelpFormatter
+from colorama import Fore, Style,init
+
+init(autoreset=True)
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -15,21 +20,49 @@ class CommandParser:
         self._add_arguments()
 
     def _add_arguments(self):
-        if hasattr(self.command, "_arguments"):
-            for args, kwargs in self.command._arguments:
-                self._add_argument(*args, **kwargs)
+        # Get cli parameters; default to an empty dict if not defined.
+        cli_params = getattr(self.command, "_cli_params", {})
 
-    def _add_argument(self, *args, **kwargs):
-        # Remove custom parameters that argparse doesn't understand
-        is_flag = kwargs.pop("flag", False)
-        is_option = kwargs.pop("is_option", False)
+        # Merge in alias info if available.
+        cli_aliases = getattr(self.command, "_cli_aliases", {})
+        for param_name, alias_name in cli_aliases.items():
+            if param_name in cli_params:
+                # Format alias if needed.
+                if not alias_name.startswith("-"):
+                    alias_name = (
+                        f"-{alias_name}" if len(alias_name) == 1 else f"--{alias_name}"
+                    )
+                cli_params[param_name].alias = alias_name
+            else:
+                raise ValueError(
+                    f"Parameter '{param_name}' not defined; cannot set alias."
+                )
 
-        if is_flag:
+        # Iterate over CLI parameters and add them.
+        for param in cli_params.values():
+            self._add_argument(param)
+
+    def _add_argument(self, param: CLIParameter):
+        args = []
+        kwargs = {}
+        if param.kind == "argument":
+            # Positional argument: no dashes.
+            args.append(param.cli_name)
+        else:
+            # For options and flags, add the main CLI name and any alias.
+            args.append(param.cli_name)
+            if param.alias:
+                args.append(param.alias)
+            # Ensure that the parsed variable name matches the function parameter.
+            kwargs["dest"] = param.param_name
+
+        kwargs["help"] = param.help
+        if param.default is not None:
+            kwargs["default"] = param.default
+
+        if param.kind == "flag":
             kwargs["action"] = "store_true"
             kwargs.setdefault("default", False)
-
-        if is_option and not args[0].startswith("-"):
-            args = (f"--{args[0]}",) + args[1:]
 
         self.parser.add_argument(*args, **kwargs)
 
@@ -38,8 +71,8 @@ class CommandParser:
             parsed_args = self.parser.parse_args(args)
             return vars(parsed_args)
         except CLIError as e:
-            print(f"Error: {str(e)}")
-            self.parser.print_help()
+            print(f"{Fore.RED}During parsing, an error occurred\n> {str(e)}{Style.RESET_ALL}")
+            print(HelpFormatter.format_command_help(self.command.__name__, self.command))
             return {}
 
 

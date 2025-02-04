@@ -23,7 +23,7 @@ def install_setup(cli: CLI, script_path: str) -> Callable:
     """
 
     @cli.command
-    @opt("--alias", default=cli.name, help="Alias for the command")
+    @opt("alias", default=cli.name, help="Alias for the command")
     def setup(alias: str):
         """Install this script as a Zsh command"""
         install_script_content = f"""#!/bin/zsh

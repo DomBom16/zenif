@@ -1,5 +1,9 @@
 # More About Prompts
 
+## `ask()`
+
+The `ask()` method is your entry gate into the terminal. When chaining this with any prompt type, the prompt interface will show up in the terminal. This should be the last method in your `Prompt` chain, returning the value that the user inputs.
+
 ## Special Prompt Methods
 
 ### `default()`
