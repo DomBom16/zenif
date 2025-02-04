@@ -1,6 +1,6 @@
 # Zenif 0.4.1
 
-Zenif (pronounced "Zenith") is a cutting-edge Python library designed to enhance the efficiency and performance of your software development projects. Whether you're an experienced developer or just beginning your coding journey, Zenif provides a robust suite of tools to simplify workflows, optimize code management, and deliver exceptional functionality.
+Zenif (pronounced "Zenith") is a Python library designed to enhance the way you write your code. Please take it into consideration that I developed Zenif as a personal side-project of mine to help me with other projects, so some features might not work as expected as I have not full tested everything.
 
 ## Installation
 
