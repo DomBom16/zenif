@@ -1,8 +1,6 @@
 from textwrap import dedent, indent
 from shutil import get_terminal_size as tsize
-from colorama import Fore, Back, Style, init
-
-init(autoreset=True)
+from colorama import Fore, Back, Style
 
 
 class HelpFormatter:

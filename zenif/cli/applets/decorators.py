@@ -3,9 +3,9 @@ from typing import Callable
 
 
 @dataclass
-class CLIParameter:
+class AParam:
     """
-    Represents metadata for a CLI parameter.
+    Represents metadata for a Applet parameter.
 
     Attributes:
         param_name: The name of the parameter as defined in the function signature.
@@ -40,7 +40,7 @@ class CLIParameter:
             self.cli_name = self.param_name
 
 
-def _ensure_cli_params(func: Callable) -> dict[str, CLIParameter]:
+def _ensure_aparams(func: Callable) -> dict[str, AParam]:
     if not hasattr(func, "_cli_params"):
         func._cli_params = {}
     return func._cli_params
@@ -55,8 +55,8 @@ def arg(name: str, *, help: str = "") -> Callable:
     """
 
     def decorator(func: Callable) -> Callable:
-        cli_params = _ensure_cli_params(func)
-        cli_params[name] = CLIParameter(
+        cli_params = _ensure_aparams(func)
+        cli_params[name] = AParam(
             param_name=name,
             kind="argument",
             help=help,
@@ -75,8 +75,8 @@ def opt(name: str, *, default: any = None, help: str = "") -> Callable:
     """
 
     def decorator(func: Callable) -> Callable:
-        cli_params = _ensure_cli_params(func)
-        cli_params[name] = CLIParameter(
+        cli_params = _ensure_aparams(func)
+        cli_params[name] = AParam(
             param_name=name,
             kind="option",
             help=help,
@@ -96,8 +96,8 @@ def flag(name: str, *, help: str = "") -> Callable:
     """
 
     def decorator(func: Callable) -> Callable:
-        cli_params = _ensure_cli_params(func)
-        cli_params[name] = CLIParameter(
+        cli_params = _ensure_aparams(func)
+        cli_params[name] = AParam(
             param_name=name,
             kind="flag",
             help=help,

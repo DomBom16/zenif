@@ -1,4 +1,4 @@
-class CLIError(Exception):
-    """Base exception for CLI-related errors."""
+class AppletError(Exception):
+    """Base exception for Applet-related errors."""
 
     pass

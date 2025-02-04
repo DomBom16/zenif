@@ -3,9 +3,7 @@ from ...constants import Cursor
 from ...utils import get_key
 
 import sys
-from colorama import init, Fore, Style
-
-init(autoreset=True)
+from colorama import Fore, Style
 
 
 class BasePrompt:

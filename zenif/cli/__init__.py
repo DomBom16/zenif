@@ -1,13 +1,4 @@
-from .applets import CLI, install_setup
-
+from .applets import Applet
 from .prompt import Prompt
 
-
-__all__ = [
-    # CLI()
-    "CLI",
-    # setup command installer
-    "install_setup",
-    # interactive prompt utils
-    "Prompt",
-]
+__all__ = ["Applet", "Prompt"]

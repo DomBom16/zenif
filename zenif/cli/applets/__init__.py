@@ -1,7 +1,3 @@
-from .core import CLI
-from .installer import install_setup
+from .core import Applet
 
-__all__ = [
-    "CLI",
-    "install_setup",
-]
+__all__ = ["Applet"]

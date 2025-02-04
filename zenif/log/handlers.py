@@ -7,7 +7,7 @@ from threading import current_thread
 from io import StringIO
 from re import sub
 from copy import deepcopy
-
+from colorama import Style
 
 class Ruleset:
 
@@ -117,7 +117,7 @@ class BaseHandler:
         log_output = StringIO()
 
         log_output.write(
-            f"{log_line}{''.join([f'{line}\n' if i == 0 else f'\x1b[{message_indent}C{line}\x1b[0m\n' for i, line in enumerate(lines)])}"
+            f"{log_line}{''.join([f'{line}\n' if i == 0 else f'\x1b[{message_indent}C{line}{Style.RESET_ALL}\n' for i, line in enumerate(lines)])}"
         )
 
         return log_output.getvalue()
@@ -160,7 +160,7 @@ class BaseHandler:
 
         metadata_str = " ".join(metadata_items)
         metadata_space = terminal_width - message_space - len(strip_ansi(metadata_str))
-        return f"\x1b[0m\x1b[2m{metadata_str.rjust(metadata_space)}\x1b[0m"
+        return f"{Style.RESET_ALL}{Style.DIM}{metadata_str.rjust(metadata_space)}{Style.RESET_ALL}"
 
 
 class StreamHandler(BaseHandler):

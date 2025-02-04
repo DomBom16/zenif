@@ -2,12 +2,6 @@
 
 Zenif (pronounced "Zenith") is a cutting-edge Python library designed to enhance the efficiency and performance of your software development projects. Whether you're an experienced developer or just beginning your coding journey, Zenif provides a robust suite of tools to simplify workflows, optimize code management, and deliver exceptional functionality.
 
-- [Zenif 0.4.1](#zenif-041)
-  - [Installation](#installation)
-  - [Documentation](#documentation)
-    - [Modules](#modules)
-  - [License](#license)
-
 ## Installation
 
 Zenif requires Python 3.12 or higher. To install the latest version, install with `pip` or your favorite PyPi package manager.

@@ -3,6 +3,9 @@ from ..utils import strip_ansi, colorize
 from copy import deepcopy
 from shutil import get_terminal_size as tsize
 from math import inf
+from colorama import init, Fore, Back, Style
+
+# init(autoreset=True)
 
 
 def shorthand(shorthand: str) -> str:
@@ -750,7 +753,7 @@ class TemplateEngine:
             style.append("\x1b[5m")
         if pvalue["reverse"]:
             style.append("\x1b[7m")
-        return f"{''.join(style)}{value}\x1b[0m" if style else value
+        return f"{''.join(style)}{value}{Style.RESET_ALL}" if style else value
 
     def __process_color(self, value: str, pvalue: dict[str, any]) -> str:
         pvalue = self.__process_pvalue(

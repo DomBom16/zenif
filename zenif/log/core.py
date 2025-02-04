@@ -9,19 +9,7 @@ from pygments.lexers import PythonLexer
 from pygments.formatters import Terminal256Formatter as tformatter
 from pygments.styles import get_style_by_name
 from random import choice
-
-# > File "demo.py", line 21, in <module>
-#     main(1, 2, z)  # Oops...
-#     |          └ 0
-#     └ <function main at 0x7ff810e63bf8>
-
-#   File "demo.py", line 16, in main
-#     x * y / z
-#     |   |   └ 0
-#     |   └ 2
-#     └ 1
-
-# ZeroDivisionError: division by zero
+from colorama import Fore
 
 
 class Logger:
@@ -30,15 +18,16 @@ class Logger:
     Args:
         ruleset (dict, optional): The list of rules that will be overriden, enabling custom behavior. Defaults to {}.
     """
+
     def __init__(self, ruleset: dict = {}):
 
         self.__levels = {
-            "debug": {"name": "debug", "level": 1, "color": "\x1b[34m"},
-            "info": {"name": "info", "level": 0, "color": "\x1b[37m"},
-            "success": {"name": "success", "level": 2, "color": "\x1b[32m"},
-            "warning": {"name": "warning", "level": 3, "color": "\x1b[33m"},
-            "error": {"name": "error", "level": 4, "color": "\x1b[31m"},
-            "lethal": {"name": "lethal", "level": 5, "color": "\x1b[35m"},
+            "debug": {"name": "debug", "level": 1, "color": Fore.BLUE},
+            "info": {"name": "info", "level": 0, "color": Fore.WHITE},
+            "success": {"name": "success", "level": 2, "color": Fore.GREEN},
+            "warning": {"name": "warning", "level": 3, "color": Fore.YELLOW},
+            "error": {"name": "error", "level": 4, "color": Fore.RED},
+            "lethal": {"name": "lethal", "level": 5, "color": Fore.MAGENTA},
         }
 
         self.defaults = {

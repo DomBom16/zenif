@@ -1,16 +1,15 @@
+from colorama import Fore, Style
 from typing import Callable
 import argparse
-from .exceptions import CLIError
-from .decorators import CLIParameter
-from .formatters import HelpFormatter
-from colorama import Fore, Style,init
 
-init(autoreset=True)
+from .decorators import AParam
+from .exceptions import AppletError
+from .formatters import HelpFormatter
 
 
 class ArgumentParser(argparse.ArgumentParser):
     def error(self, message):
-        raise CLIError(message)
+        raise AppletError(message)
 
 
 class CommandParser:
@@ -42,7 +41,7 @@ class CommandParser:
         for param in cli_params.values():
             self._add_argument(param)
 
-    def _add_argument(self, param: CLIParameter):
+    def _add_argument(self, param: AParam):
         args = []
         kwargs = {}
         if param.kind == "argument":
@@ -70,9 +69,13 @@ class CommandParser:
         try:
             parsed_args = self.parser.parse_args(args)
             return vars(parsed_args)
-        except CLIError as e:
-            print(f"{Fore.RED}During parsing, an error occurred\n> {str(e)}{Style.RESET_ALL}")
-            print(HelpFormatter.format_command_help(self.command.__name__, self.command))
+        except AppletError as e:
+            print(
+                f"{Fore.RED}During parsing, an error occurred\n> {str(e)}{Style.RESET_ALL}"
+            )
+            print(
+                HelpFormatter.format_command_help(self.command.__name__, self.command)
+            )
             return {}
 
 

@@ -15,7 +15,7 @@ from pygments.lexers import get_lexer_for_filename
 # from pygments.styles import get_style_by_name, STYLE_MAP
 # from pygments.formatters import Terminal256Formatter as tformatter
 
-init(autoreset=True)
+# init(autoreset=True)
 
 
 class EditorPrompt(BasePrompt):

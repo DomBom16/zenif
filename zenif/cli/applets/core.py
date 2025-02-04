@@ -1,18 +1,20 @@
+from colorama import Fore, Style
 from typing import Callable
+import os
 import sys
-from .parsers import parse_command_args
-from .formatters import HelpFormatter
-from .exceptions import CLIError
-from .decorators import arg, opt, flag, alias
-from ...log import Logger
-from colorama import Fore, Style, init
 
-init(autoreset=True)
+from ...log import Logger
+from .decorators import alias, arg, flag, opt
+from .exceptions import AppletError
+from .formatters import HelpFormatter
+from .installer import install_setup
+from .parsers import parse_command_args
+
 
 l = Logger({"log_line": {"format": []}})
 
 
-class CLI:
+class Applet:
     """
     A command-line interface (CLI) framework for defining and executing commands.
 
@@ -21,8 +23,8 @@ class CLI:
     flags, as well as setting up callbacks for root, help, and pre-command execution.
     """
 
-    def __init__(self, name: str | None = None):
-        self.name = name or "zenif-cli"
+    def __init__(self):
+        self.name = os.path.basename(sys.argv[0]) or "zenif-applet"
         self.commands: dict[str, Callable] = {}
         self.root_callback: Callable[[], any] | None = None
         self.before_command_callback: Callable[[str, list[str]], any] | None = None
@@ -59,6 +61,10 @@ class CLI:
             return decorator
         return decorator(func)
 
+    def install(self, path: str) -> Callable:
+        """Exposes a install command for the Applet."""
+        return install_setup(self, path)
+
     def arg(self, name: str, *, help: str = "") -> Callable:
         """Decorator for a required positional argument."""
         return arg(name, help=help)
@@ -90,8 +96,9 @@ class CLI:
 
     def run(self, args: list[str] = None) -> None:
         """
-        Executes the CLI with the given arguments.
+        Executes the Applet with the given arguments.
         """
+
         if not args:
             args = sys.argv[1:]
 
@@ -133,7 +140,7 @@ class CLI:
                 result = command(**parsed_args)
                 if result is not None:
                     l.info(result)
-            except CLIError as e:
+            except AppletError as e:
                 print(f"Error: {str(e)}")
                 self.print_command_help(command_name)
         else:
@@ -170,7 +177,7 @@ class CLI:
                 result = command(**parsed_args)
                 if result is not None:
                     l.info(result)
-            except CLIError as e:
+            except AppletError as e:
                 print(f"Error: {str(e)}")
                 self.print_command_help(command_name)
         else:
@@ -178,7 +185,7 @@ class CLI:
             self.print_help()
 
     def print_help(self) -> None:
-        """Print the help text for the CLI."""
+        """Print the help text for the Applet."""
         help_text = HelpFormatter.format_cli_help(self.name, self.commands)
         print(help_text)
 

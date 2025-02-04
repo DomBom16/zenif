@@ -7,5 +7,9 @@
 
 from . import log, decorators, cli, schema
 
+# initialize colorama *once*
+from colorama import init
+init(autoreset=True)
+
 __version__ = "0.4.1"
 __all__ = ["log", "decorators", "cli", "schema"]

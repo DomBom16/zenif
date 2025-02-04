@@ -3,9 +3,8 @@ from ...schema import Schema
 from ...constants import Keys
 
 import shutil
-from colorama import init, Style
+from colorama import Style
 
-init(autoreset=True)
 
 class NumberPrompt(BasePrompt):
     def __init__(

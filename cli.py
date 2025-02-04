@@ -1,4 +1,5 @@
-from zenif.cli import CLI, Prompt as p, install_setup
+#!/usr/bin/env python3
+from zenif.cli import Applet, Prompt as p
 from zenif.schema import (
     Schema,
     BooleanF,
@@ -12,19 +13,19 @@ from zenif.schema import (
 )
 import os
 
-cli = CLI(name="cli")
+a = Applet()
 
-install_setup(cli, os.path.abspath(__file__))
+a.install(os.path.abspath(__file__))
 
 
-@cli.command
-@cli.arg("branch", help="The branch to fetch")
-@cli.opt("depth", default=10, help="The depth to use")
-@cli.alias("depth", "d")
+@a.command
+@a.arg("branch", help="The branch to fetch")
+@a.opt("depth", default=10, help="The depth to use")
+@a.alias("depth", "d")
 def fetch(branch, depth):
     """
     Fetch a branch with a specified depth.
-    
+
     Usage examples:
       fetch main --depth=10
       fetch feature -d=10
@@ -32,9 +33,9 @@ def fetch(branch, depth):
     return f"Fetching branch '{branch}' with depth={depth}"
 
 
-@cli.command
-@cli.arg("path", help="The folder path")
-@cli.flag("all", help="Show all")
+@a.command
+@a.arg("path", help="The folder path")
+@a.flag("all", help="Show all")
 def ls(path, all):
     """
     List directory contents.
@@ -44,7 +45,7 @@ def ls(path, all):
     return f"Listing {path} with all={all}"
 
 
-@cli.command
+@a.command
 def test_prompts():
     """Test all available prompts"""
 
@@ -118,22 +119,22 @@ def test_prompts():
     print(f"{fav_interest=}")
 
 
-@cli.root
+@a.root
 def root():
-    cli.execute("test_prompts")
+    a.execute("test_prompts")
 
 
-@cli.help
+@a.help
 def help():
     # return "This is the help command"
     pass
 
 
-@cli.before
+@a.before
 def before(command: str, args: list[str]):
     # return f"Command: {command}, Args: {args}"
     pass
 
 
 if __name__ == "__main__":
-    cli.run()
+    a.run()

@@ -2,9 +2,7 @@ from .base import BasePrompt
 from ...schema import Schema
 from ...constants import Keys, Cursor
 
-from colorama import init, Fore, Style
-
-init(autoreset=True)
+from colorama import Fore, Style
 
 
 class CheckboxPrompt(BasePrompt):
