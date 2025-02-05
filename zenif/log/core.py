@@ -19,9 +19,19 @@ class Logger:
         ruleset (dict, optional): The list of rules that will be overriden, enabling custom behavior. Defaults to {}.
     """
 
-    def __init__(self, ruleset: dict = {}):
+    def __init__(self, ruleset: dict[str, any] = {}) -> None:
+        """
+        Initializes the Logger with the specified ruleset.
 
-        self.__levels = {
+        Args:
+            ruleset (dict): A dictionary of rules to override the default behavior.
+
+        Notes:
+            - The ruleset is deepcopied before being used.
+            - If a rule is not specified, the default value is used.
+            - The ruleset is not validated, so make sure to provide correct values.
+        """
+        self.__levels: dict[str, dict[str, str | int]] = {
             "debug": {"name": "debug", "level": 1, "color": Fore.BLUE},
             "info": {"name": "info", "level": 0, "color": Fore.WHITE},
             "success": {"name": "success", "level": 2, "color": Fore.GREEN},
@@ -30,7 +40,7 @@ class Logger:
             "lethal": {"name": "lethal", "level": 5, "color": Fore.MAGENTA},
         }
 
-        self.defaults = {
+        self.defaults: dict[str, any] = {
             "timestamps": {
                 "always_show": False,
                 "use_utc": False,
@@ -67,7 +77,7 @@ class Logger:
             "log_line": {"format": "default"},
         }
 
-        self.__rules = self.defaults.copy()
+        self.__rules: dict[str, any] = self.defaults.copy()
         if ruleset:
             for category, settings in ruleset.items():
                 if category in self.__rules:
@@ -75,8 +85,8 @@ class Logger:
                 else:
                     self.__rules[category] = settings
 
-        self.ruleset = Ruleset(self.__rules, self.defaults)
-        self.stream = Streams(self.defaults)
+        self.ruleset: Ruleset = Ruleset(self.__rules, self.defaults)
+        self.stream: Streams = Streams(self.defaults)
 
         if self.ruleset.output.default_file_stream:
             self.stream.file.add(
