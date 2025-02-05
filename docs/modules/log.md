@@ -245,7 +245,9 @@ For quick setup, you can use one of the premade formats by setting the Log Line 
 - `"noalign"`: Similar to the default view but without alignment parameters, useful for saving space.
 - `"simple"`: Shows only the timestamp and the level.
 - `"short"`: Shows only the timestamp and 3-letter level abbreviation.
-- `"timestamp_only"`: Shows only the timestamp.
+- `"timestamp"`: Shows only the timestamp.
+- `"level"`: Shows only the level.
+- `"levelshort"`: Shows only the 3-letter level abbreviation
 
 An example where the sys.stdout stream's Log Line > Format is changed to `"filled"`:
 
