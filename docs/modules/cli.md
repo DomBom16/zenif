@@ -8,7 +8,7 @@ Zenif includes a CLI (Command Line Interface) module that allows you to easily c
   - [Table of Contents](#table-of-contents)
   - [Applets](#applets)
     - [Getting Started with Applets](#getting-started-with-applets)
-    - [Setting Up ZSH Commands for Your Users](#setting-up-zsh-commands-for-your-users)
+    - [Using install() for Development](#using-install-for-development)
     - [Special Callback Decorators](#special-callback-decorators)
   - [Prompts](#prompts)
     - [Getting Started With Prompts](#getting-started-with-prompts)
@@ -152,12 +152,12 @@ if __name__ == '__main__':
     app.run()
 ```
 
-### Setting Up ZSH Commands for Your Users
+### Using install() for Development
 
-The CLI module comes with a handy method that let's your users install the given file as a symlink that can be run from anywhere. By using the `app.install()` method within your script, the targeted `Applet` will now show the `install` command. When run, users will be brought through an quick and simple installation flow.
+The CLI module comes with a handy method that lets you install the given file as a symlink that can be run from anywhere. By using the `app.install()` method within your script, the targeted `Applet` will now show the `install` command. When run, you will be brought through an quick and simple installation flow.
 
 > **Important**
-> This is intended for small packages that don't wish to upload to a package manager. The `install()` method does not replace the functionality of a package manager.
+> This is intended for development use only. Do not use `install()` in production environments.
 
 ```python
 from zenif.cli import Applet
@@ -166,7 +166,7 @@ app = Applet()
 app.install()
 ```
 
-Users can now run `python script.py install`.
+You can now run pass `install` as an argument to get started.
 
 ### Special Callback Decorators
 

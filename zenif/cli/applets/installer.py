@@ -128,8 +128,9 @@ def install_setup(applet: "Applet", script_path: str) -> Callable:
         friendly_install_dir = friendly_path(install_dir)
 
         l.warning(
-            f"{Fore.YELLOW}{'Warning'.ljust(15)}{Fore.YELLOW}The installer is currently in beta, use with caution{Style.RESET_ALL}"
+            f"{Fore.YELLOW}\033[1m\033[3mWARNING: install is not intended for production use, only use for development{Style.RESET_ALL}"
         )
+        print()
 
         l.success(
             f"{Fore.GREEN}{'Started'.ljust(15)}{Fore.YELLOW}{target_script.name} {Fore.CYAN}>> {Fore.GREEN}{name}{Style.RESET_ALL}"
