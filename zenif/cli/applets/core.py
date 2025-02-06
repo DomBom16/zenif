@@ -4,7 +4,7 @@ import os
 import sys
 
 from ...log import Logger
-from .decorators import alias, arg, flag, opt
+from .parameters import _alias, _arg, _flag, _opt
 from .exceptions import AppletError
 from .formatters import HelpFormatter
 from .installer import install_setup
@@ -62,24 +62,42 @@ class Applet:
         return decorator(func)
 
     def install(self, path: str) -> Callable:
-        """Exposes a install command for the Applet."""
+        """Exposes a install command for the Applet.
+
+        _**NOTE:** install is not intended for production use. Only use for development._
+        """
         return install_setup(self, path)
+
+    def _install_help(self) -> str:
+        app = self
+
+        @app.command
+        def help() -> str:
+            """Show this help menu"""
+            if self.help_callback:
+                result = self.help_callback()
+                if result is not None:
+                    l.info(result)
+            self.print_help()
+            return
+
+        return help
 
     def arg(self, name: str, *, help: str = "") -> Callable:
         """Decorator for a required positional argument."""
-        return arg(name, help=help)
+        return _arg(name, help=help)
 
     def opt(self, name: str, *, default: any = None, help: str = "") -> Callable:
         """Decorator for an option (named parameter)."""
-        return opt(name, default=default, help=help)
+        return _opt(name, default=default, help=help)
 
     def flag(self, name: str, *, help: str = "") -> Callable:
         """Decorator for a boolean flag."""
-        return flag(name, help=help)
+        return _flag(name, help=help)
 
     def alias(self, name: str, to: str) -> Callable:
         """Decorator to set a shorthand alias for an option or flag."""
-        return alias(name, alias=to)
+        return _alias(name, alias=to)
 
     def help(self, func: Callable = None) -> Callable:
         """
@@ -98,6 +116,8 @@ class Applet:
         """
         Executes the Applet with the given arguments.
         """
+
+        self._install_help()
 
         if not args:
             args = sys.argv[1:]
@@ -136,7 +156,10 @@ class Applet:
             try:
                 command = self.commands[command_name]
                 parsed_args = parse_command_args(command, args[1:])
-                print(f"\x1b]2;{self.name} {command_name}\x07", end="")
+                print(
+                    f"\x1b]2;{self.name} {command_name} {" ".join(args[1:])}\x07",
+                    end="",
+                )
                 result = command(**parsed_args)
                 if result is not None:
                     l.info(result)

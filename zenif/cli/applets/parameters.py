@@ -3,7 +3,7 @@ from typing import Callable
 
 
 @dataclass
-class AParam:
+class Parameter:
     """
     Represents metadata for a Applet parameter.
 
@@ -40,23 +40,16 @@ class AParam:
             self.cli_name = self.param_name
 
 
-def _ensure_aparams(func: Callable) -> dict[str, AParam]:
+def _ensure_aparams(func: Callable) -> dict[str, Parameter]:
     if not hasattr(func, "_cli_params"):
         func._cli_params = {}
     return func._cli_params
 
 
-def arg(name: str, *, help: str = "") -> Callable:
-    """
-    Decorator for a required positional argument.
-
-    Example:
-        @arg("path", help="The folder path")
-    """
-
+def _arg(name: str, *, help: str = "") -> Callable:
     def decorator(func: Callable) -> Callable:
         cli_params = _ensure_aparams(func)
-        cli_params[name] = AParam(
+        cli_params[name] = Parameter(
             param_name=name,
             kind="argument",
             help=help,
@@ -66,17 +59,10 @@ def arg(name: str, *, help: str = "") -> Callable:
     return decorator
 
 
-def opt(name: str, *, default: any = None, help: str = "") -> Callable:
-    """
-    Decorator for an option (an optional parameter that takes a value).
-
-    Example:
-        @opt("depth", default=10, help="The depth to use")
-    """
-
+def _opt(name: str, *, default: any = None, help: str = "") -> Callable:
     def decorator(func: Callable) -> Callable:
         cli_params = _ensure_aparams(func)
-        cli_params[name] = AParam(
+        cli_params[name] = Parameter(
             param_name=name,
             kind="option",
             help=help,
@@ -87,17 +73,13 @@ def opt(name: str, *, default: any = None, help: str = "") -> Callable:
     return decorator
 
 
-def flag(name: str, *, help: str = "") -> Callable:
-    """
-    Decorator for a boolean flag.
-
-    Example:
-        @flag("all", help="Show all")
-    """
+def _flag(name: str, *, help: str = "") -> Callable:
+    if name in ("help", "h"):
+        raise ValueError("The 'help' flag is reserved for the help command.")
 
     def decorator(func: Callable) -> Callable:
         cli_params = _ensure_aparams(func)
-        cli_params[name] = AParam(
+        cli_params[name] = Parameter(
             param_name=name,
             kind="flag",
             help=help,
@@ -108,10 +90,9 @@ def flag(name: str, *, help: str = "") -> Callable:
     return decorator
 
 
-def alias(name: str, alias: str) -> Callable:
-    """
-    Decorator to set a shorthand alias for an already defined option or flag.
-    """
+def _alias(name: str, alias: str) -> Callable:
+    if name in ("help", "h"):
+        raise ValueError("The 'help' flag is reserved for the help command.")
 
     def decorator(func: Callable) -> Callable:
         # Ensure the function has a place to store alias info.

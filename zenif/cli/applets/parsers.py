@@ -2,7 +2,7 @@ from colorama import Fore, Style
 from typing import Callable
 import argparse
 
-from .decorators import AParam
+from .parameters import Parameter
 from .exceptions import AppletError
 from .formatters import HelpFormatter
 
@@ -41,7 +41,7 @@ class CommandParser:
         for param in cli_params.values():
             self._add_argument(param)
 
-    def _add_argument(self, param: AParam):
+    def _add_argument(self, param: Parameter):
         args = []
         kwargs = {}
         if param.kind == "argument":

@@ -1,6 +1,7 @@
 from textwrap import dedent, indent
 from shutil import get_terminal_size as tsize
 from colorama import Fore, Back, Style
+from .parameters import Parameter
 
 
 class HelpFormatter:
@@ -11,7 +12,7 @@ class HelpFormatter:
         """
         lines = []
         lines.append(
-            f"{Back.BLUE}{Fore.BLACK}  {command_name} {Fore.BLUE}│{Style.RESET_ALL}{Fore.BLUE}  {dedent(command.__doc__ if command.__doc__ else 'No description').strip().split('\n')[0]}{Style.RESET_ALL}"
+            f"{Back.BLUE}{Fore.BLACK} {command_name}{Fore.BLUE}:{Style.RESET_ALL}{Fore.BLUE}  {dedent(command.__doc__ if command.__doc__ else 'No description').strip().split('\n')[0]}{Style.RESET_ALL}"
         )
 
         if len(command.__doc__.split("\n")) > 1:
@@ -26,7 +27,7 @@ class HelpFormatter:
                         if command.__doc__
                         else "No description"
                     ),
-                    " " * (len(command_name) + 3) + "│  ",
+                    " " * (len(command_name) + 1) + "│  ",
                     pred,
                 )
                 .strip()
@@ -45,11 +46,16 @@ class HelpFormatter:
             else:
                 pass
 
+        cli_params["--help"] = Parameter(
+            param_name="help",
+            kind="flag",
+            help="Show this help menu",
+            default=False,
+            alias="h",
+        )
+
         if cli_params:
-            header = (
-                f"{Back.BLUE}{Fore.BLACK}{'  Parameter':<25} {'Type':<10} "
-                f"{'Default':<10} {'Description'.ljust(tsize().columns - 48)}{Style.RESET_ALL}"
-            )
+            header = f"{Back.BLUE}{Fore.BLUE}─ {Fore.BLACK}Parameter{Fore.BLUE} {"─"*(25-3-len("Parameter"))}{Fore.BLACK} Type{Fore.BLUE} {"─"*(10-1-len("Type"))} {Fore.BLACK}Default{Fore.BLUE} {"─"*(10-1-len("Default"))}{Fore.BLACK} Description{Fore.BLUE} {"─"*(tsize().columns-49-len("Description"))}{Style.RESET_ALL}"
             lines.append(header)
 
             for param in sorted(cli_params.values(), key=lambda p: p.param_name):
