@@ -6,15 +6,67 @@ from .parameters import Parameter
 
 class HelpFormatter:
     @staticmethod
-    def format_command_help(command_name: str, command: any) -> str:
+    def format_cli_help(cli_name: str, commands: dict[str, any]) -> str:
         """
-        Format help text for a single command in a visually pleasing manner.
+        Format help text for the entire CLI application in a visually pleasing style.
+        Commands with aliases will display like "fetch, f".
         """
         lines = []
         lines.append(
-            f"{Back.BLUE}{Fore.BLACK} {command_name}{Fore.BLUE}:{Style.RESET_ALL}{Fore.BLUE}  {dedent(command.__doc__ if command.__doc__ else 'No description').strip().split('\n')[0]}{Style.RESET_ALL}"
+            f"{Back.BLUE}{Fore.BLACK}  {cli_name} <command> [args]  {Style.RESET_ALL}"
+        )
+        lines.append("")
+
+        lines.append(
+            f"{Back.BLUE}{Fore.BLACK}  {'Command':<20} {'Description'.ljust(tsize().columns - 23)}{Style.RESET_ALL}"
         )
 
+        # Format each primary command. If the command has aliases (stored on _aliases), list them.
+        for name, command in sorted(commands.items()):
+            # Get the aliases that were registered on the command.
+            aliases = getattr(command, "_aliases", [])
+            if aliases:
+                # Build a display string like "fetch, f, another_alias"
+                display_name = f"{name}, {', '.join(aliases)}"
+            else:
+                display_name = name
+
+            doc = (
+                command.__doc__.strip()
+                if command.__doc__
+                else "No description available."
+            )
+            first_line = doc.split("\n")[0]
+            lines.append(
+                f"{Fore.BLUE}  {display_name:<20} {first_line}{Style.RESET_ALL}"
+            )
+        return "\n".join(lines)
+
+    @staticmethod
+    def format_command_help(command_name: str, command: any) -> str:
+        """
+        Format help text for a single command.
+        If the command has aliases, list them next to the command name.
+        """
+        lines = []
+        # Retrieve aliases registered on the command (if any)
+        aliases = getattr(command, "_aliases", [])
+        if aliases:
+            header = (
+                f"{Back.BLUE}{Fore.BLACK} {', '.join([command_name] + aliases)}"
+                f"{Fore.BLUE}:{Style.RESET_ALL}{Fore.BLUE}  "
+                f"{dedent(command.__doc__ if command.__doc__ else 'No description').strip().split('\n')[0]}"
+                f"{Style.RESET_ALL}"
+            )
+        else:
+            header = (
+                f"{Back.BLUE}{Fore.BLACK} {command_name}{Fore.BLUE}:{Style.RESET_ALL}{Fore.BLUE}  "
+                f"{dedent(command.__doc__ if command.__doc__ else 'No description').strip().split('\n')[0]}"
+                f"{Style.RESET_ALL}"
+            )
+        lines.append(header)
+
+        # If there is more documentation than the first line, add the additional doc indented.
         if len(command.__doc__.split("\n")) > 1:
 
             def pred(s):
@@ -27,7 +79,7 @@ class HelpFormatter:
                         if command.__doc__
                         else "No description"
                     ),
-                    " " * (len(command_name) + 1) + "│  ",
+                    " " * (len(", ".join([command_name] + aliases)) + 1) + "│  ",
                     pred,
                 )
                 .strip()
@@ -36,6 +88,7 @@ class HelpFormatter:
             lines.append(f"{Fore.BLUE}{Style.DIM}{doc}{Style.RESET_ALL}")
         lines.append("")
 
+        # Now, format the parameters (and their aliases, if set on the parameter objects).
         cli_params = getattr(command, "_cli_params", {})
         cli_aliases = getattr(command, "_cli_aliases", {})
         for param, alias in cli_aliases.items():
@@ -43,9 +96,8 @@ class HelpFormatter:
                 if not alias.startswith("-"):
                     alias = f"-{alias}" if len(alias) == 1 else f"--{alias}"
                 cli_params[param].alias = alias
-            else:
-                pass
 
+        # Add a default help flag for the command.
         cli_params["--help"] = Parameter(
             param_name="help",
             kind="flag",
@@ -55,8 +107,14 @@ class HelpFormatter:
         )
 
         if cli_params:
-            header = f"{Back.BLUE}{Fore.BLUE}─ {Fore.BLACK}Parameter{Fore.BLUE} {"─"*(25-3-len("Parameter"))}{Fore.BLACK} Type{Fore.BLUE} {"─"*(10-1-len("Type"))} {Fore.BLACK}Default{Fore.BLUE} {"─"*(10-1-len("Default"))}{Fore.BLACK} Description{Fore.BLUE} {"─"*(tsize().columns-49-len("Description"))}{Style.RESET_ALL}"
-            lines.append(header)
+            header_line = (
+                f"{Back.BLUE}{Fore.BLUE}─ {Fore.BLACK}Parameter{Fore.BLUE} "
+                f'{"─"*(25-3-len("Parameter"))}{Fore.BLACK} Type{Fore.BLUE} '
+                f'{"─"*(10-1-len("Type"))}{Fore.BLACK} Default{Fore.BLUE} '
+                f'{"─"*(10-1-len("Default"))}{Fore.BLACK} Description{Fore.BLUE} '
+                f'{"─"*(tsize().columns-49-len("Description"))}{Style.RESET_ALL}'
+            )
+            lines.append(header_line)
 
             for param in sorted(cli_params.values(), key=lambda p: p.param_name):
                 name = param.cli_name
@@ -79,30 +137,4 @@ class HelpFormatter:
                 f"{Fore.BLUE}No arguments defined for this command.{Style.RESET_ALL}"
             )
 
-        return "\n".join(lines)
-
-    @staticmethod
-    def format_cli_help(cli_name: str, commands: dict[str, any]) -> str:
-        """
-        Format help text for the entire CLI application in a visually pleasing style.
-        """
-        lines = []
-        lines.append(
-            f"{Back.BLUE}{Fore.BLACK}  {cli_name} <command> [args]  {Style.RESET_ALL}"
-        )
-        lines.append("")
-
-        lines.append(
-            f"{Back.BLUE}{Fore.BLACK}  {'Command':<20} {'Description'.ljust(tsize().columns - 23)}{Style.RESET_ALL}"
-        )
-
-        # Format each command with its first line of docstring (if available)
-        for name, command in sorted(commands.items()):
-            doc = (
-                command.__doc__.strip()
-                if command.__doc__
-                else "No description available."
-            )
-            first_line = doc.split("\n")[0]
-            lines.append(f"{Fore.BLUE}  {name:<20} {first_line}{Style.RESET_ALL}")
         return "\n".join(lines)
