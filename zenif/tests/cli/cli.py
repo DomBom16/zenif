@@ -12,13 +12,14 @@ from zenif.schema import (
     NotEmpty,
 )
 import os
+import time
 
 a = Applet()
 
 a.install(os.path.abspath(__file__))
 
 
-@a.command
+@a.command(aliases=["f"])
 @a.arg("branch", help="The branch to fetch")
 @a.opt("depth", default=10, help="The depth to use")
 @a.alias("depth", "d")
@@ -30,6 +31,7 @@ def fetch(branch, depth):
       fetch main --depth=10
       fetch feature -d=10
     """
+    time.sleep(2)
     return f"Fetching branch '{branch}' with depth={depth}"
 
 
@@ -45,7 +47,7 @@ def ls(path, all):
     return f"Listing {path} with all={all}"
 
 
-@a.command
+@a.command(aliases=["tp"])
 def test_prompts():
     """Test all available prompts"""
 
