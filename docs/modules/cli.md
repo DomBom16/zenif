@@ -36,7 +36,15 @@ The `Applet` class is a command-line interface (CLI) framework for defining and 
 Register a function as a command within the CLI using the `@app.command` decorator. This tells Zenif that the function below will be a CLI command. In this case, the function name greet becomes the command name that users will invoke.
 
 ```py
-@app.command()
+@app.command
+def greet():
+    ...
+```
+
+Optionally, we can pass an `aliases` argument with a list of strings that can also be called in substition of greet.
+
+```py
+@app.command(aliases=["hello", "hi"])
 def greet():
     ...
 ```
@@ -130,7 +138,7 @@ from zenif.cli import Applet
 
 app = Applet(name="demo")
 
-@app.command
+@app.command(aliases=["hello", "hi"])
 @app.arg("name", help="Name to greet")
 @app.opt("greeting", default="Hello", help="Greeting to use")
 @app.flag("shout", help="Print in uppercase")
@@ -191,11 +199,11 @@ def root():
     return "No subcommand provided. Displaying help..." # This return value is logged.
 
 @app.before
-def before_command(cmd: str, args: list[str]):
+def before(cmd: str, args: list[str]):
     return f"About to execute command '{cmd}' with arguments: {args}" # Logged before the command runs.
 
 @app.help
-def on_help():
+def help():
     return "Help is being shown." # This is logged when help is triggered.
 
 if __name__ == '__main__':
