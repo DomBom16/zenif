@@ -2,9 +2,8 @@ from .base import BasePrompt
 from ...schema import Schema
 from ...log import Logger
 from ...constants import Keys, Cursor
-from ...utils import wrap, strip_ansi
 
-from colorama import init, Fore, Style
+from colorama import Fore, Style
 from shutil import get_terminal_size
 
 # from pygments import highlight
@@ -116,7 +115,7 @@ class EditorPrompt(BasePrompt):
             )
 
             output = ""
-                    
+
             for line in buffer:    
                 output += f"\n{Cursor.lclear()}{' ' * indent}{Fore.YELLOW}{line}{Style.RESET_ALL}"
 
@@ -154,8 +153,9 @@ class EditorPrompt(BasePrompt):
                 cx = 0
             elif char == Keys.CTRLD:
                 if not error and buffer:
-                    self._print_prompt(self.message, buffer[-1])
-                    print()
+                    print(Cursor.left(pcx), end="")
+                    print(Cursor.up(pcy + 2), end="")
+                    self._print_prompt(self.message, buffer[0].strip() + (" …" if len(buffer) > 1 else ""))
                     return "\n".join(buffer)
             else:
                 buffer[cy] = buffer[cy][:cx] + char + buffer[cy][cx:]

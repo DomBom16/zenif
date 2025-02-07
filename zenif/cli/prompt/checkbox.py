@@ -24,19 +24,27 @@ class CheckboxPrompt(BasePrompt):
 
         controls = "↑/↓ to navigate, Space to select, Enter to confirm"
 
+        check = "•" # "X"
+        hover = "○" # check
+        hovercheck = "●"  # f"\x1b[4m{check}\x1b[0m"
+
+        print()
         print()
 
         i = True
         while True:
-            for i, (choice, is_selected) in enumerate(zip(self.choices, selected)):
-                if i == current:
-                    print(f"{Fore.YELLOW}{Style.DIM}X{Style.NORMAL}", end="")
+            for j, (choice, is_selected) in enumerate(zip(self.choices, selected)):
+                print()
+                if j == current:
+                    print(f"{Fore.YELLOW}{Style.DIM}{hover}{Style.NORMAL}", end="")
                 else:
                     print(f"{Fore.YELLOW} ", end="")
                 print(
-                    f"\r{f"{Fore.YELLOW}{"\x1b[4m" if i == current else ""}X\x1b[0m" if is_selected else Cursor.right(1)} {Fore.YELLOW}{Style.DIM}{choice}{Fore.RESET}"
+                    f"\r{f"{Fore.YELLOW}{hovercheck if j == current else check}{Style.RESET_ALL}" if is_selected else Cursor.right(1)} {Fore.YELLOW}{Style.DIM}{choice}{Fore.RESET}",
+                    end="",
                 )
 
+            key = ""
             if i:
                 i = False
                 result = [
@@ -46,13 +54,13 @@ class CheckboxPrompt(BasePrompt):
                 ]
                 error = self.validate(result)
 
-                print(Cursor.up(len(self.choices) + 2), end="")
+                print(Cursor.up(len(self.choices) + 1), end="")
                 self._print_prompt(self.message, error=f"{error if error else ""}\n")
                 print(
-                    f"\r{Fore.RESET}{Style.DIM}  {controls}{Cursor.down(len(self.choices))}"
+                    f"\r{Fore.RESET}{Style.DIM}  {controls}{Cursor.down(len(self.choices) - 1)}"
                 )
-
-            key = self._get_key()
+            else:
+                key = self._get_key()
             if key == " ":  # Space
                 selected[current] = not selected[current]
 
@@ -63,15 +71,15 @@ class CheckboxPrompt(BasePrompt):
             ]
             error = self.validate(result)
 
-            print(Cursor.up(len(self.choices) + 2), end="")
+            print(Cursor.up(len(self.choices) + 1), end="")
             self._print_prompt(self.message, error=f"{error if error else ""}\n")
             print(
-                f"\r{Fore.RESET}{Style.DIM}  {controls}{Cursor.down(len(self.choices))}"
+                f"\r{Fore.RESET}{Style.DIM}  {controls}{Cursor.down(len(self.choices) - 1)}"
             )
 
             if key == Keys.ENTER and not error:
-                for _ in range(len(self.choices) + 2):
-                    print(Cursor.up(1) + Cursor.lclear(), end="")
+                for _ in range(len(self.choices) + 1):
+                    print(Cursor.lclear() + Cursor.up(1) + Cursor.lclear(), end="")
                 self._print_prompt(
                     self.message,
                     (

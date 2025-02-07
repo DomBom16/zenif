@@ -30,29 +30,36 @@ class ChoicePrompt(BasePrompt):
 
         controls = "↑/↓ to navigate, Enter to confirm"
 
+        check = "→"
+
         print(
             f"{Fore.GREEN}? {Fore.CYAN}{self.message}:{Fore.RESET}\n{Style.DIM}  {controls}"
         )
         while True:
             for i, choice in enumerate(self.choices):
+                if i > 0:
+                    print()
                 if i == current:
-                    print(f"{Fore.YELLOW}{Style.NORMAL}> {choice}{Fore.RESET}")
+                    print(
+                        f"{Fore.YELLOW}{Style.NORMAL}{check} {choice}{Fore.RESET}",
+                        end="",
+                    )
                 else:
-                    print(f"{Fore.YELLOW}{Style.DIM}  {choice}{Fore.RESET}")
+                    print(f"{Fore.YELLOW}{Style.DIM}  {choice}{Fore.RESET}", end="")
 
             key = self._get_key()
             if key == Keys.ENTER:  # Enter key
                 result = self.choices[current]
                 error = self.validate(result or "")
                 if not error:
-                    for _ in range(len(self.choices) + 2):
-                        print(Cursor.up(1) + Cursor.lclear(), end="")
+                    for _ in range(len(self.choices) + 1):
+                        print(Cursor.lclear() + Cursor.up(1) + Cursor.lclear(), end="")
                     self._print_prompt(self.message, result)
                     print()  # Move to next line
                     return result
                 else:
-                    for _ in range(len(self.choices) + 2):
-                        print(Cursor.up(1) + Cursor.lclear(), end="")
+                    for _ in range(len(self.choices) + 1):
+                        print(Cursor.lclear() + Cursor.up(1) + Cursor.lclear(), end="")
                     self._print_prompt(self.message, error=error)
                     print()
                     print(
@@ -63,4 +70,4 @@ class ChoicePrompt(BasePrompt):
             elif key == Keys.DOWN and current < len(self.choices) - 1:  # Down arrow
                 current += 1
 
-            print(Cursor.up(len(self.choices) + 1))  # Move cursor up to redraw choices
+            print(Cursor.up(len(self.choices)))  # Move cursor up to redraw choices
