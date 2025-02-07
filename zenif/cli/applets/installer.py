@@ -119,7 +119,7 @@ def install_setup(applet: "Applet", script_path: str) -> Callable:
     @app.command
     @app.opt("name", default=app.name.lower(), help="Name for the installed command")
     def install(name: str):
-        """Install this CLI app as a globally accessible command."""
+        """Install as a global command"""
         install_dir = detect_install_dir()
         original_script = Path(script_path)
 
