@@ -24,11 +24,11 @@ Here's a simple example of how to create and use a schema:
 ```python
 from zenif.schema import Schema, StringF, IntegerF, ListF, Length, Value
 
-user_schema = Schema(
-    name=StringF().name("name").has(Length(min=3, max=50)),
-    age=IntegerF().name("age").has(Value(min=18, max=120)),
-    interests=ListF().name("interests").item_type(StringF()).has(Length(min=1))
-)
+user_schema = Schema({
+    "name": StringF().has(Length(min=3, max=50)),
+    "age": IntegerF().has(Value(min=18, max=120)),
+    "interests": ListF().items(StringF()).has(Length(min=1))
+})
 
 # Validating data
 valid_data = {
@@ -53,7 +53,7 @@ is_valid, errors, coerced_data = user_schema.validate(invalid_data)
 print(is_valid)
 # False
 print(errors)
-# {'name': ['Minimum length is 3.'], 'age': ['Maximum value is 120.'], 'interests': ['Minimum length is 1.']}
+# {'name': [('LengthError', 'Minimum length is 3.')], 'age': [('ValueRangeError', 'Maximum value is 120.')], 'interests': [('LengthError', 'Minimum length is 1.')]}
 ```
 
 ## Available Field Types
@@ -79,7 +79,7 @@ class MyTypeF(SchemaField[MyType]):
         return ...
 ```
 
-When creating a field, your class name should be in the `{type}F` format, where the type name is followed by the letter "F". It is required that class names end with "F". When extending the SchemaField class, you don't need to worry about the `default()`, `optional()`, `name()`, and `has()` methods. While the `coerce` method is optional, the default instace will simply return the value as is.
+When creating a field, your class name should be in the `{type}F` format, where the type name is followed by the letter "F".
 
 ## Validators
 
@@ -88,42 +88,57 @@ Validators are used to apply specific rules to fields. Zenif's built-in validato
 - `Length(min=None, max=None)`: Ensures a minimum and maximum length for strings or lists
 - `Value(min=None, max=None)`: Ensures a minimum and maximum value for numbers
 - `Regex(pattern)`: Validates strings against a regular expression
-- `Email()`: Validates email adresses
+- `Email()`: Validates email addresses
 - `Date()`: Ensures the field is in the format YYYY-MM-DD
 - `Alphanumeric()`: Ensures the field only contains letters and numbers
-- `URL()`: Validates URL adresses
+- `URL()`: Validates URL addresses
 - `NotEmpty()`: Ensures the field is not empty
+- `Truthy()`: Ensures a value is truthy
+- `Falsy()`: Ensures a value is falsy
 
-You can also create custom validators by extending the `Validator` class:
+You can also create custom validators by extending the base `Validator` class. **Important:** When your custom validator extends the `Validator` class, its `__call__` method automatically wraps any exceptions thrown in the `_validate` method. This ensures that any error raised is an instance of `ValidationError` or one of its subclasses, which maintains consistent error handling across the schema. For example:
 
 ```python
 from zenif.schema import Validator
 
 class OddOrEven(Validator):
-    def __init__(self, parity: str = "even"):
+    def __init__(self, parity: str = "even", err: str | None = None):
+        super().__init__(err)
         self.parity = 1 if parity.lower() == "odd" else 0
 
     def _validate(self, value):
         if value % 2 != self.parity:
+            # Even if a different type of error is raised, the base Validator wraps it as a ValidationError
             raise ValueError(f"Must be an {'even' if self.parity == 0 else 'odd'} number.")
-
-age_schema = Schema(
-    age=IntegerF().name("age").has(OddOrEven(parity="even"))
-)
 ```
+
+In addition, the framework now provides more specific exceptions that extend `ValidationError`, such as:
+
+- `LengthError`
+- `ValueRangeError`
+- `RegexError`
+- `EmailError`
+- `AlphanumericError`
+- `URLError`
+- `DateError`
+- `EmptyValueError`
+- `NotTruthyError`
+- `NotFalsyError`
+
+These exceptions allow for more granular error handling and clearer messages.
 
 ## Integration with CLI Module
 
-The Schema module integrates seamlessly with Zenif's CLI module, allowing for robust input validation in interactive prompts. You must use the `all_optional()` method since each value is inputted one-by-one, but all prompts are still required unless a default value is provided:
+The Schema module integrates seamlessly with Zenif's CLI module, allowing for robust input validation in interactive prompts.
 
 ```python
 from zenif.cli import Prompt
 from zenif.schema import Schema, StringF, IntegerF, Length, Value
 
-user_schema = Schema(
-    name=StringF().name("name").has(Length(min=3, max=50)),
-    age=IntegerF().name("age").has(Value(min=18, max=120))
-).all_optional()
+user_schema = Schema({
+    "name": StringF().has(Length(min=3, max=50)),
+    "age": IntegerF().has(Value(min=18, max=120))
+})
 
 name = Prompt.text("Enter your name", schema=user_schema, id="name").ask()
 age = Prompt.number("Enter your age", schema=user_schema, id="age").ask()
@@ -141,9 +156,7 @@ In this example, the prompts will enforce the schema rules, ensuring that the na
 You can validate lists of items:
 
 ```python
-tags_schema = Schema(
-    tags=ListF().name("tags").item_type(StringF()).has(Length(min=3))
-)
+tags_schema = Schema({ "tags": ListF().items(StringF()).has(Length(min=3)) })
 ```
 
 This schema ensures that 'tags' is a list of strings with at least 3 items.
@@ -155,7 +168,7 @@ You can make fields optional or provide default values:
 ```python
 user_schema = Schema(
     name=StringF().name("name"),
-    age=IntegerF().name("age").optional(),
+    age=IntegerF().name("age").default(),
     is_active=BooleanF().name("is_active").default(True)
 )
 ```
@@ -173,7 +186,7 @@ class UserRole(Enum):
 
 user_schema = Schema(
     name=StringF().name("name"),
-    role=EnumF().name("role").enum_class(UserRole).default(UserRole.USER)
+    role=EnumF().name("role").enum(UserRole).default(UserRole.USER)
 )
 ```
 
@@ -181,9 +194,11 @@ user_schema = Schema(
 
 When validation fails, the `validate` method returns a tuple `(is_valid, errors, coerced_data)`:
 
-- `is_valid`: A boolean indicating whether the validation passed.
-- `errors`: A dictionary containing detailed error messages for each invalid field.
-- `coerced_data`: A dictionary containing the validated and coerced data.
+- **`is_valid`**: A boolean indicating whether the validation passed.
+- **`errors`**: A dictionary containing detailed error messages for each invalid field. Errors are now returned as tuples in the form `(ErrorClass, message)`, ensuring that you can programmatically distinguish between different types of validation errors.
+- **`coerced_data`**: A dictionary containing the validated and coerced data.
+
+For example, if a field fails a length check, the error might look like `('LengthError', 'Minimum length is 3')`.
 
 ## Coercion
 

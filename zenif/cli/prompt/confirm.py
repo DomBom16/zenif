@@ -1,6 +1,7 @@
 from .base import BasePrompt
-from ...schema import Schema
+from ...schema import Schema, BooleanF
 from ...constants import Keys
+
 
 class ConfirmPrompt(BasePrompt):
     def __init__(
@@ -11,6 +12,14 @@ class ConfirmPrompt(BasePrompt):
     ):
         super().__init__(message, schema, id)
         self._default: bool | None = None
+
+        # Check if the field is a BooleanF
+        if schema and not isinstance(self.field, BooleanF):
+            field_type = type(self.field).__name__
+            error_message = (
+                f"ConfirmPrompt requires a BooleanF field, but got {field_type}"
+            )
+            raise TypeError(error_message)
 
     def default(self, value: bool) -> "ConfirmPrompt":
         """Set the default value for the prompt."""

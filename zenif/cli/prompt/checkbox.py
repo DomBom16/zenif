@@ -1,5 +1,5 @@
 from .base import BasePrompt
-from ...schema import Schema
+from ...schema import Schema, ListF
 from ...constants import Keys, Cursor
 
 from colorama import Fore, Style
@@ -17,6 +17,14 @@ class CheckboxPrompt(BasePrompt):
         super().__init__(message, schema, id)
         self.choices = choices
 
+        # Check if the field is a ListF
+        if schema and not isinstance(self.field, ListF):
+            field_type = type(self.field).__name__
+            error_message = (
+                f"CheckboxPrompt requires a ListF field, but got {field_type}"
+            )
+            raise TypeError(error_message)
+
     def ask(self) -> list[str]:
         """Prompt the user for input."""
         selected = [False] * len(self.choices)
@@ -24,8 +32,8 @@ class CheckboxPrompt(BasePrompt):
 
         controls = "↑/↓ to navigate, Space to select, Enter to confirm"
 
-        check = "•" # "X"
-        hover = "○" # check
+        check = "•"  # "X"
+        hover = "○"  # check
         hovercheck = "●"  # f"\x1b[4m{check}\x1b[0m"
 
         print()
@@ -61,7 +69,7 @@ class CheckboxPrompt(BasePrompt):
                 )
             else:
                 key = self._get_key()
-            if key == " ":  # Space
+            if key == " ":
                 selected[current] = not selected[current]
 
             result = [
@@ -88,11 +96,11 @@ class CheckboxPrompt(BasePrompt):
                         else str(result[0])
                     ),
                 )
-                print()  # Move to next line
+                print()
                 return result
-            elif key == Keys.UP and current > 0:  # Up arrow
+            elif key == Keys.UP and current > 0:
                 current -= 1
-            elif key == Keys.DOWN and current < len(self.choices) - 1:  # Down arrow
+            elif key == Keys.DOWN and current < len(self.choices) - 1:
                 current += 1
 
             print(Cursor.up(len(self.choices) + 1))  # Move cursor up to redraw choices

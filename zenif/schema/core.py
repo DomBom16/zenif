@@ -3,6 +3,8 @@ from typing import Callable, Generic, TypeVar
 
 T = TypeVar("T")
 
+from .exceptions import ValidationError
+
 
 class Condition:
     def __init__(self, condition: Callable[[dict], bool], error_message: str):
@@ -26,12 +28,17 @@ class Validator:
     def validate(self, value: any):
         try:
             self._validate(value)
-        except ValueError as e:
+        except Exception as e:
+            # If a custom error message was provided via err, use it
             if self.err:
-                raise ValueError(self.err)
+                if isinstance(e, ValidationError):
+                    raise type(e)(self.err) from e
+                else:
+                    raise ValidationError(self.err) from e
             else:
-                raise e
-            raise e
+                if isinstance(e, ValidationError):
+                    raise
+                raise ValidationError(str(e)) from e
 
     def _validate(self, value: any):
         raise NotImplementedError()
@@ -39,20 +46,12 @@ class Validator:
 
 class SchemaField(Generic[T]):
     def __init__(self):
-        self._name: str | None = None
         self._default: any | None = None
-
         self.validators: list[Validator] = []
-
         self.is_required: bool = True
-
         self.condition: Condition | None = None
         self.pre_transform: Callable[[any], any] | None = None
         self.post_transform: Callable[[T], any] | None = None
-
-    def name(self, name: str) -> SchemaField[T]:
-        self._name = name
-        return self
 
     def has(self, validator: Validator) -> SchemaField[T]:
         self.validators.append(validator)
@@ -64,12 +63,9 @@ class SchemaField(Generic[T]):
         self.condition = Condition(condition, error_message)
         return self
 
-    def default(self, value: T | Callable[[], T]) -> SchemaField[T]:
-        self._default = value
-        self.is_required = False
-        return self
-
-    def optional(self) -> SchemaField[T]:
+    def default(self, value: T | Callable[[], T] | None) -> SchemaField[T]:
+        if value is not None:
+            self._default = value if callable(value) else lambda: value
         self.is_required = False
         return self
 
@@ -86,34 +82,30 @@ class SchemaField(Generic[T]):
 
 
 class Schema:
-    def __init__(self, **fields: SchemaField):
-        """A class for validating and coercing data based on a schema."""
+    def __init__(self, fields: dict[str, SchemaField]):
+        """A class for validating and coercing data based on a schema.
 
+        The schema is initialized with a dictionary of fields.
+        """
         self.fields = fields
         self._strict = False
-        self._all_optional = False
 
     def strict(self, value: bool = True) -> Schema:
         """Set strict mode to True or False."""
         self._strict = value
         return self
 
-    def all_optional(self) -> Schema:
-        """Mark all fields as optional."""
-        self._all_optional = True
-        return self
-
-    def validate(self, data: dict) -> tuple[bool, dict[str, list[str]], dict]:
+    def validate(
+        self, data: dict, partial: bool = False
+    ) -> tuple[bool, dict[str, list[str]], dict]:
         """Validate data against the schema.
 
         Args:
             data (dict): The data to validate.
-
-        Raises:
-            SyntaxError: If a field name does not end with "F".
+            partial (bool): If True, only validate fields present in the data.
 
         Returns:
-            tuple[bool, dict[str, list[str]], dict]: A tuple containing a boolean indicating whether the data is valid, a dictionary of field errors, and finally a dictionary of coerced data.
+            tuple[bool, dict[str, list[str]], dict]: A tuple containing a boolean indicating whether the data is valid, a dictionary of field errors, and a dictionary of coerced data.
         """
         is_valid = True
         errors: dict[str, list[str]] = {}
@@ -128,13 +120,16 @@ class Schema:
                 if not field.condition.check(data):
                     continue  # Skip this field if the condition is not met
             if field_name not in data:
-                if field.is_required and not self._all_optional:
+                if partial:
+                    continue
+                if field.is_required:
                     is_valid = False
-                    errors[field_name] = ["This field is required."]
+                    errors[field_name] = [("ValidationError", "Field is required.")]
                 elif field._default is not None:
                     coerced_data[field_name] = (
                         field._default() if callable(field._default) else field._default
                     )
+                continue
             else:
                 try:
                     value = data[field_name]
@@ -149,9 +144,9 @@ class Schema:
                     for validator in field.validators:
                         try:
                             validator(value)
-                        except ValueError as e:
+                        except ValidationError as e:
                             is_valid = False
-                            field_errors.append(str(e))
+                            field_errors.append((e.__class__.__name__, e.message))
 
                     if field.post_transform:
                         value = field.post_transform(value)

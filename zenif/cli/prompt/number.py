@@ -1,5 +1,5 @@
 from .base import BasePrompt
-from ...schema import Schema
+from ...schema import Schema, FloatF, IntegerF
 from ...constants import Keys
 
 import shutil
@@ -18,6 +18,12 @@ class NumberPrompt(BasePrompt):
         self._commas: bool = False
         self._allow_decimals: bool = False
         self._allow_negatives: bool = False
+
+        # Check if the field is a IntegerF or FloatF
+        if schema and not isinstance(self.field, (IntegerF, FloatF)):
+            field_type = type(self.field).__name__
+            error_message = f"NumberPrompt requires an IntegerF or FloatF field, but got {field_type}"
+            raise TypeError(error_message)
 
     def default(self, value: int) -> "NumberPrompt":
         """Set the default value for the prompt."""

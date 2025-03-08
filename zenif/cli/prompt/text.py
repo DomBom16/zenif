@@ -1,8 +1,9 @@
 from .base import BasePrompt
-from ...schema import Schema
+from ...schema import Schema, StringF
 from ...constants import Keys
 
 import shutil
+
 
 class TextPrompt(BasePrompt):
     def __init__(
@@ -13,6 +14,12 @@ class TextPrompt(BasePrompt):
     ):
         super().__init__(message, schema, id)
         self._default: str | None = None
+
+        # Check if the field is a StringF
+        if schema and not isinstance(self.field, StringF):
+            field_type = type(self.field).__name__
+            error_message = f"TextPrompt requires a StringF field, but got {field_type}"
+            raise TypeError(error_message)
 
     def default(self, value: str) -> "TextPrompt":
         """Set the default value for the prompt."""

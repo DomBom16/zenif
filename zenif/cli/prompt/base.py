@@ -28,13 +28,15 @@ class BasePrompt:
     def validate(self, value):
         try:
             if self.schema and self.id:
-                is_valid, errors, _ = self.schema.validate({self.id: value})
+                is_valid, errors, _ = self.schema.validate({self.id: value}, partial=True)
                 if not is_valid:
-                    return errors.get(self.id, ["Invalid input"])[0].rstrip(".")
+                    # Expect errors to be a tuple (ErrorClass, message)
+                    error_tuple = errors.get(self.id, [("ValidationError", "Invalid input")])[0]
+                    return error_tuple[1].rstrip(".")
             elif self.field:
                 self.field.validate(value)
             return None
-        except ValueError as e:
+        except Exception as e:
             return str(e)
 
     @staticmethod

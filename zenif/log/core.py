@@ -118,7 +118,7 @@ class Logger:
                 ),
                 PythonLexer(),
                 tformatter(style=get_style_by_name("one-dark")),
-            )
+            ).strip()
             return formatted
         return str(value)
 

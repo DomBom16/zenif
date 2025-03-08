@@ -1,3 +1,10 @@
+import sys
+import termios
+import tty
+import select
+import os
+
+
 class Keys:
     """
     A set of common keys used in the terminal.
@@ -35,12 +42,12 @@ class Keys:
     CTRLG = "\x07"  # ASCII 7
     CTRLH = "\x08"  # ASCII 8 (\b)
     CTRLI = "\x09"  # ASCII 9 (\t)
-    CTRLJ = "\x0A"  # ASCII 10 (\n)
-    CTRLK = "\x0B"  # ASCII 11
-    CTRLL = "\x0C"  # ASCII 12 (\f)
-    CTRLM = "\x0D"  # ASCII 13 (\r)
-    CTRLN = "\x0E"  # ASCII 14
-    CTRLO = "\x0F"  # ASCII 15
+    CTRLJ = "\x0a"  # ASCII 10 (\n)
+    CTRLK = "\x0b"  # ASCII 11
+    CTRLL = "\x0c"  # ASCII 12 (\f)
+    CTRLM = "\x0d"  # ASCII 13 (\r)
+    CTRLN = "\x0e"  # ASCII 14
+    CTRLO = "\x0f"  # ASCII 15
     CTRLP = "\x10"  # ASCII 16
     CTRLQ = "\x11"  # ASCII 17
     CTRLR = "\x12"  # ASCII 18
@@ -51,7 +58,7 @@ class Keys:
     CTRLW = "\x17"  # ASCII 23
     CTRLX = "\x18"  # ASCII 24
     CTRLY = "\x19"  # ASCII 25
-    CTRLZ = "\x1A"  # ASCII 26
+    CTRLZ = "\x1a"  # ASCII 26
 
     # Function keys
     F1 = "\x1bOP"
@@ -162,7 +169,7 @@ class Cursor:
             str: Ansi code to move the cursor right
         """
         return f"\x1b[{dx}C"
-    
+
     @staticmethod
     def cright(x: int, dx: int, w: int) -> str:
         """Move the cursor right continuously, advancing to the next line if necessary
@@ -207,6 +214,52 @@ class Cursor:
             str: Ansi code to set the cursor
         """
         return f"\x1b[{y};{x}f"
+
+    @staticmethod
+    def get(timeout=1.0):
+        """Get the cursor position on the screen
+
+        Returns:
+            tuple[int, int]: The cursor position on the screen
+        """
+        with open("/dev/tty", "rb+", buffering=0) as tty_fd:
+            fd = tty_fd.fileno()
+            old_settings = termios.tcgetattr(fd)
+            try:
+                # Set terminal to cbreak (raw) mode for character-by-character input
+                tty.setcbreak(fd)
+
+                # Send the ANSI query to get cursor position
+                tty_fd.write(b"\x1b[6n")
+
+                response = b""
+                while True:
+                    # Use select to avoid blocking indefinitely
+                    r, _, _ = select.select([tty_fd], [], [], timeout)
+                    if not r:
+                        break  # Timeout reached, no more data
+                    # Read one byte at a time
+                    byte = tty_fd.read(1)
+                    if not byte:
+                        break
+                    response += byte
+                    if response.endswith(b"R"):
+                        break  # End of response reached
+
+                # Expected response is of the form b"\x1b[<rows>;<cols>R"
+                if response.startswith(b"\x1b[") and response.endswith(b"R"):
+                    try:
+                        numbers = response[2:-1].split(b";")
+                        if len(numbers) == 2:
+                            row = int(numbers[0] or 1) - 1
+                            col = int(numbers[1] or 1) - 1
+                            return row, col
+                    except ValueError:
+                        pass  # Conversion failed if unexpected format
+                return None  # Return None if the response was not as expected
+            finally:
+                # Restore the original terminal settings
+                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
     @staticmethod
     def hide() -> str:

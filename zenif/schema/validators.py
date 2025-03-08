@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .core import Validator
+from .exceptions import *
 
 from re import match
 
@@ -19,11 +20,11 @@ class Length(Validator):
 
     def _validate(self, value: any):
         if value is None:
-            raise ValueError(f"Value is of None type.")
+            raise LengthError("Value is of None type.")
         if len(value) < self.min:
-            raise ValueError(f"Minimum length is {self.min}.")
+            raise LengthError(f"Minimum length is {self.min}.")
         if len(value) > self.max:
-            raise ValueError(f"Maximum length is {self.max}.")
+            raise LengthError(f"Maximum length is {self.max}.")
 
 
 class Value(Validator):
@@ -38,11 +39,11 @@ class Value(Validator):
 
     def _validate(self, value: any):
         if value is None:
-            raise ValueError(f"Value is of None type.")
+            raise ValueRangeError("Value is of None type.")
         if value < self.min:
-            raise ValueError(f"Minimum value is {self.min}.")
+            raise ValueRangeError(f"Minimum value is {self.min}.")
         if value > self.max:
-            raise ValueError(f"Maximum value is {self.max}.")
+            raise ValueRangeError(f"Maximum value is {self.max}.")
 
 
 class Regex(Validator):
@@ -54,7 +55,7 @@ class Regex(Validator):
 
     def _validate(self, value: any):
         if not match(self.pattern, str(value)):
-            raise ValueError(f"Value does not match pattern.")
+            raise RegexError("Value does not match pattern.")
 
 
 class Email(Regex):
@@ -68,6 +69,10 @@ class Email(Regex):
             err,
         )
 
+    def _validate(self, value: any):
+        if not match(self.pattern, str(value)):
+            raise EmailError(self.err)
+
 
 class Alphanumeric(Regex):
     """Ensures the value is alphanumeric."""
@@ -76,6 +81,10 @@ class Alphanumeric(Regex):
         if err is None:
             err = "Value must be alphanumeric."
         super().__init__(r"^[a-zA-Z0-9]+$", err)
+
+    def _validate(self, value: any):
+        if not match(self.pattern, str(value)):
+            raise AlphanumericError("Value must be alphanumeric.")
 
 
 class URL(Regex):
@@ -89,6 +98,10 @@ class URL(Regex):
             err,
         )
 
+    def _validate(self, value: any):
+        if not match(self.pattern, str(value)):
+            raise URLError(self.err)
+
 
 class Date(Regex):
     """Validates that the value matches the YYYY-MM-DD format."""
@@ -97,6 +110,10 @@ class Date(Regex):
         if err is None:
             err = "Invalid date format. Expected format is YYYY-MM-DD."
         super().__init__(r"^\d{4}-\d{2}-\d{2}$", err)
+
+    def _validate(self, value: any):
+        if not match(self.pattern, str(value)):
+            raise DateError(self.err)
 
 
 class NotEmpty(Validator):
@@ -107,4 +124,24 @@ class NotEmpty(Validator):
 
     def _validate(self, value: any):
         if not value:
-            raise ValueError("Value cannot be empty.")
+            raise EmptyValueError("Value cannot be empty.")
+
+class Truthy(Validator):
+    """Validates that the value is truthy."""
+
+    def __init__(self, err: str | None = None):
+        super().__init__(err)
+
+    def _validate(self, value: any):
+        if not value:
+            raise NotTruthyError("Value cannot be falsy.")
+        
+class Falsy(Validator):
+    """Validates that the value is falsy."""
+
+    def __init__(self, err: str | None = None):
+        super().__init__(err)
+
+    def _validate(self, value: any):
+        if value:
+            raise NotFalsyError("Value cannot be truthy.")

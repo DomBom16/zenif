@@ -1,5 +1,5 @@
 from .base import BasePrompt
-from ...schema import Schema
+from ...schema import Schema, StringF
 from ...constants import Keys
 
 import shutil
@@ -13,6 +13,14 @@ class PasswordPrompt(BasePrompt):
     ):
         super().__init__(message, schema, id)
         self._peeper: bool = False
+
+        # Check if the field is a StringF
+        if schema and not isinstance(self.field, StringF):
+            field_type = type(self.field).__name__
+            error_message = (
+                f"PasswordPrompt requires a StringF field, but got {field_type}"
+            )
+            raise TypeError(error_message)
 
     def peeper(self) -> "PasswordPrompt":
         """Enable password peeper mode. This will show the last character typed unless it is a space or the last keypress was a backspace."""

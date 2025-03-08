@@ -5,12 +5,22 @@ from zenif.schema import (
     BooleanF,
     StringF,
     IntegerF,
+    DateF,
     ListF,
     Length,
     Value,
     Email,
     NotEmpty,
+    Validator,
+    ValidationError,
+    Regex,
+    Truthy,
 )
+from zenif.constants import Cursor
+from zenif.log import Logger
+
+l = Logger()
+
 import os
 import time
 
@@ -51,53 +61,109 @@ def ls(path, all):
 def test_prompts():
     """Test all available prompts"""
 
-    class OddOrEven:
-        def __init__(self, parity: str = "even"):
+    class OddOrEven(Validator):
+        def __init__(self, parity: str = "even", err: str | None = None):
+            super().__init__(err)
             self.parity = 1 if parity == "odd" else 0
 
-        def __call__(self, value):
+        def _validate(self, value):
             if value % 2 != self.parity:
-                raise ValueError(
-                    f"Must be an {'even' if self.parity ==
-                                  0 else 'odd'} number."
+                raise ValidationError(
+                    f"Must be an {'even' if self.parity == 0 else 'odd'} number."
                 )
 
     # clear the screen
     os.system("cls" if os.name == "nt" else "clear")
 
     schema = Schema(
-        are_you_sure=BooleanF().name("continue"),
-        name=StringF().name("name").has(Length(min=3, max=50)),
-        password=StringF().name("password").has(NotEmpty()),
-        age=IntegerF()
-        .name("age")
-        .has(Value(min=18, max=120))
-        .has(OddOrEven(parity="odd")),
-        interests=ListF()
-        .name("interests")
-        .item_type(StringF())
-        .has(Length(min=3, err="Select a minimum of 3 interests.")),
-        fav_interest=StringF().name("fav_interest"),
-        email=StringF().name("email").has(Email()),
-    ).all_optional()
+        {
+            "are_you_sure": BooleanF().has(Truthy()),
+            "name": StringF().has(Length(min=3, max=50)),
+            "email": StringF().has(Email()),
+            "password": StringF()
+            .has(Length(min=8))
+            .has(
+                Regex(
+                    r"^(?=.*[a-z]).+$",
+                    err="Password must contain at least one lowercase letter.",
+                )
+            )
+            .has(
+                Regex(
+                    r"^(?=.*[A-Z]).+$",
+                    err="Password must contain at least one uppercase letter.",
+                )
+            )
+            .has(
+                Regex(r"^(?=.*\d).+$", err="Password must contain at least one digit.")
+            )
+            .has(
+                Regex(
+                    r"^(?=.*[@$!%*#?&]).+$",
+                    err="Password must contain at least one special character.",
+                )
+            ),
+            "date": DateF().has(NotEmpty()),
+            "salary": IntegerF().has(Value(min=0, max=1000000)),
+            "age": IntegerF().has(Value(min=18, max=120)).has(OddOrEven(parity="odd")),
+            "editor": StringF().has(NotEmpty()),
+            "interests": ListF()
+            .items(StringF())
+            .has(Length(min=3, err="Select a minimum of 3 interests.")),
+            "fav_interest": StringF(),
+        }
+    )
 
     for i in range(4):
         print(i + 1)
 
+    print(Cursor.get())
+
     p.keypress("Press a, b, or c").keys("a", "b", "c").ask()
 
+    l.info(
+        schema.validate(
+            {
+                "are_you_sure": False,
+                "name": "Al",
+                "email": "invalid-email",
+                "password": "",
+                "date": "not-a-date",
+                "salary": -500,
+                "age": 15,
+                "editor": "",
+                "interests": ["Re"],
+                "fav_interest": "This can always be valid",
+            }
+        )
+    )
+
     if (
-        not p.confirm("Are you sure you want to continue?", schema, "are_you_sure")
+        not p.confirm(
+            "Are you sure you want to continue?", schema=schema, id="are_you_sure"
+        )
         .default(True)
         .ask()
     ):
         return
-    # name = p.text("Enter your name", schema, "name").ask()
-    # email = p.text("Enter your email", schema, "email").ask()
-    # password = p.password("Enter your password", schema, "password").peeper().ask()
-    # date = p.date("Enter your date of birth").month_first().show_words().ask()
-    # age = p.number("Enter your age", schema, "age").ask()
-    editor = p.editor("Enter your hacker code").language("py").ask()
+    name = p.text("Enter your name", schema=schema, id="name").ask()
+    email = p.text("Enter your email", schema=schema, id="email").ask()
+    password = (
+        p.password("Enter your password", schema=schema, id="password").peeper().ask()
+    )
+    date = (
+        p.date("Enter your date of birth", schema=schema, id="date")
+        .month_first()
+        .show_words()
+        .ask()
+    )
+    salary = p.number("Enter your salary", schema=schema, id="salary").commas().ask()
+    age = p.number("Enter your age", schema=schema, id="age").ask()
+    editor = (
+        p.editor("Enter your hacker code", schema=schema, id="editor")
+        .language("py")
+        .ask()
+    )
     interests = p.checkbox(
         "Select your interests",
         ["Reading", "Gaming", "Sports", "Cooking", "Travel"],
@@ -111,11 +177,12 @@ def test_prompts():
         "fav_interest",
     ).ask()
 
-    # print(f"{name=}")
-    # print(f"{email=}")
-    # print(f"{password=}")
-    # print(f"{date=}")
-    # print(f"{age=}")
+    print(f"{name=}")
+    print(f"{email=}")
+    print(f"{password=}")
+    print(f"{date=}")
+    print(f"{salary=}")
+    print(f"{age=}")
     print(f"{editor=}")
     print(f"{interests=}")
     print(f"{fav_interest=}")

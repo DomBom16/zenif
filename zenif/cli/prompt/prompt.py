@@ -91,6 +91,8 @@ class Prompt:
     @staticmethod
     def keypress(
         message: str,
+        schema: Schema | None = None,
+        id: str | None = None,
     ) -> KeyPrompt:
-        """Creates a keypress prompt where the user can input multiple keys. Unlike other prompts, this prompt does not have a schema or id."""
-        return KeyPrompt(message)
+        """Creates a keypress prompt where the user can input multiple keys."""
+        return KeyPrompt(message, schema, id)

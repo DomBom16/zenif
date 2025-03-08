@@ -1,6 +1,5 @@
 from .base import BasePrompt
-from ...schema import Schema
-from ...log import Logger
+from ...schema import Schema, StringF
 from ...constants import Keys, Cursor
 
 from colorama import Fore, Style
@@ -26,6 +25,14 @@ class EditorPrompt(BasePrompt):
     ):
         super().__init__(message, schema, id)
         self._language: str = "txt"
+
+        # Check if the field is a StringF
+        if schema and not isinstance(self.field, StringF):
+            field_type = type(self.field).__name__
+            error_message = (
+                f"EditorPrompt requires a StringF field, but got {field_type}"
+            )
+            raise TypeError(error_message)
 
     def language(self, language: str) -> "EditorPrompt":
         """Set the file language for the prompt."""
@@ -80,9 +87,9 @@ class EditorPrompt(BasePrompt):
     def ask(self) -> str:
         """Prompt the user for input."""
 
-        Logger({"log_line": {"format": "simple"}}).warning(
-            "EditorPrompt is in a very experimental state. Use at your own risk. Known issues can be found at https://github.com/DomBom16/zenif/blob/main/docs/extra/editor-prompt-known-issues.md."
-        )
+        # Logger({"log_line": {"format": "simple"}}).warning(
+        #     "EditorPrompt is in a very experimental state. Use at your own risk. Known issues can be found at https://github.com/DomBom16/zenif/blob/main/docs/extra/editor-prompt-known-issues.md."
+        # )
 
         # Prompt and error on first line
         # Controls on second line

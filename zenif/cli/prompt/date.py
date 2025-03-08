@@ -1,5 +1,5 @@
 from .base import BasePrompt
-from ...schema import Schema
+from ...schema import Schema, DateF
 from ...constants import Keys, Cursor
 from ...decorators import enforce_types
 
@@ -30,6 +30,12 @@ class DatePrompt(BasePrompt):
         self.day: str = ""
         self.month: str = ""
         self.year: str = ""
+
+        # Check if the field is a DateF
+        if schema and not isinstance(self.field, DateF):
+            field_type = type(self.field).__name__
+            error_message = f"DatePrompt requires a DateF field, but got {field_type}"
+            raise TypeError(error_message)
 
     def default(self, value: tuple[int, int, int]) -> "DatePrompt":
         """Set the default value for the prompt."""

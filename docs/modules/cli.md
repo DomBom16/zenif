@@ -238,13 +238,13 @@ if __name__ == '__main__':
 
 ### Types of Prompts
 
-- `Prompt.text()`: For text input (works with String schema fields)
-- `Prompt.password()`: For hidden password input (works with String schema fields)
-- `Prompt.confirm()`: For yes/no questions (works with Boolean schema fields)
-- `Prompt.choice()`: For selecting one item from a list (works _only_ with String schema fields)
-- `Prompt.checkbox()`: For selecting multiple items from a list (works with List schema fields)
-- `Prompt.number()`: For numeric input (works with Integer or Float schema fields)
-- `Prompt.date()`: For dates (works with String schema fields)
+- `Prompt.text()`: For text input (StringF)
+- `Prompt.password()`: For hidden password input (StringF)
+- `Prompt.confirm()`: For yes/no questions (BooleanF)
+- `Prompt.choice()`: For selecting one item from a list (StringF)
+- `Prompt.checkbox()`: For selecting multiple items from a list (ListF)
+- `Prompt.number()`: For numeric input (IntegerF, FloatF)
+- `Prompt.date()`: For dates (DateF)
 
 Find more about different types of prompts and how they work, check out [More About Prompts](../extra/more-about-prompts.md)
 
@@ -258,18 +258,11 @@ from zenif.schema import Schema, StringF, IntegerF, ListF, Length, Value
 
 app = Applet()
 
-user_schema = Schema(
-    name=StringF()
-         .name("name")
-         .has(NotEmpty()),
-    password=StringF()
-            .name("password")
-            .has(Length(min=3, max=50))
-    interests=ListF()
-              .name("interests")
-              .item_type(StringF())
-              .has(Length(min=1, max=5))
-)
+user_schema = Schema({
+    "name": StringF().has(NotEmpty()),
+    "password": StringF().has(Length(min=3, max=50)),
+    "interests": ListF().items(StringF()).has(Length(min=1, max=5))
+})
 
 @app.command
 def setup():
