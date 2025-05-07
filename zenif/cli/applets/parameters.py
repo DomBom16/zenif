@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Callable
+from typing import Any, Callable
 
 
 @dataclass
@@ -19,7 +19,7 @@ class Parameter:
     param_name: str
     kind: str
     help: str = ""
-    default: any = None
+    default: Any = None
     cli_name: str = ""
     alias: str | None = None
 
@@ -59,7 +59,7 @@ def _arg(name: str, *, help: str = "") -> Callable:
     return decorator
 
 
-def _opt(name: str, *, default: any = None, help: str = "") -> Callable:
+def _opt(name: str, *, default: Any = None, help: str = "") -> Callable:
     def decorator(func: Callable) -> Callable:
         cli_params = _ensure_aparams(func)
         cli_params[name] = Parameter(
@@ -95,9 +95,10 @@ def _alias(name: str, alias: str) -> Callable:
         raise ValueError("The 'help' flag is reserved for the help command.")
 
     def decorator(func: Callable) -> Callable:
-        # Ensure the function has a place to store alias info.
+        # Ensure the function has a place to store alias info
         if not hasattr(func, "_cli_aliases"):
             func._cli_aliases = {}
+
         func._cli_aliases[name] = alias
         return func
 

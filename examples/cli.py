@@ -1,34 +1,37 @@
 #!/usr/bin/env python3
-from zenif.cli import Applet, Prompt as p
-from zenif.schema import (
-    Schema,
-    BooleanF,
-    StringF,
-    IntegerF,
-    DateF,
-    ListF,
-    Length,
-    Value,
-    Email,
-    NotEmpty,
-    Validator,
-    ValidationError,
-    Regex,
-    Truthy,
-)
-from zenif.constants import Cursor
-from zenif.log import Logger
-
-l = Logger()
-
 import os
 import time
+
+from zenif.cli import Applet
+from zenif.cli import Prompt as p
+from zenif.constants import Cursor
+from zenif.log import Logger
+from zenif.schema import (
+    BooleanF,
+    DateF,
+    Email,
+    IntegerF,
+    Length,
+    ListF,
+    NotEmpty,
+    Regex,
+    Schema,
+    StringF,
+    Truthy,
+    ValidationError,
+    Validator,
+    Value,
+)
+
+L = Logger()
+
 
 a = Applet()
 
 a.install(os.path.abspath(__file__))
 
 
+@a.root
 @a.command(aliases=["f"])
 @a.arg("branch", help="The branch to fetch")
 @a.opt("depth", default=10, help="The depth to use")
@@ -75,7 +78,7 @@ def test_prompts():
     # clear the screen
     os.system("cls" if os.name == "nt" else "clear")
 
-    schema = Schema(
+    s = Schema(
         {
             "are_you_sure": BooleanF().has(Truthy()),
             "name": StringF().has(Length(min=3, max=50)),
@@ -121,8 +124,8 @@ def test_prompts():
 
     p.keypress("Press a, b, or c").keys("a", "b", "c").ask()
 
-    l.info(
-        schema.validate(
+    L.info(
+        s.validate(
             {
                 "are_you_sure": False,
                 "name": "Al",
@@ -139,43 +142,46 @@ def test_prompts():
     )
 
     if (
-        not p.confirm(
-            "Are you sure you want to continue?", schema=schema, id="are_you_sure"
-        )
+        not p.confirm("Are you sure you want to continue?", s, "are_you_sure")
         .default(True)
         .ask()
     ):
         return
-    name = p.text("Enter your name", schema=schema, id="name").ask()
-    email = p.text("Enter your email", schema=schema, id="email").ask()
-    password = (
-        p.password("Enter your password", schema=schema, id="password").peeper().ask()
-    )
+    name = p.text("Enter your name", s, "name").ask()
+    email = p.text("Enter your email", s, "email").ask()
+    password = p.password("Enter your password", s, "password").peeper().ask()
     date = (
-        p.date("Enter your date of birth", schema=schema, id="date")
-        .month_first()
-        .show_words()
+        p.date("Enter your date of birth", s, "date").month_first().show_words().ask()
+    )
+    salary = p.number("Enter your salary", s, "salary").commas().ask()
+    age = p.number("Enter your age", s, "age").ask()
+    editor = p.editor("Enter your hacker code", s, "editor").language("py").ask()
+    interests = (
+        p.checkbox("Select your interests", s, "interests")
+        .choices("Reading", "Gaming", "Sports", "Cooking", "Travel")
         .ask()
     )
-    salary = p.number("Enter your salary", schema=schema, id="salary").commas().ask()
-    age = p.number("Enter your age", schema=schema, id="age").ask()
-    editor = (
-        p.editor("Enter your hacker code", schema=schema, id="editor")
-        .language("py")
+    fav_interest = (
+        p.choice("Select your favorite interest", s, "fav_interest")
+        .choices(interests)
         .ask()
     )
-    interests = p.checkbox(
-        "Select your interests",
-        ["Reading", "Gaming", "Sports", "Cooking", "Travel"],
-        schema,
-        "interests",
-    ).ask()
-    fav_interest = p.choice(
-        "Select your favorite interest",
-        interests,
-        schema,
-        "fav_interest",
-    ).ask()
+
+    L.info(
+        s.validate(
+            {
+                "name": name,
+                "email": email,
+                "password": password,
+                "date": date,
+                "salary": salary,
+                "age": age,
+                "editor": editor,
+                "interests": interests,
+                "fav_interest": fav_interest,
+            }
+        )
+    )
 
     print(f"{name=}")
     print(f"{email=}")
@@ -188,8 +194,12 @@ def test_prompts():
     print(f"{fav_interest=}")
 
 
-@a.root
-def root():
+# @a.root
+@a.flag("debug", help="Enable debug mode")
+def root(debug: bool = False):
+    if debug:
+        print("Debug mode enabled")
+        time.sleep(3)
     a.execute("test_prompts")
 
 

@@ -1,15 +1,17 @@
-from .handlers import Ruleset, Streams, FHGroup, SHGroup
-from ..utils import strip_unsafe_objs, strip_repr_id
-
-from inspect import currentframe, getmodule
 import sys
-from black import format_str, Mode
-from pygments import highlight
-from pygments.lexers import PythonLexer
-from pygments.formatters import Terminal256Formatter as tformatter
-from pygments.styles import get_style_by_name
+from inspect import currentframe, getmodule
 from random import choice
+from typing import Any
+
+from black import Mode, format_str
 from colorama import Fore
+from pygments import highlight
+from pygments.formatters import Terminal256Formatter as tformatter
+from pygments.lexers import PythonLexer
+from pygments.styles import get_style_by_name
+
+from ..utils import strip_repr_id, strip_unsafe_objs
+from .handlers import FHGroup, Ruleset, SHGroup, Streams
 
 
 class Logger:
@@ -19,7 +21,7 @@ class Logger:
         ruleset (dict, optional): The list of rules that will be overriden, enabling custom behavior. Defaults to {}.
     """
 
-    def __init__(self, ruleset: dict[str, any] = {}) -> None:
+    def __init__(self, ruleset: dict[str, Any] = {}) -> None:
         """
         Initializes the Logger with the specified ruleset.
 
@@ -40,7 +42,7 @@ class Logger:
             "lethal": {"name": "lethal", "level": 5, "color": Fore.MAGENTA},
         }
 
-        self.defaults: dict[str, any] = {
+        self.defaults: dict[str, Any] = {
             "timestamps": {
                 "always_show": False,
                 "use_utc": False,
@@ -77,7 +79,7 @@ class Logger:
             "log_line": {"format": "default"},
         }
 
-        self.__rules: dict[str, any] = self.defaults.copy()
+        self.__rules: dict[str, Any] = self.defaults.copy()
         if ruleset:
             for category, settings in ruleset.items():
                 if category in self.__rules:
@@ -127,8 +129,8 @@ class Logger:
         level: str,
         values: tuple,
         sep: str = " ",
-        metadata: dict = None,
-        fields: any = None,
+        metadata: dict | None = None,
+        fields: Any | None = None,
     ):
         if not metadata:
             frame = currentframe().f_back.f_back

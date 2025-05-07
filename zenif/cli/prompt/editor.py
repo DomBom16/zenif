@@ -1,19 +1,15 @@
-from .base import BasePrompt
-from ...schema import Schema, StringF
-from ...constants import Keys, Cursor
-
-from colorama import Fore, Style
 from shutil import get_terminal_size
 
-# from pygments import highlight
-from pygments.util import ClassNotFound
+from colorama import Fore, Style
 from pygments.lexer import Lexer
 from pygments.lexers import get_lexer_for_filename
 
-# from pygments.styles import get_style_by_name, STYLE_MAP
-# from pygments.formatters import Terminal256Formatter as tformatter
+# from pygments import highlight
+from pygments.util import ClassNotFound
 
-# init(autoreset=True)
+from ...constants import Cursor, Keys
+from ...schema import Schema, StringF
+from .base import BasePrompt
 
 
 class EditorPrompt(BasePrompt):
@@ -123,7 +119,7 @@ class EditorPrompt(BasePrompt):
 
             output = ""
 
-            for line in buffer:    
+            for line in buffer:
                 output += f"\n{Cursor.lclear()}{' ' * indent}{Fore.YELLOW}{line}{Style.RESET_ALL}"
 
             print(output, end="")
@@ -162,7 +158,10 @@ class EditorPrompt(BasePrompt):
                 if not error and buffer:
                     print(Cursor.left(pcx), end="")
                     print(Cursor.up(pcy + 2), end="")
-                    self._print_prompt(self.message, buffer[0].strip() + (" …" if len(buffer) > 1 else ""))
+                    self._print_prompt(
+                        self.message,
+                        buffer[0].strip() + (" …" if len(buffer) > 1 else ""),
+                    )
                     return "\n".join(buffer)
             else:
                 buffer[cy] = buffer[cy][:cx] + char + buffer[cy][cx:]

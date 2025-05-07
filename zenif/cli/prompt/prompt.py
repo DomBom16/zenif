@@ -1,14 +1,13 @@
 from ...schema import Schema
-
-from .text import TextPrompt
-from .password import PasswordPrompt
-from .confirm import ConfirmPrompt
-from .choice import ChoicePrompt
 from .checkbox import CheckboxPrompt
-from .number import NumberPrompt
+from .choice import ChoicePrompt
+from .confirm import ConfirmPrompt
 from .date import DatePrompt
 from .editor import EditorPrompt
 from .key import KeyPrompt
+from .number import NumberPrompt
+from .password import PasswordPrompt
+from .text import TextPrompt
 
 
 class Prompt:
@@ -44,22 +43,20 @@ class Prompt:
     @staticmethod
     def choice(
         message: str,
-        choices: list[str],
         schema: Schema | None = None,
         id: str | None = None,
     ) -> ChoicePrompt:
         """Creates a choice prompt where the user can select from a list of choices."""
-        return ChoicePrompt(message, choices, schema, id)
+        return ChoicePrompt(message, schema, id)
 
     @staticmethod
     def checkbox(
         message: str,
-        choices: list[str],
         schema: Schema | None = None,
         id: str | None = None,
     ) -> CheckboxPrompt:
         """Creates a checkbox prompt where the user can select multiple choices from a list of choices."""
-        return CheckboxPrompt(message, choices, schema, id)
+        return CheckboxPrompt(message, schema, id)
 
     @staticmethod
     def number(

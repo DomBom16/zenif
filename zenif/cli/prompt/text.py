@@ -1,8 +1,8 @@
-from .base import BasePrompt
-from ...schema import Schema, StringF
-from ...constants import Keys
-
 import shutil
+
+from ...constants import Keys
+from ...schema import Schema, StringF
+from .base import BasePrompt
 
 
 class TextPrompt(BasePrompt):

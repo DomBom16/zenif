@@ -1,8 +1,6 @@
-import sys
+import select
 import termios
 import tty
-import select
-import os
 
 
 class Keys:
@@ -188,7 +186,7 @@ class Cursor:
             if fx >= w:
                 fx = 0
                 fy += 1
-        return f"\x1b[{fx-x}C" + (f"\x1b[{fy}B" if fy > 0 else "")
+        return f"\x1b[{fx - x}C" + (f"\x1b[{fy}B" if fy > 0 else "")
 
     @staticmethod
     def left(x: int) -> str:

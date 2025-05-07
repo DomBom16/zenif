@@ -1,24 +1,25 @@
-from ..log import Logger
-from .exceptions import TimeoutError, RateLimitError
-
-import time
-from functools import wraps
+import cProfile
+import functools
+import io
+import pstats
 import signal
-from collections import deque
-from typing import Callable, TypeVar
+import time
+import tracemalloc
+from collections import OrderedDict, deque
+from functools import wraps
 from inspect import signature
 from threading import Thread
-from collections import OrderedDict
-import time
-import functools
-import cProfile
-import pstats
-import io
-import tracemalloc
+from typing import Callable, TypeVar
 
-logger = Logger(ruleset={"timestamps": {"always_show": True}, "log_line": {"format": "simple"}})
+from ..log import Logger
+from .exceptions import RateLimitError, TimeoutError
+
+logger = Logger(
+    ruleset={"timestamps": {"always_show": True}, "log_line": {"format": "simple"}}
+)
 
 T = TypeVar("T")
+
 
 def retry(
     max_retries: int = 3, delay: float = 1.0
@@ -46,7 +47,7 @@ def retry(
             while attempts < max_retries:
                 try:
                     return func(*args, **kwargs)
-                except Exception as e:
+                except Exception:
                     attempts += 1
                     if attempts >= max_retries:
                         raise
@@ -78,6 +79,7 @@ def retry_expo(
     :param initial_delay: The time in seconds to wait between the first and
         second attempts. Defaults to 1.0.
     """
+
     def decorator_retry_expo_backoff(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper_retry_expo_backoff(*args: any, **kwargs: any) -> T:
@@ -85,7 +87,7 @@ def retry_expo(
             while attempts < max_retries:
                 try:
                     return func(*args, **kwargs)
-                except Exception as e:
+                except Exception:
                     attempts += 1
                     if attempts >= max_retries:
                         raise
@@ -114,6 +116,7 @@ def timeout(seconds: float) -> Callable[[Callable[..., T]], Callable[..., T]]:
 
     :param seconds: The maximum time in seconds to allow the function to execute.
     """
+
     def decorator_timeout(func: Callable[..., T]) -> Callable[..., T]:
         def _handle_timeout(signum: int, frame: any | None) -> None:
             raise TimeoutError(
@@ -160,6 +163,7 @@ def rate_limiter(
     :param immediate_fail: If `True`, raise a `RateLimitError` if the rate limit is
         exceeded. If `False`, block until the rate limit is no longer exceeded.
     """
+
     def decorator_rate_limiter(func: Callable[..., T]) -> Callable[..., T]:
         call_times: deque = deque(maxlen=calls)
 
@@ -199,6 +203,7 @@ def trace(func: Callable[..., T]) -> Callable[..., T]:
     :return: A decorated version of the function that prints the arguments and return
         value.
     """
+
     @wraps(func)
     def wrapper_trace(*args: any, **kwargs: any) -> T:
         args_repr = [repr(a) for a in args]
@@ -226,6 +231,7 @@ def suppress_exceptions(func: Callable[..., T | None]) -> Callable[..., T | None
     :param func: The function to be decorated.
     :return: A decorated version of the function that suppresses any exceptions.
     """
+
     @wraps(func)
     def wrapper_suppress_exceptions(*args: any, **kwargs: any) -> T | None:
         try:
@@ -258,6 +264,7 @@ def deprecated(
     :return: A decorated version of the function that logs a deprecation
         warning when called.
     """
+
     def decorator(f: Callable[..., T]) -> Callable[..., T]:
         @wraps(f)
         def wrapper_deprecated(*args: any, **kwargs: any) -> T:
@@ -293,6 +300,7 @@ def type_check(
     :return: A decorated version of the function that performs type checking on
         arguments and return value.
     """
+
     def decorator_type_check(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper_type_check(*args: any, **kwargs: any) -> T:
@@ -324,6 +332,7 @@ def log_execution_time(func: Callable[..., T]) -> Callable[..., T]:
     :param func: The function to be decorated.
     :return: A decorated version of the function that logs the execution time.
     """
+
     @wraps(func)
     def wrapper_log_execution_time(*args: any, **kwargs: any) -> T:
         start_time = time.perf_counter()
@@ -356,6 +365,7 @@ def cache(
     :param max_size: The maximum size of the cache. If None, there is no limit.
     :return: A decorated version of the function that caches its result.
     """
+
     def decorator(f: Callable[..., T]) -> Callable[..., T]:
         cache_dict: OrderedDict = OrderedDict()
 
@@ -416,6 +426,7 @@ def enforce_types(func):
     :return: A decorated version of the function that enforces type
              annotations on its arguments and return value.
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         sig = signature(func)
@@ -453,13 +464,14 @@ def retry_on_exception(exceptions, max_retries=3, delay=1):
         Defaults to 3.
     :param delay: The time in seconds to wait between attempts. Defaults to 1.0.
     """
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             for attempt in range(max_retries):
                 try:
                     return func(*args, **kwargs)
-                except exceptions as e:
+                except exceptions:
                     if attempt == max_retries - 1:
                         raise
                     time.sleep(delay)
@@ -478,6 +490,7 @@ def background_task(func):
     The return value of the decorated function is a Thread object that can be
     used to wait for the thread to complete (e.g., by calling join()).
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         thread = Thread(target=func, args=args, kwargs=kwargs)
@@ -503,6 +516,7 @@ def profile(func):
     :return: A decorated version of the function that logs execution time,
             memory usage, and profiling statistics.
     """
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         global _profiler_active
@@ -529,10 +543,10 @@ def profile(func):
             ps = pstats.Stats(profiler, stream=s).sort_stats("cumulative")
             ps.print_stats(10)  # Print top 10 lines
 
-            print(f"{"Function:".ljust(25)} {func.__name__}")
-            print(f"{"Time taken:".ljust(25)} {end_time - start_time:.4f} seconds")
-            print(f"{"Current memory usage:".ljust(25)} {current / 10**6:.6f} MB")
-            print(f"{"Peak memory usage:".ljust(25)} {peak / 10**6:.6f} MB")
+            print(f"{'Function:'.ljust(25)} {func.__name__}")
+            print(f"{'Time taken:'.ljust(25)} {end_time - start_time:.4f} seconds")
+            print(f"{'Current memory usage:'.ljust(25)} {current / 10**6:.6f} MB")
+            print(f"{'Peak memory usage:'.ljust(25)} {peak / 10**6:.6f} MB")
             print("Profile:")
             print(s.getvalue())
         else:

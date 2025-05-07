@@ -1,40 +1,42 @@
 from .core import Schema
+from .exceptions import (
+    AlphanumericError,
+    DateError,
+    EmailError,
+    EmptyValueError,
+    LengthError,
+    NotFalsyError,
+    NotTruthyError,
+    RegexError,
+    StrictValidationError,
+    URLError,
+    ValidationError,
+    ValueRangeError,
+)
 from .fields import (
-    StringF,
-    FloatF,
+    BooleanF,
     DateF,
     DictF,
     EnumF,
-    ListF,
-    BooleanF,
+    FloatF,
     IntegerF,
+    ListF,
     SchemaField,
+    StringF,
 )
 from .validators import (
-    Validator,
-    Length,
-    Value,
-    Regex,
-    Email,
-    Date,
     URL,
-    NotEmpty,
     Alphanumeric,
-    Truthy,
+    Date,
+    Email,
     Falsy,
-)
-from .exceptions import (
-    ValidationError,
-    LengthError,
-    ValueRangeError,
-    RegexError,
-    EmailError,
-    DateError,
-    URLError,
-    EmptyValueError,
-    AlphanumericError,
-    NotTruthyError,
-    NotFalsyError,
+    Length,
+    NotEmpty,
+    Regex,
+    Truthy,
+    URLType,  # enum for URL types
+    Validator,
+    Value,
 )
 
 __all__ = [
@@ -57,12 +59,14 @@ __all__ = [
     "Email",
     "Date",
     "URL",
+    "URLType",  # enum for URL types
     "NotEmpty",
     "Alphanumeric",
     "Truthy",
     "Falsy",
     # Exceptions
     "ValidationError",  # base class
+    "StrictValidationError",
     "LengthError",
     "ValueRangeError",
     "RegexError",

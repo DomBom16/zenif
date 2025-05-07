@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from .core import Applet
 
 
-l = Logger({"log_line": {"format": [{"type": "static", "value": "  "}]}})
+L = Logger({"log_line": {"format": [{"type": "static", "value": "  "}]}})
 
 
 def friendly_path(path: Path) -> str:
@@ -86,23 +86,23 @@ def add_install_dir_to_zshrc(install_dir: Path) -> None:
     if zshrc_path.exists():
         content = zshrc_path.read_text()
         if str(install_dir) in content:
-            l.info(
+            L.info(
                 f"{Fore.WHITE}{'Found'.ljust(15)}{Fore.YELLOW}{friendly_install_dir} {Fore.CYAN}>> {Fore.GREEN}{friendly_path(zshrc_path)}"
             )
             return
     else:
-        l.info(
+        L.info(
             f"{Fore.WHITE}{'Creating'.ljust(15)}{Fore.YELLOW}{friendly_path(zshrc_path)}"
         )
 
     export_line = f'\n# Added by Zenif CLI framework installer\nexport PATH="{install_dir}:$PATH"\n'
 
-    l.info(
+    L.info(
         f"{Fore.WHITE}{'Updating'.ljust(15)}{Fore.YELLOW}{friendly_path(zshrc_path)} {Fore.CYAN}>> {Fore.GREEN}{friendly_install_dir}"
     )
     with open(zshrc_path, "a") as f:
         f.write(export_line)
-    l.success(
+    L.success(
         f"{Fore.GREEN}{'Updated'.ljust(15)}{Fore.YELLOW}{friendly_path(zshrc_path)} {Fore.CYAN}>> {Fore.GREEN}{friendly_install_dir}"
     )
 
@@ -127,24 +127,24 @@ def install_setup(applet: "Applet", script_path: str) -> Callable:
         friendly_target_script = friendly_path(target_script)
         friendly_install_dir = friendly_path(install_dir)
 
-        l.warning(
+        L.warning(
             f"{Fore.YELLOW}\033[1m\033[3mWARNING: install is not intended for production use, only use for development{Style.RESET_ALL}"
         )
         print()
 
-        l.success(
+        L.success(
             f"{Fore.GREEN}{'Started'.ljust(15)}{Fore.YELLOW}{target_script.name} {Fore.CYAN}>> {Fore.GREEN}{name}{Style.RESET_ALL}"
         )
         if original_script.is_symlink():
-            l.info(
+            L.info(
                 f"{Fore.WHITE}{'Found'.ljust(15)}{Fore.YELLOW}{friendly_path(original_script)} {Fore.CYAN}>> {Fore.GREEN}{friendly_path(install_dir)}"
             )
             print()
-            l.success(
+            L.success(
                 f"{Fore.GREEN}{'Completed'.ljust(15)}{Fore.YELLOW}{target_script.name} {Fore.CYAN}>> {Fore.GREEN}{name}{Style.RESET_ALL}"
             )
             print()
-            l.success(
+            L.success(
                 f"{Fore.CYAN}Try running {Fore.BLACK}{Back.CYAN}  {name} --help  {Style.RESET_ALL}{Fore.CYAN} to get started{Style.RESET_ALL}"
             )
             return
@@ -154,7 +154,7 @@ def install_setup(applet: "Applet", script_path: str) -> Callable:
             Prompt.text("Enter the command alias to install").default(name).ask()
         )
         print()
-        l.success(
+        L.success(
             f"{Fore.GREEN}{'Updated'.ljust(15)}{Fore.YELLOW}{target_script.name} {Fore.CYAN}>> {Fore.GREEN}{command_alias}{Style.RESET_ALL}"
         )
         print()
@@ -168,7 +168,7 @@ def install_setup(applet: "Applet", script_path: str) -> Callable:
         print()
 
         if not confirm:
-            l.error(
+            L.error(
                 f"{Fore.RED}{'Aborted'.ljust(15)}{Fore.YELLOW}{target_script.name} {Fore.CYAN}>> {Fore.GREEN}{command_alias}{Style.RESET_ALL}"
             )
             return
@@ -176,58 +176,58 @@ def install_setup(applet: "Applet", script_path: str) -> Callable:
         # Create a symlink in the install_dir.
         target_symlink = install_dir / command_alias
         friendly_target_symlink = friendly_path(target_symlink)
-        l.info(
+        L.info(
             f"{Fore.WHITE}{'Installing'.ljust(15)}{Fore.YELLOW}{friendly_target_script} {Style.DIM}({command_alias}){Style.RESET_ALL} {Fore.CYAN}>> {Fore.GREEN}{friendly_target_symlink}{Style.RESET_ALL}"
         )
         if target_symlink.exists() or target_symlink.is_symlink():
-            l.warning(
+            L.warning(
                 f"{Fore.YELLOW}{'Found'.ljust(15)}{Fore.YELLOW}{command_alias} {Fore.CYAN}>> {Fore.GREEN}{friendly_target_symlink}"
             )
             print()
             choice = Prompt.confirm("Overwrite existing command?").default(True).ask()
             print()
             if not choice:
-                l.error(
+                L.error(
                     f"{Fore.RED}{'Aborted'.ljust(15)}{Fore.YELLOW}{target_script.name} {Fore.CYAN}>> {Fore.GREEN}{command_alias}{Style.RESET_ALL}"
                 )
                 return
             try:
-                l.info(
+                L.info(
                     f"{Fore.WHITE}{'Removing'.ljust(15)}{Fore.YELLOW}{friendly_target_symlink}"
                 )
                 target_symlink.unlink()
-                l.success(
+                L.success(
                     f"{Fore.GREEN}{'Removed'.ljust(15)}{Fore.YELLOW}{friendly_target_symlink}"
                 )
             except Exception as e:
-                l.error(f"Could not remove existing command: {e}")
+                L.error(f"Could not remove existing command: {e}")
                 return
 
         try:
             target_symlink.symlink_to(target_script)
-            l.success(
+            L.success(
                 f"{Fore.GREEN}{'Installed'.ljust(15)}{Fore.YELLOW}{friendly_target_script} {Style.DIM}({command_alias}){Style.RESET_ALL} {Fore.CYAN}>> {Fore.GREEN}{friendly_target_symlink}{Style.RESET_ALL}"
             )
         except Exception as e:
-            l.error(
+            L.error(
                 f"{Fore.RED}{'Failed'.ljust(15)}{Fore.YELLOW}installation {Fore.CYAN}>> {Fore.GREEN}{command_alias}{Style.RESET_ALL}: {Fore.RED}{e}{Style.RESET_ALL}"
             )
             return
 
         # Automatically add the installation directory to the user's PATH.
-        l.info(
+        L.info(
             f"{Fore.WHITE}{'Adding'.ljust(15)}{Fore.YELLOW}{friendly_install_dir}{Style.RESET_ALL} {Fore.CYAN}>> {Fore.GREEN}$PATH{Style.RESET_ALL}"
         )
         add_install_dir_to_zshrc(install_dir)
-        l.success(
+        L.success(
             f"{Fore.GREEN}{'Added'.ljust(15)}{Fore.YELLOW}{friendly_install_dir}{Style.RESET_ALL} {Fore.CYAN}>> {Fore.GREEN}$PATH{Style.RESET_ALL}"
         )
         print()
-        l.success(
+        L.success(
             f"{Fore.GREEN}{'Completed'.ljust(15)}{Fore.YELLOW}{target_script.name} {Fore.CYAN}>> {Fore.GREEN}{command_alias}{Style.RESET_ALL}"
         )
         print()
-        l.success(
+        L.success(
             f"{Fore.CYAN}Try running {Fore.BLACK}{Back.CYAN}  {command_alias} --help  {Style.RESET_ALL}{Fore.CYAN} to get started{Style.RESET_ALL}"
         )
 

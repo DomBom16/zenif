@@ -1,12 +1,13 @@
-from textwrap import dedent, indent
+from textwrap import dedent
 from shutil import get_terminal_size as tsize
+from typing import Any
 from colorama import Fore, Back, Style
 from .parameters import Parameter
 
 
 class HelpFormatter:
     @staticmethod
-    def format_cli_help(cli_name: str, commands: dict[str, any]) -> str:
+    def format_cli_help(cli_name: str, commands: dict[str, Any]) -> str:
         """
         Format help text for the entire CLI application in a visually pleasing style.
         Commands with aliases will display like "fetch, f".
@@ -43,7 +44,7 @@ class HelpFormatter:
         return "\n".join(lines)
 
     @staticmethod
-    def format_command_help(command_name: str, command: any) -> str:
+    def format_command_help(command_name: str, command: Any) -> str:
         """
         Format help text for a single command.
         If the command has aliases, list them next to the command name.
@@ -66,27 +67,11 @@ class HelpFormatter:
             )
         lines.append(header)
 
-        # If there is more documentation than the first line, add the additional doc indented.
-        if len(command.__doc__.split("\n")) > 1:
-
-            def pred(s):
-                return True
-
-            doc = "\n".join(
-                indent(
-                    dedent(
-                        "\n".join(command.__doc__.split("\n")[1:])
-                        if command.__doc__
-                        else "No description"
-                    ),
-                    " " * (len(", ".join([command_name] + aliases)) + 1) + "│  ",
-                    pred,
-                )
-                .strip()
-                .split("\n")[1:]
-            )
-            lines.append(f"{Fore.BLUE}{Style.DIM}{doc}{Style.RESET_ALL}")
-        lines.append("")
+        # Safely get the command documentation or a default message
+        doc = command.__doc__ or "No description"
+        doc_lines = dedent(doc).strip().split("\n")[1:]
+        for line in doc_lines:
+            lines.append(f"{Fore.BLUE}{Style.DIM}{line}{Style.RESET_ALL}")
 
         # Now, format the parameters (and their aliases, if set on the parameter objects).
         cli_params = getattr(command, "_cli_params", {})
@@ -107,15 +92,6 @@ class HelpFormatter:
         )
 
         if cli_params:
-            header_line = (
-                f"{Back.BLUE}{Fore.BLUE}─ {Fore.BLACK}Parameter{Fore.BLUE} "
-                f'{"─"*(25-3-len("Parameter"))}{Fore.BLACK} Type{Fore.BLUE} '
-                f'{"─"*(10-1-len("Type"))}{Fore.BLACK} Default{Fore.BLUE} '
-                f'{"─"*(10-1-len("Default"))}{Fore.BLACK} Description{Fore.BLUE} '
-                f'{"─"*(tsize().columns-49-len("Description"))}{Style.RESET_ALL}'
-            )
-            lines.append(header_line)
-
             for param in sorted(cli_params.values(), key=lambda p: p.param_name):
                 name = param.cli_name
                 if name.startswith("--"):
@@ -129,8 +105,9 @@ class HelpFormatter:
                 kind = param.kind.capitalize()
                 default = param.default if param.default is not None else ""
                 description = param.help
+                lines.append("")
                 lines.append(
-                    f"{Fore.BLUE}{name:<25} {kind:<10} {str(default):<10} {description}{Style.RESET_ALL}"
+                    f"{Fore.BLUE}{name}  {Style.DIM}{kind}\n{Fore.BLUE}{Style.DIM}  {description}{f"\n{Fore.RESET}  Defaults to {default}" if len(str(default)) > 0 and param.kind == "option" else ""}{Style.RESET_ALL}"
                 )
         else:
             lines.append(

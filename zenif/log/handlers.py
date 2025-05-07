@@ -1,17 +1,19 @@
+from copy import deepcopy
+from datetime import UTC, datetime
+from io import StringIO
+from re import sub
+from shutil import get_terminal_size as tsize
+from threading import current_thread
+from typing import Any
+
+from colorama import Style
+
 from ..utils import strip_ansi, wrap
 from .template import TemplateEngine
 
-from datetime import datetime, UTC
-from shutil import get_terminal_size as tsize
-from threading import current_thread
-from io import StringIO
-from re import sub
-from copy import deepcopy
-from colorama import Style
 
 class Ruleset:
-
-    def __init__(self, rules: dict[str, any], defaults: dict[str, any]):
+    def __init__(self, rules: dict[str, Any], defaults: dict[str, Any]):
         self._rules = self._merge_with_defaults(deepcopy(rules), deepcopy(defaults))
         self.dict = self.Dict(self._rules)
         for category, settings in self._rules.items():
@@ -23,7 +25,7 @@ class Ruleset:
                 )(),
             )
 
-    def _merge_with_defaults(self, rules: dict[str, any], defaults: dict[str, any]):
+    def _merge_with_defaults(self, rules: dict[str, Any], defaults: dict[str, Any]):
         merged = defaults.copy()
         for category, settings in rules.items():
             if category in merged:
@@ -40,15 +42,14 @@ class Ruleset:
 
 
 class BaseHandler:
-
-    def __init__(self, defaults: dict[str, any]):
+    def __init__(self, defaults: dict[str, Any]):
         self.output_streams = []
         self.stream_rulesets = {}
         self.template_engine = TemplateEngine()
         self.previous_timestamp = None
         self.defaults = deepcopy(defaults)
 
-    def add(self, stream: str | object, ruleset: dict[str, any] = None):
+    def add(self, stream: str | object, ruleset: dict[str, Any] = None):
         if stream not in self.output_streams:
             self.output_streams.append(stream)
             if ruleset:
@@ -64,7 +65,7 @@ class BaseHandler:
                 del self.stream_rulesets[stream]
 
     def modify(
-        self, stream: str | object, ruleset: dict[str, any], use_original: bool = False
+        self, stream: str | object, ruleset: dict[str, Any], use_original: bool = False
     ):
         if stream not in self.stream_rulesets:
             raise ValueError(f"Stream {stream} not found in handler.")
@@ -82,8 +83,8 @@ class BaseHandler:
         self,
         message: str,
         level: dict[str, str | int],
-        metadata: dict[str, any],
-        ruleset: dict[str, any],
+        metadata: dict[str, Any],
+        ruleset: dict[str, Any],
     ):
         terminal_width = tsize().columns
 
@@ -122,7 +123,7 @@ class BaseHandler:
 
         return log_output.getvalue()
 
-    def _define_timestamp(self, ruleset: dict[str, any]):
+    def _define_timestamp(self, ruleset: dict[str, Any]):
         now = datetime.now(UTC if ruleset.timestamps.use_utc else None)
         timestamp = now.strftime("%H:%M:%S")
         if timestamp == self.previous_timestamp and not ruleset.timestamps.always_show:
@@ -132,8 +133,8 @@ class BaseHandler:
 
     def _generate_metadata(
         self,
-        metadata: dict[str, any],
-        ruleset: dict[str, any],
+        metadata: dict[str, Any],
+        ruleset: dict[str, Any],
         message_space: int,
         terminal_width: int,
     ):
@@ -164,13 +165,12 @@ class BaseHandler:
 
 
 class StreamHandler(BaseHandler):
-
-    def __init__(self, defaults: dict[str, any]):
+    def __init__(self, defaults: dict[str, Any]):
         super().__init__(defaults)
         self.output_streams = []
         self.stream_rulesets = {}
 
-    def add(self, stream: object, ruleset: dict[str, any] = None):
+    def add(self, stream: object, ruleset: dict[str, Any] = None):
         if stream not in self.output_streams:
             self.output_streams.append(stream)
             if ruleset:
@@ -180,7 +180,7 @@ class StreamHandler(BaseHandler):
         return stream
 
     def modify(
-        self, stream: object, ruleset: dict[str, any], use_original: bool = False
+        self, stream: object, ruleset: dict[str, Any], use_original: bool = False
     ):
         if stream not in self.stream_rulesets:
             raise ValueError(f"Stream {stream} not found in handler.")
@@ -195,7 +195,7 @@ class StreamHandler(BaseHandler):
             self.stream_rulesets[stream] = Ruleset(current_rules, self.defaults)
 
     def write(
-        self, message: str, level_dict: dict[str, str | int], metadata: dict[str, any]
+        self, message: str, level_dict: dict[str, str | int], metadata: dict[str, Any]
     ):
         for stream in self.output_streams:
             ruleset = self.stream_rulesets.get(stream)
@@ -210,7 +210,7 @@ class StreamHandler(BaseHandler):
                 stream.write(message)
             stream.flush()
 
-    def _should_log(self, message: str, level: int, ruleset: dict[str, any]):
+    def _should_log(self, message: str, level: int, ruleset: dict[str, Any]):
         if level < ruleset.filtering.min_level:
             return False
         if any(
@@ -226,13 +226,13 @@ class StreamHandler(BaseHandler):
 
 
 class FileHandler(BaseHandler):
-    def __init__(self, defaults: dict[str, any]):
+    def __init__(self, defaults: dict[str, Any]):
         super().__init__(defaults)
         self.file_streams = {}
         self.file_rulesets = {}
 
     def add(
-        self, file_path: str, ruleset: dict[str, any] | None = None, reset: bool = False
+        self, file_path: str, ruleset: dict[str, Any] | None = None, reset: bool = False
     ):
         if file_path not in self.file_streams or reset:
             mode = "w" if reset else "a"
@@ -253,7 +253,7 @@ class FileHandler(BaseHandler):
                 del self.file_rulesets[file_path]
 
     def modify(
-        self, file_path: str, ruleset: dict[str, any], use_original: bool = False
+        self, file_path: str, ruleset: dict[str, Any], use_original: bool = False
     ):
         if file_path in self.file_rulesets:
             if use_original:
@@ -266,7 +266,7 @@ class FileHandler(BaseHandler):
                 self.file_rulesets[file_path] = Ruleset(current_rules, self.defaults)
 
     def write(
-        self, message: str, level_dict: dict[str, str | int], metadata: dict[str, any]
+        self, message: str, level_dict: dict[str, str | int], metadata: dict[str, Any]
     ):
         for file_path, file_stream in self.file_streams.items():
             ruleset = self.file_rulesets.get(file_path)
@@ -281,7 +281,7 @@ class FileHandler(BaseHandler):
                 file_stream.write(strip_ansi(message))
             file_stream.flush()
 
-    def _should_log(self, message: str, level: int, ruleset: dict[str, any]):
+    def _should_log(self, message: str, level: int, ruleset: dict[str, Any]):
         if level < ruleset.filtering.min_level:
             return False
         if any(
@@ -302,7 +302,7 @@ class FileHandler(BaseHandler):
 
 
 class Streams:
-    def __init__(self, defaults: dict[str, any]):
+    def __init__(self, defaults: dict[str, Any]):
         self.file = FileHandler(defaults)
         self.normal = StreamHandler(defaults)
 
@@ -343,7 +343,7 @@ class FHGroup:
             self.file_handler.remove(file_path)
             self.file_handler.add(file_path, reset=True)
 
-    def modify(self, ruleset: dict[str, any], use_original: bool = False):
+    def modify(self, ruleset: dict[str, Any], use_original: bool = False):
         for file_path in self.file_paths:
             self.file_handler.modify(file_path, ruleset, use_original)
 
@@ -354,7 +354,6 @@ class FHGroup:
 
 
 class SHGroup:
-
     def __init__(self, stream_handler: StreamHandler, *items):
         self.stream_handler = stream_handler
         self.streams = []
@@ -385,7 +384,7 @@ class SHGroup:
                 self.stream_handler.remove(item)
         return [*items]
 
-    def modify(self, ruleset: dict[str, any], use_original: bool = False):
+    def modify(self, ruleset: dict[str, Any], use_original: bool = False):
         for stream in self.streams:
             self.stream_handler.modify(stream, ruleset, use_original)
 

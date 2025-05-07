@@ -1,9 +1,10 @@
 from __future__ import annotations
-from typing import Callable, Generic, TypeVar
 
-T = TypeVar("T")
+from typing import Any, Callable, Generic, TypeVar
 
 from .exceptions import ValidationError
+
+T = TypeVar("T")
 
 
 class Condition:
@@ -18,14 +19,14 @@ class Condition:
 class Validator:
     def __init__(self, err: str | None = None):
         if err:
-            self.err = f"{err}{"" if err.endswith(".") else "."}"
+            self.err = f"{err}{'' if err.endswith('.') else '.'}"
         else:
             self.err = ""
 
-    def __call__(self, value: any) -> any:
+    def __call__(self, value: Any) -> Any:
         self.validate(value=value)
 
-    def validate(self, value: any):
+    def validate(self, value: Any):
         try:
             self._validate(value)
         except Exception as e:
@@ -40,18 +41,18 @@ class Validator:
                     raise
                 raise ValidationError(str(e)) from e
 
-    def _validate(self, value: any):
+    def _validate(self, value: Any):
         raise NotImplementedError()
 
 
 class SchemaField(Generic[T]):
     def __init__(self):
-        self._default: any | None = None
+        self._default: Any | None = None
         self.validators: list[Validator] = []
         self.is_required: bool = True
         self.condition: Condition | None = None
-        self.pre_transform: Callable[[any], any] | None = None
-        self.post_transform: Callable[[T], any] | None = None
+        self.pre_transform: Callable[[Any], Any] | None = None
+        self.post_transform: Callable[[T], Any] | None = None
 
     def has(self, validator: Validator) -> SchemaField[T]:
         self.validators.append(validator)
@@ -69,15 +70,15 @@ class SchemaField(Generic[T]):
         self.is_required = False
         return self
 
-    def pre(self, func: Callable[[any], any]) -> "SchemaField[T]":
+    def pre(self, func: Callable[[Any], Any]) -> "SchemaField[T]":
         self.pre_transform = func
         return self
 
-    def post(self, func: Callable[[T], any]) -> "SchemaField[T]":
+    def post(self, func: Callable[[T], Any]) -> "SchemaField[T]":
         self.post_transform = func
         return self
 
-    def coerce(self, value: any) -> T:
+    def coerce(self, value: Any) -> T | None:
         return value  # Default implementation, subclasses should override if needed
 
 
@@ -97,7 +98,7 @@ class Schema:
 
     def validate(
         self, data: dict, partial: bool = False
-    ) -> tuple[bool, dict[str, list[str]], dict]:
+    ) -> tuple[bool, dict[str, list[tuple[str, str]]], dict]:
         """Validate data against the schema.
 
         Args:
@@ -105,10 +106,10 @@ class Schema:
             partial (bool): If True, only validate fields present in the data.
 
         Returns:
-            tuple[bool, dict[str, list[str]], dict]: A tuple containing a boolean indicating whether the data is valid, a dictionary of field errors, and a dictionary of coerced data.
+            tuple[bool, dict[str, list[tuple[str, str]]], dict]: A tuple containing a boolean indicating whether the data is valid, a dictionary of field errors, and a dictionary of coerced data.
         """
         is_valid = True
-        errors: dict[str, list[str]] = {}
+        errors: dict[str, list[tuple[str, str]]] = {}
         coerced_data = {}
 
         for field_name, field in self.fields.items():
@@ -140,7 +141,7 @@ class Schema:
                     if field.pre_transform:
                         value = field.pre_transform(value)
 
-                    field_errors = []
+                    field_errors: list[tuple[str, str]] = []
                     for validator in field.validators:
                         try:
                             validator(value)
@@ -157,12 +158,17 @@ class Schema:
                         coerced_data[field_name] = value
                 except Exception as e:
                     is_valid = False
-                    errors[field_name] = [str(e)]
+                    errors[field_name] = [("Exception", str(e))]
 
         if self._strict:
             extra_fields = set(data.keys()) - set(self.fields.keys())
             if extra_fields:
                 is_valid = False
-                errors["__extra__"] = [f"Unexpected fields: {', '.join(extra_fields)}"]
+                errors["__extra__"] = [
+                    (
+                        "StrictValidationError",
+                        f"Unexpected fields: {', '.join(extra_fields)}",
+                    )
+                ]
 
         return is_valid, errors, coerced_data

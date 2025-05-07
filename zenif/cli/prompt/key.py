@@ -1,9 +1,8 @@
-from .base import BasePrompt
 from ...schema import Schema, StringF
+from .base import BasePrompt
 
 
 class KeyPrompt(BasePrompt):
-
     def __init__(
         self,
         message: str,
@@ -19,10 +18,9 @@ class KeyPrompt(BasePrompt):
             error_message = f"KeyPrompt requires a StringF field, but got {field_type}"
             raise TypeError(error_message)
 
-    def keys(self, *keys):
+    def keys(self, *keys: str):
         """Set the keys for the prompt."""
-        keys = list(keys)
-        self._keys = keys
+        self._keys = list(keys)
         return self
 
     def ask(self) -> str:

@@ -1,6 +1,6 @@
-from .base import BasePrompt
-from ...schema import Schema, BooleanF
 from ...constants import Keys
+from ...schema import BooleanF, Schema
+from .base import BasePrompt
 
 
 class ConfirmPrompt(BasePrompt):
@@ -31,7 +31,9 @@ class ConfirmPrompt(BasePrompt):
         options = (
             ["y", "N"]
             if self._default is False
-            else ["Y", "n"] if self._default is True else ["y", "n"]
+            else ["Y", "n"]
+            if self._default is True
+            else ["y", "n"]
         )
         while True:
             self._print_prompt(
@@ -40,7 +42,9 @@ class ConfirmPrompt(BasePrompt):
                 default_option=(
                     "Y"
                     if self._default is True
-                    else "N" if self._default is False else None
+                    else "N"
+                    if self._default is False
+                    else None
                 ),
             )
             key = self._get_key().lower()
@@ -63,7 +67,9 @@ class ConfirmPrompt(BasePrompt):
                         default_option=(
                             "Y"
                             if self._default is True
-                            else "N" if self._default is False else None
+                            else "N"
+                            if self._default is False
+                            else None
                         ),
                     )
                     print()

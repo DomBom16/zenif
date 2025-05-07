@@ -269,10 +269,9 @@ def setup():
     """Interactive setup command with schema validation"""
     name = Prompt.text("Enter your name", schema=user_schema, id="name").ask()
     age = Prompt.number("Enter your age", schema=user_schema, id="age").ask()
-    interests = Prompt.checkbox("Select your interests",
-                                choices=["Reading", "Gaming", "Sports", "Cooking", "Travel"],
-                                schema=user_schema,
-                                id="interests").ask()
+    interests = Prompt.checkbox("Select your interests", schema=user_schema, id="interests")
+                      .choices("Reading", "Gaming", "Sports", "Cooking", "Travel")
+                      .ask()
 
     return f"Name: {name}, Age: {age}, Interests: {interests}"
 

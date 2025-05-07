@@ -1,0 +1,18 @@
+This is a sample text file for testing the single command demo.
+It contains multiple lines of text that can be processed.
+
+Line 1: Simple text processing.
+Line 2: Testing command line flags.
+Line 3: The quick brown fox jumps over the lazy dog.
+Line 4: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Line 5: Testing the --limit/-l parameter.
+Line 6: Checking verbose output with -v.
+Line 7: Testing file output with -o/--output.
+Line 8: The zenif CLI framework makes it easy to build command-line tools.
+Line 9: This line will be converted to uppercase in the demo.
+Line 10: Testing the line limit - this might not appear if limit < 10.
+Line 11: Another line that might be truncated.
+Line 12: The answer to life, the universe, and everything is 42.
+Line 13: Testing single command mode functionality.
+Line 14: Nearly at the end of the sample file.
+Line 15: Last line of the sample file.

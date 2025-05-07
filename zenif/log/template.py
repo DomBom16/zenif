@@ -1,15 +1,15 @@
-from ..utils import strip_ansi, colorize
-
 from copy import deepcopy
-from shutil import get_terminal_size as tsize
 from math import inf
-from colorama import init, Fore, Back, Style
+from shutil import get_terminal_size as tsize
+from typing import Any
 
-# init(autoreset=True)
+from colorama import Style
+
+from ..utils import colorize, strip_ansi
 
 
-def shorthand(shorthand: str) -> str:
-    shorthands = {
+def shorthand(shorthand: str) -> list[dict]:
+    shorthands: dict[str, list[dict]] = {
         "default": [
             {
                 "type": "template",
@@ -518,9 +518,8 @@ class LastProcessed:
 
 
 class TemplateEngine:
-
     def __init__(self):
-        self.processors: dict[str, any] = {
+        self.processors: dict[str, Any] = {
             # Main processors
             "align": self.__process_align,
             "case": self.__process_case,
@@ -543,7 +542,7 @@ class TemplateEngine:
         self.processed: LastProcessed = LastProcessed()
 
     def process(
-        self, template: list[dict[str, any]] | str, context: dict[str, any], level: str
+        self, template: list[dict[str, Any]] | str, context: dict[str, Any], level: str
     ) -> str:
         if isinstance(template, str):
             template = shorthand(template)
@@ -580,8 +579,8 @@ class TemplateEngine:
         return result
 
     def __process_parameters(
-        self, value: str, parameters: list[dict[str, any]]
-    ) -> tuple[str, dict[str, any]]:
+        self, value: str, parameters: list[dict[str, Any]]
+    ) -> tuple[str, dict[str, Any]]:
         last_parameters = {k: None for k in self.last_processors}
 
         for parameter in parameters:
@@ -600,8 +599,8 @@ class TemplateEngine:
         return value, last_parameters
 
     def __process_if(
-        self, value: str, pvalue: dict[str, any]
-    ) -> tuple[str, dict[str, any]]:
+        self, value: str, pvalue: dict[str, Any]
+    ) -> tuple[str, dict[str, Any]]:
         pvalue = self.__process_pvalue(pvalue, {"condition": {}, "action": {}})
         condition_type = pvalue["condition"].get("type", None).lower()
         condition_value = pvalue["condition"].get("value", None)
@@ -635,7 +634,7 @@ class TemplateEngine:
         return value, last_parameters
 
     def __evaluate_condition(
-        self, condition_type: str, condition_value: any, value: str
+        self, condition_type: str, condition_value: Any, value: str
     ) -> bool:
         if condition_type == "breakpoint":
             bp = self.__process_pvalue((condition_value or {}), {"min": 0, "max": inf})
@@ -654,7 +653,7 @@ class TemplateEngine:
             return False
 
     def __get_segment_value(
-        self, segment: dict[str, any], context: dict[str, any]
+        self, segment: dict[str, Any], context: dict[str, Any]
     ) -> str:
         if segment["type"] != "template":
             self.__tempname = ""
@@ -662,7 +661,7 @@ class TemplateEngine:
         self.__tempname = segment["value"]
         return str(context.get(segment["value"], ""))
 
-    def __process_pvalue(self, value: any, default: any) -> any:
+    def __process_pvalue(self, value: Any, default: Any) -> Any:
         if not isinstance(value, type(default)):
             raise TypeError(f"Value {value} must be type {type(default)}")
         if isinstance(value, dict):
@@ -672,7 +671,7 @@ class TemplateEngine:
             value = default
         return value
 
-    def __process_align(self, value: str, pvalue: dict[str, any]) -> str:
+    def __process_align(self, value: str, pvalue: dict[str, Any]) -> str:
         pvalue = self.__process_pvalue(
             pvalue, {"alignment": "left", "width": 10, "fillchar": " "}
         )
@@ -709,11 +708,11 @@ class TemplateEngine:
                 "Invalid case value. Try 'upper', 'lower', 'capitalize', 'swapcase', 'title'"
             )
 
-    def __process_affix(self, value: str, pvalue: dict[str, any]) -> str:
+    def __process_affix(self, value: str, pvalue: dict[str, Any]) -> str:
         pvalue = self.__process_pvalue(pvalue, {"prefix": "", "suffix": ""})
         return pvalue["prefix"] + value + pvalue["suffix"]
 
-    def __process_truncate(self, value: str, pvalue: dict[str, any]) -> str:
+    def __process_truncate(self, value: str, pvalue: dict[str, Any]) -> str:
         pvalue = self.__process_pvalue(
             pvalue, {"width": 10, "marker": "…", "position": "end"}
         )
@@ -740,7 +739,7 @@ class TemplateEngine:
 
         return value
 
-    def __process_mask(self, value: str, pvalue: dict[str, any]) -> str:
+    def __process_mask(self, value: str, pvalue: dict[str, Any]) -> str:
         pvalue = self.__process_pvalue(
             pvalue, {"width": (10, 4), "masker": "*", "position": "end"}
         )
@@ -756,7 +755,7 @@ class TemplateEngine:
         else:
             raise ValueError("Invalid mask position. Try 'end', 'middle', 'start'")
 
-    def __process_pad(self, value: str, pvalue: dict[str, any]) -> str:
+    def __process_pad(self, value: str, pvalue: dict[str, Any]) -> str:
         pvalue = self.__process_pvalue(pvalue, {"left": 0, "right": 0, "fillchar": " "})
         return f"{(pvalue['fillchar'][0] * pvalue['left'])}{value}{(pvalue['fillchar'][0] * pvalue['right'])}"
 
@@ -779,6 +778,7 @@ class TemplateEngine:
                 return value if terminal_width < int(pvalue[1:]) else ""
         elif isinstance(pvalue, int):
             return value if terminal_width >= pvalue else ""
+        return ""
 
     def __process_style(self, value: str, pvalue: dict[str, bool]) -> str:
         pvalue = self.__process_pvalue(
@@ -804,7 +804,7 @@ class TemplateEngine:
             style.append("\x1b[7m")
         return f"{''.join(style)}{value}{Style.RESET_ALL}" if style else value
 
-    def __process_color(self, value: str, pvalue: dict[str, any]) -> str:
+    def __process_color(self, value: str, pvalue: dict[str, Any]) -> str:
         pvalue = self.__process_pvalue(
             pvalue, {"foreground": (), "fgcmap": None, "background": (), "bgcmap": None}
         )

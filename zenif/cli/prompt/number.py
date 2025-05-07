@@ -1,9 +1,10 @@
-from .base import BasePrompt
-from ...schema import Schema, FloatF, IntegerF
-from ...constants import Keys
-
 import shutil
+
 from colorama import Style
+
+from ...constants import Keys
+from ...schema import FloatF, IntegerF, Schema
+from .base import BasePrompt
 
 
 class NumberPrompt(BasePrompt):

@@ -10,6 +10,10 @@ The `ask()` method is your entry gate into the terminal. When chaining this with
 
 Available for the `text`, `confirm`, and `number` types. If a default is given, the user can submit an empty field and the default value will be used as their submission.
 
+### `choices()`
+
+Available for the `choice` and `checkbox` types. Based off the inputted string or list arguments, assign the list of choices to be shown to the user. All passed in arguments are flattened into one list.
+
 ### `peeper()`
 
 Available for the `password` type. When enabled, masked inputs will show the last character if it was just typed. If `Space` or `Backspace` are pressed, the last character of the input will not be visible. After submitting, the "peeper" character will not be visible.

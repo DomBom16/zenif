@@ -1,60 +1,61 @@
 from __future__ import annotations
 
-from .core import SchemaField
-
-from enum import Enum
-from datetime import datetime
 from ast import literal_eval
+from datetime import datetime
+from enum import Enum
+from typing import Any
+
+from .core import SchemaField
 
 
 class StringF(SchemaField[str]):
-    def coerce(self, value: any) -> str:
+    def coerce(self, value: Any) -> str:
         try:
             return str(value)
-        except Exception as e:
+        except Exception:
             # Fallback: return an empty string on conversion failure
             return ""
 
 
 class IntegerF(SchemaField[int]):
-    def coerce(self, value: any) -> int:
+    def coerce(self, value: Any) -> int:
         try:
             # Attempt to convert to float first to handle numeric strings
             return int(float(value))
-        except Exception as e:
+        except Exception:
             # Fallback: return 0 on conversion failure
             return 0
 
 
 class FloatF(SchemaField[float]):
-    def coerce(self, value: any) -> float:
+    def coerce(self, value: Any) -> float:
         try:
             return float(value)
-        except Exception as e:
+        except Exception:
             # Fallback: return 0.0 on conversion failure
             return 0.0
 
 
 class BooleanF(SchemaField[bool]):
-    def coerce(self, value: any) -> bool:
+    def coerce(self, value: Any) -> bool:
         try:
             if isinstance(value, str):
                 lowered = value.lower()
-                if lowered in ('true', '1', 'yes'):
+                if lowered in ("true", "1", "yes"):
                     return True
-                elif lowered in ('false', '0', 'no'):
+                elif lowered in ("false", "0", "no"):
                     return False
                 else:
                     # Fallback: return False for unrecognized boolean strings
                     return False
             return bool(value)
-        except Exception as e:
+        except Exception:
             # Fallback: return False on conversion failure
             return False
 
 
 class DateF(SchemaField[datetime]):
-    def coerce(self, value: any) -> datetime | None:
+    def coerce(self, value: Any) -> datetime | None:
         try:
             if isinstance(value, str):
                 return datetime.fromisoformat(value)
@@ -68,7 +69,7 @@ class DateF(SchemaField[datetime]):
                 return value
             # Fallback: return None if no valid conversion is possible
             return None
-        except Exception as e:
+        except Exception:
             # Fallback: return None on conversion failure
             return None
 
@@ -82,14 +83,14 @@ class EnumF(SchemaField[Enum]):
         self._enum_class = enum_class
         return self
 
-    def coerce(self, value: any) -> Enum | None:
+    def coerce(self, value: Any) -> Enum | None:
         if self._enum_class is None:
             return None
         try:
             if isinstance(value, str):
                 return self._enum_class[value.upper()]
             return self._enum_class(value)
-        except Exception as e:
+        except Exception:
             # Fallback: return None on conversion failure
             return None
 
@@ -103,7 +104,7 @@ class ListF(SchemaField[list]):
         self._item_type = item_type
         return self
 
-    def coerce(self, value: any) -> list:
+    def coerce(self, value: Any) -> list:
         try:
             if isinstance(value, str):
                 value = literal_eval(value)
@@ -112,7 +113,7 @@ class ListF(SchemaField[list]):
             if self._item_type:
                 return [self._item_type.coerce(item) for item in value]
             return value
-        except Exception as e:
+        except Exception:
             # Fallback: return an empty list on conversion failure
             return []
 
@@ -131,7 +132,7 @@ class DictF(SchemaField[dict]):
         self._value_type = value_type
         return self
 
-    def coerce(self, value: any) -> dict:
+    def coerce(self, value: Any) -> dict:
         try:
             if isinstance(value, str):
                 value = literal_eval(value)
@@ -144,6 +145,6 @@ class DictF(SchemaField[dict]):
                     for k, v in value.items()
                 }
             return value
-        except Exception as e:
+        except Exception:
             # Fallback: return an empty dict on conversion failure
             return {}

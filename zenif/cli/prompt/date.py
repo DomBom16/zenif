@@ -1,11 +1,12 @@
-from .base import BasePrompt
-from ...schema import Schema, DateF
-from ...constants import Keys, Cursor
-from ...decorators import enforce_types
-
-from colorama import Fore, Back, Style
 from datetime import datetime
 from math import floor
+
+from colorama import Back, Fore, Style
+
+from ...constants import Cursor, Keys
+from ...decorators import enforce_types
+from ...schema import DateF, Schema
+from .base import BasePrompt
 
 
 class DatePrompt(BasePrompt):
@@ -51,7 +52,7 @@ class DatePrompt(BasePrompt):
     @enforce_types
     def year_range(self, start: int, end: int) -> "DatePrompt":
         """Set the minimum and maximum years for the prompt. Any values that exceed the range will be capped."""
-        self._year_range = (start, end)
+        self._year_range = (max(0, start), end)
         return self
 
     def separator(self, sep: str) -> "DatePrompt":
@@ -78,7 +79,11 @@ class DatePrompt(BasePrompt):
             controls = "←/→ to navigate, Tab to highlight, Enter to confirm"
 
             error = self.validate(
-                f"{self.month or 'MM'}/{self.day or 'DD'}/{self.year or 'YYYY'}"
+                datetime(
+                    int(self.year or -1), int(self.month or -1), int(self.day or -1)
+                )
+                if self.year and self.month and self.day
+                else None
             )
 
             for _ in range(3):
@@ -86,7 +91,7 @@ class DatePrompt(BasePrompt):
             self._print_prompt(self.message, error=error)
             print(f"\n{Fore.RESET}{Style.DIM}  {controls}")
 
-            formatted_value = f"  {Fore.YELLOW}{Back.RESET}{"" if self.current_field_idx == 0 else Style.DIM}{f"{Fore.BLACK}{Back.YELLOW}" if self.current_field_idx == 0 and fresh else ''}"
+            formatted_value = f"  {Fore.YELLOW}{Back.RESET}{'' if self.current_field_idx == 0 else Style.DIM}{f'{Fore.BLACK}{Back.YELLOW}' if self.current_field_idx == 0 and fresh else ''}"
 
             formatted_value += (
                 (self.month or "MM").rjust(2, "0")
@@ -94,7 +99,7 @@ class DatePrompt(BasePrompt):
                 else (self.day or "DD").rjust(2, "0")
             )
 
-            formatted_value += f"{Fore.YELLOW}{Back.RESET}{Style.DIM}{self._sep}{Style.NORMAL if self.current_field_idx == 1 else ""}{f"{Fore.BLACK}{Back.YELLOW}" if self.current_field_idx == 1 and fresh else ''}"
+            formatted_value += f"{Fore.YELLOW}{Back.RESET}{Style.DIM}{self._sep}{Style.NORMAL if self.current_field_idx == 1 else ''}{f'{Fore.BLACK}{Back.YELLOW}' if self.current_field_idx == 1 and fresh else ''}"
 
             formatted_value += (
                 (self.day or "DD").rjust(2, "0")
@@ -102,7 +107,7 @@ class DatePrompt(BasePrompt):
                 else (self.month or "MM").rjust(2, "0")
             )
 
-            formatted_value += f"{Fore.YELLOW}{Back.RESET}{Style.DIM}{self._sep}{Style.NORMAL if self.current_field_idx == 2 else ""}{f"{Fore.BLACK}{Back.YELLOW}" if self.current_field_idx == 2 and fresh else ''}"
+            formatted_value += f"{Fore.YELLOW}{Back.RESET}{Style.DIM}{self._sep}{Style.NORMAL if self.current_field_idx == 2 else ''}{f'{Fore.BLACK}{Back.YELLOW}' if self.current_field_idx == 2 and fresh else ''}"
 
             formatted_value += (self.year or "YYYY").rjust(4, "0")
 
@@ -124,11 +129,16 @@ class DatePrompt(BasePrompt):
                     self.year = str(self._year_range[0])
                 fresh = char == Keys.STAB
             elif char == Keys.ENTER:  # Enter key
-                # check if all fields are filled
+                # check if all fields are filled and valid
                 if (
-                    1 <= int(self.day) <= 31
-                    and 1 <= int(self.month) <= 12
-                    and (self._year_range[0] <= int(self.year) <= self._year_range[1])
+                    1 <= int(self.day or -1) <= 31
+                    and 1 <= int(self.month or -1) <= 12
+                    and (
+                        self._year_range[0]
+                        <= int(self.year or -1)
+                        <= self._year_range[1]
+                    )
+                    and not error
                 ):
                     months = [
                         "January",
@@ -150,7 +160,7 @@ class DatePrompt(BasePrompt):
                     self._print_prompt(
                         self.message,
                         (
-                            f"{months[int(self.month or 0) - 1]} {self.day or ""}, {self.year or ""}"
+                            f"{months[int(self.month or 0) - 1]} {self.day or ''}, {self.year or ''}"
                             if self._show_words
                             else f"{int(self.month if self._month_first else self.day)}{self._sep}{int(self.day if self._month_first else self.month)}{self._sep}{int(self.year)}"
                         ),
