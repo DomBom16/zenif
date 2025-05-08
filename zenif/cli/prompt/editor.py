@@ -83,10 +83,6 @@ class EditorPrompt(BasePrompt):
     def ask(self) -> str:
         """Prompt the user for input."""
 
-        # Logger({"log_line": {"format": "simple"}}).warning(
-        #     "EditorPrompt is in a very experimental state. Use at your own risk. Known issues can be found at https://github.com/DomBom16/zenif/blob/main/docs/extra/editor-prompt-known-issues.md."
-        # )
-
         # Prompt and error on first line
         # Controls on second line
         # Editor on third line and extends downward

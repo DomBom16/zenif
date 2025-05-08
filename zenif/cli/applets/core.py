@@ -9,7 +9,7 @@ from .exceptions import AppletError
 from .formatters import HelpFormatter
 from .installer import install_setup
 from .parameters import _alias, _arg, _flag, _opt
-from .parser import parse_command_args
+from .parser import parse
 
 L = Logger({"log_line": {"format": []}})
 
@@ -23,16 +23,18 @@ class Applet:
     flags, as well as setting up callbacks for root, help, and pre-command execution.
     """
 
-    def __init__(self, mode: str = "multi"):
+    def __init__(self, single: bool = False):
         """
         Initialize the Applet CLI framework.
 
         Args:
-            mode: The mode of operation - "multi" (default) for subcommands or
-                 "single" for a single command CLI
+            single: Whether the applet operates in single command mode (default: False)
         """
-        self.name = os.path.basename(sys.argv[0]) or "zenif-applet"
-        self.mode = mode  # 'multi' or 'single'
+        self.name = (
+            os.path.basename(sys.argv[0]) or "zenif-applet"
+        )  # Strip the file extension from the basename
+        self.name = os.path.splitext(self.name)[0]
+        self.single = single
 
         self.commands: dict[str, Callable] = {}
         self.aliases: dict[str, str] = {}
@@ -108,10 +110,7 @@ class Applet:
         return decorator(func)
 
     def install(self, path: str) -> Callable:
-        """Exposes a install command for the Applet.
-
-        _**NOTE:** install is not intended for production use. Only use for development._
-        """
+        """Exposes a install command for the Applet."""
         return install_setup(self, path)
 
     def _install_help(self) -> Callable:
@@ -158,7 +157,7 @@ class Applet:
             return decorator
         return decorator(func)
 
-    def main(self, func: Callable | None = None) -> Callable:
+    def single(self, func: Callable | None = None) -> Callable:
         """
         Decorator to set a callback for the main command in single command mode.
         """
@@ -186,7 +185,7 @@ class Applet:
         help_flags = ["-h", "--help"]
 
         # SINGLE COMMAND MODE
-        if self.mode == "single":
+        if self.single:
             # If help is requested, show help for the main command
             if args and any(arg in help_flags for arg in args):
                 if self.help_callback:
@@ -209,7 +208,7 @@ class Applet:
                         if result is not None:
                             L.info(result)
 
-                    parsed_args = parse_command_args(self.main_command, args)
+                    parsed_args = parse(self.main_command, args)
                     print(f"\x1b]2;{self.name} {' '.join(args)}\x07", end="")
                     result = self.main_command(**parsed_args)
                     if result is not None:
@@ -251,7 +250,7 @@ class Applet:
         # Handle no arguments - run root callback if defined
         if not args:
             if self.root_callback:  # Use root_callback consistently
-                parsed_args = parse_command_args(self.root_callback, args)
+                parsed_args = parse(self.root_callback, args)
                 result = self.root_callback(**parsed_args)
                 if result is not None:
                     L.info(result)
@@ -290,7 +289,7 @@ class Applet:
                 return
 
             try:
-                parsed_args = parse_command_args(self.root_callback, args)
+                parsed_args = parse(self.root_callback, args)
                 result = self.root_callback(**parsed_args)
                 if result is not None:
                     L.info(result)
@@ -348,7 +347,7 @@ class Applet:
                 self.print_command_help(command_name)
                 return
 
-            parsed_args = parse_command_args(command, args[1:])
+            parsed_args = parse(command, args[1:])
             primary_name = getattr(command, "_primary_name", command_name)
             print(
                 f"\x1b]2;{self.name} {primary_name} {' '.join(args[1:])}\x07",
@@ -394,7 +393,7 @@ class Applet:
                     if result is not None:
                         L.info(result)
                 try:
-                    parsed_args = parse_command_args(self.root_callback, args)
+                    parsed_args = parse(self.root_callback, args)
                     print(f"\x1b]2;{self.name} {' '.join(args)}\x07", end="")
                     result = self.root_callback(**parsed_args)
                     if result is not None:
@@ -424,7 +423,7 @@ class Applet:
                     L.info(result)
             try:
                 command = self.commands[command_name]
-                parsed_args = parse_command_args(command, args)
+                parsed_args = parse(command, args)
                 primary_name = getattr(command, "_primary_name", command_name)
                 print(f"\x1b]2;{self.name} {primary_name}\x07", end="")
                 result = command(**parsed_args)
@@ -446,7 +445,7 @@ class Applet:
 
     def print_help(self) -> None:
         """Print the help text for the Applet."""
-        if self.mode == "single" and self.main_command:
+        if self.single and self.main_command:
             # In single mode, just show help for the main command
             help_text = HelpFormatter.format_command_help(self.name, self.main_command)
             print(help_text)

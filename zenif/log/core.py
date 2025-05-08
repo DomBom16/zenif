@@ -42,7 +42,7 @@ class Logger:
             "lethal": {"name": "lethal", "level": 5, "color": Fore.MAGENTA},
         }
 
-        self.defaults: dict[str, Any] = {
+        self.defaults: dict[str, dict[str, Any]] = {
             "timestamps": {
                 "always_show": False,
                 "use_utc": False,

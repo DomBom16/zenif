@@ -10,6 +10,7 @@ Zenif includes a CLI (Command Line Interface) module that allows you to easily c
     - [Getting Started with Applets](#getting-started-with-applets)
     - [Using install() for Development](#using-install-for-development)
     - [Special Callback Decorators](#special-callback-decorators)
+    - [Single Command Mode](#single-command-mode)
   - [Prompts](#prompts)
     - [Getting Started With Prompts](#getting-started-with-prompts)
     - [Types of Prompts](#types-of-prompts)
@@ -136,7 +137,7 @@ Here's the code put together.
 ```python
 from zenif.cli import Applet
 
-app = Applet(name="demo")
+app = Applet()
 
 @app.command(aliases=["hello", "hi"])
 @app.arg("name", help="Name to greet")
@@ -159,6 +160,8 @@ def root():
 if __name__ == '__main__':
     app.run()
 ```
+
+Learn how you can simplify this code by using [Single Command Mode](#single-command-mode).
 
 ### Using install() for Development
 
@@ -205,6 +208,32 @@ def before(cmd: str, args: list[str]):
 @app.help
 def help():
     return "Help is being shown." # This is logged when help is triggered.
+
+if __name__ == '__main__':
+    app.run()
+```
+
+### Single Command Mode
+
+Sometimes you want to set up your CLI application to not have any subcommands, and run a single command directly. In order to do this, initialize the Applet with `single=True`. We can convert our greet CLI to use `@app.single` instead of `@app.command` and `@app.root`:
+
+```python
+from zenif.cli import Applet, Prompt
+
+app = Applet(single=True)
+
+@app.single
+@app.arg("name", help="Name to greet")
+@app.opt("greeting", default="Hello", help="Greeting to use")
+@app.flag("shout", help="Print in uppercase")
+@app.alias("greeting", "g")
+@app.alias("shout", "s")
+def greet(name: str, greeting: str, shout: bool = False):
+    """Greet a person."""
+    message = f"{greeting}, {name}!"
+    if shout:
+        message = message.upper()
+    return message
 
 if __name__ == '__main__':
     app.run()

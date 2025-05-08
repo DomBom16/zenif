@@ -6,7 +6,7 @@ import os
 # Add the project root to sys.path to ensure imports work
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from zenif.cli.applets.custom_parser import parse_command_args
+from zenif.cli.applets.parser import parse
 from zenif.cli.applets.parameters import Parameter
 from zenif.cli.applets.exceptions import AppletError
 
@@ -89,7 +89,7 @@ class TestCustomParser(unittest.TestCase):
     def test_positional_arguments(self):
         """Test parsing of positional arguments"""
         args = ["/path/to/dir"]
-        result = parse_command_args(self.cmd_with_params, args)
+        result = parse(self.cmd_with_params, args)
         self.assertEqual(result["path"], "/path/to/dir")
         self.assertEqual(result["depth"], 1)  # Default value
         self.assertFalse(result["quiet"])  # Default value
@@ -97,7 +97,7 @@ class TestCustomParser(unittest.TestCase):
     def test_options_standard_format(self):
         """Test parsing options in --option value format"""
         args = ["/path/to/dir", "--depth", "5", "--mode", "advanced"]
-        result = parse_command_args(self.cmd_with_params, args)
+        result = parse(self.cmd_with_params, args)
         self.assertEqual(result["path"], "/path/to/dir")
         self.assertEqual(result["depth"], "5")
         self.assertEqual(result["mode"], "advanced")
@@ -105,7 +105,7 @@ class TestCustomParser(unittest.TestCase):
     def test_options_equal_format(self):
         """Test parsing options in --option=value format"""
         args = ["/path/to/dir", "--depth=5", "--mode=advanced"]
-        result = parse_command_args(self.cmd_with_params, args)
+        result = parse(self.cmd_with_params, args)
         self.assertEqual(result["path"], "/path/to/dir")
         self.assertEqual(result["depth"], "5")
         self.assertEqual(result["mode"], "advanced")
@@ -113,39 +113,39 @@ class TestCustomParser(unittest.TestCase):
     def test_short_options(self):
         """Test parsing short options based on first letter"""
         args = ["/path/to/dir", "-d", "5", "-m", "advanced"]
-        result = parse_command_args(self.cmd_with_params, args)
+        result = parse(self.cmd_with_params, args)
         self.assertEqual(result["depth"], "5")
         self.assertEqual(result["mode"], "advanced")
 
     def test_short_options_equal_format(self):
         """Test parsing short options in -o=value format"""
         args = ["/path/to/dir", "-d=5", "-m=advanced"]
-        result = parse_command_args(self.cmd_with_params, args)
+        result = parse(self.cmd_with_params, args)
         self.assertEqual(result["depth"], "5")
         self.assertEqual(result["mode"], "advanced")
 
     def test_short_options_joined_numeric(self):
         """Test parsing short options in -o10 format (for numeric values)"""
         args = ["/path/to/dir", "-d5"]
-        result = parse_command_args(self.cmd_with_params, args)
+        result = parse(self.cmd_with_params, args)
         self.assertEqual(result["depth"], "5")
 
     def test_flags(self):
         """Test parsing boolean flags"""
         args = ["/path/to/dir", "--quiet"]
-        result = parse_command_args(self.cmd_with_params, args)
+        result = parse(self.cmd_with_params, args)
         self.assertTrue(result["quiet"])
 
     def test_short_flags(self):
         """Test parsing short boolean flags"""
         args = ["/path/to/dir", "-q"]
-        result = parse_command_args(self.cmd_with_params, args)
+        result = parse(self.cmd_with_params, args)
         self.assertTrue(result["quiet"])
 
     def test_aliases(self):
         """Test parsing options and flags with aliases"""
         args = ["/path/to/file", "-v", "-f", "json"]
-        result = parse_command_args(self.cmd_with_aliases, args)
+        result = parse(self.cmd_with_aliases, args)
         self.assertEqual(result["target"], "/path/to/file")
         self.assertTrue(result["verbose"])
         self.assertEqual(result["format"], "json")
@@ -153,7 +153,7 @@ class TestCustomParser(unittest.TestCase):
     def test_mixed_args(self):
         """Test parsing a mix of different argument types"""
         args = ["/path/to/dir", "-q", "--depth=5", "-m", "advanced"]
-        result = parse_command_args(self.cmd_with_params, args)
+        result = parse(self.cmd_with_params, args)
         self.assertEqual(result["path"], "/path/to/dir")
         self.assertEqual(result["depth"], "5")
         self.assertTrue(result["quiet"])
@@ -162,7 +162,7 @@ class TestCustomParser(unittest.TestCase):
     def test_root_command(self):
         """Test parsing arguments for a root command"""
         args = ["--branch", "develop", "--all"]
-        result = parse_command_args(self.root_function, args)
+        result = parse(self.root_function, args)
         self.assertEqual(result["branch"], "develop")
         self.assertTrue(result["all"])
 
@@ -170,13 +170,13 @@ class TestCustomParser(unittest.TestCase):
         """Test that an error is raised when a required argument is missing"""
         args = []
         with self.assertRaises(AppletError):
-            parse_command_args(self.cmd_with_params, args)
+            parse(self.cmd_with_params, args)
 
     def test_unknown_option(self):
         """Test that an error is raised for unknown options"""
         args = ["/path/to/dir", "--unknown", "value"]
         with self.assertRaises(AppletError):
-            parse_command_args(self.cmd_with_params, args)
+            parse(self.cmd_with_params, args)
 
 
 if __name__ == "__main__":

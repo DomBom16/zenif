@@ -21,7 +21,7 @@ def _split_joined_opt(arg: str) -> Tuple[str, str]:
     return arg, ""
 
 
-class CustomCommandParser:
+class CommandParser:
     """
     A custom command parser for the Applet framework that supports various argument formats:
     - Positional arguments: cli path
@@ -254,7 +254,7 @@ class CustomCommandParser:
         return result
 
 
-def parse_command_args(command: Callable, args: List[str]) -> Dict[str, Any]:
+def parse(command: Callable, args: List[str]) -> Dict[str, Any]:
     """
     Parse command arguments using the custom parser.
     Returns a dictionary mapping parameter names to their values.
@@ -266,7 +266,7 @@ def parse_command_args(command: Callable, args: List[str]) -> Dict[str, Any]:
     if any(arg in HELP_FLAGS for arg in args):
         raise AppletError("Help requested")
 
-    parser = CustomCommandParser(command)
+    parser = CommandParser(command)
     try:
         return parser.parse_args(args)
     except AppletError as e:

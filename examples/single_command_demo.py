@@ -27,10 +27,10 @@ from zenif.log import Logger
 logger = Logger({"log_line": {"format": []}})
 
 # Create applet in single command mode
-app = Applet(mode="single")
+app = Applet(single=True)
 
 
-@app.main
+@app.single
 @app.arg("file", help="Input file to process")
 @app.opt("output", default="output.txt", help="Output file name")
 @app.opt("limit", default=10, help="Limit the number of lines processed")
@@ -79,12 +79,6 @@ def process(file, output, limit, verbose, overwrite):
 
     except Exception as e:
         return f"Error processing file: {str(e)}"
-
-
-@app.help
-def show_help():
-    """Custom help handler"""
-    return "File Processing Tool - Single Command Demo"
 
 
 def main():
