@@ -167,7 +167,7 @@ Learn how you can simplify this code by using [Single Command Mode](#single-comm
 
 The CLI module comes with a handy method that lets you install the given file as a symlink that can be run from anywhere. By using the `app.install()` method within your script, the targeted `Applet` will now show the `install` command. When run, you will be brought through an quick and simple installation flow.
 
-> **Important**
+> [!IMPORTANT]
 > This is intended for development use only. Do not use `install()` in production environments.
 
 ```python
