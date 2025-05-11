@@ -187,6 +187,8 @@ Zenif’s CLI now supports additional callback decorators that allow you to defi
   Runs when no subcommand is passed. If the callback returns a value, it is logged to the terminal.
 - Before Command Callback (`@app.before`)
   Runs just before a subcommand is executed. It receives the subcommand name and its arguments; any returned value is logged.
+- After Command Callback (`@app.after`)
+  Runs after a subcommand is executed. It receives the subcommand name and its arguments; any returned value is logged.
 - Help Callback (`@app.help`)
   Runs whenever help is shown. Its return value is logged as well.
 
@@ -204,6 +206,10 @@ def root():
 @app.before
 def before(cmd: str, args: list[str]):
     return f"About to execute command '{cmd}' with arguments: {args}" # Logged before the command runs.
+
+@app.after
+def after(cmd: str, args: list[str]):
+    return f"Command '{cmd}' with arguments: {args} has finished." # Logged after the command runs.
 
 @app.help
 def help():

@@ -5,9 +5,9 @@ from colorama import Fore, Back, Style
 from .parameters import Parameter
 
 
-class HelpFormatter:
+class Help:
     @staticmethod
-    def format_cli_help(cli_name: str, commands: dict[str, Any]) -> str:
+    def cli(cli_name: str, commands: dict[str, Any]) -> str:
         """
         Format help text for the entire CLI application in a visually pleasing style.
         Commands with aliases will display like "fetch, f".
@@ -44,7 +44,7 @@ class HelpFormatter:
         return "\n".join(lines)
 
     @staticmethod
-    def format_command_help(command_name: str, command: Any) -> str:
+    def cmd(command_name: str, command: Any) -> str:
         """
         Format help text for a single command.
         If the command has aliases, list them next to the command name.

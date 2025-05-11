@@ -46,7 +46,7 @@ def _ensure_aparams(func: Callable) -> dict[str, Parameter]:
     return func._cli_params
 
 
-def _arg(name: str, *, help: str = "") -> Callable:
+def arg(name: str, *, help: str = "") -> Callable:
     def decorator(func: Callable) -> Callable:
         cli_params = _ensure_aparams(func)
         cli_params[name] = Parameter(
@@ -59,7 +59,7 @@ def _arg(name: str, *, help: str = "") -> Callable:
     return decorator
 
 
-def _opt(name: str, *, default: Any = None, help: str = "") -> Callable:
+def opt(name: str, *, default: Any = None, help: str = "") -> Callable:
     def decorator(func: Callable) -> Callable:
         cli_params = _ensure_aparams(func)
         cli_params[name] = Parameter(
@@ -73,7 +73,7 @@ def _opt(name: str, *, default: Any = None, help: str = "") -> Callable:
     return decorator
 
 
-def _flag(name: str, *, help: str = "") -> Callable:
+def flag(name: str, *, help: str = "") -> Callable:
     if name in ("help", "h"):
         raise ValueError("The 'help' flag is reserved for the help command.")
 
@@ -90,7 +90,7 @@ def _flag(name: str, *, help: str = "") -> Callable:
     return decorator
 
 
-def _alias(name: str, alias: str) -> Callable:
+def alias(name: str, alias: str) -> Callable:
     if name in ("help", "h"):
         raise ValueError("The 'help' flag is reserved for the help command.")
 

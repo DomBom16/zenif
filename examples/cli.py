@@ -17,7 +17,6 @@ from zenif.schema import (
     Regex,
     Schema,
     StringF,
-    Truthy,
     ValidationError,
     Validator,
     Value,
@@ -31,7 +30,7 @@ a = Applet()
 a.install(os.path.abspath(__file__))
 
 
-@a.root
+# @a.root
 @a.command(aliases=["f"])
 @a.arg("branch", help="The branch to fetch")
 @a.opt("depth", default=10, help="The depth to use")
@@ -80,7 +79,7 @@ def test_prompts():
 
     s = Schema(
         {
-            "are_you_sure": BooleanF().has(Truthy()),
+            "are_you_sure": BooleanF(),
             "name": StringF().has(Length(min=3, max=50)),
             "email": StringF().has(Email()),
             "password": StringF()
@@ -124,23 +123,6 @@ def test_prompts():
 
     p.keypress("Press a, b, or c").keys("a", "b", "c").ask()
 
-    L.info(
-        s.validate(
-            {
-                "are_you_sure": False,
-                "name": "Al",
-                "email": "invalid-email",
-                "password": "",
-                "date": "not-a-date",
-                "salary": -500,
-                "age": 15,
-                "editor": "",
-                "interests": ["Re"],
-                "fav_interest": "This can always be valid",
-            }
-        )
-    )
-
     if (
         not p.confirm("Are you sure you want to continue?", s, "are_you_sure")
         .default(True)
@@ -170,6 +152,7 @@ def test_prompts():
     L.info(
         s.validate(
             {
+                "are_you_sure": True,
                 "name": name,
                 "email": email,
                 "password": password,
@@ -194,7 +177,7 @@ def test_prompts():
     print(f"{fav_interest=}")
 
 
-# @a.root
+@a.root
 @a.flag("debug", help="Enable debug mode")
 def root(debug: bool = False):
     if debug:

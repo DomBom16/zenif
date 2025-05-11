@@ -5,11 +5,17 @@ from typing import Any, Callable
 from colorama import Fore, Style
 
 from ...log import Logger
-from .exceptions import AppletError
-from .formatters import HelpFormatter
+from .commands import check_for_help_flags
+from .commands import execute_command as execmd
+from .commands import resolve_command as rescmd
+from .error_handlers import handle_help_request
+from .help import Help
 from .installer import install_setup
-from .parameters import _alias, _arg, _flag, _opt
-from .parser import parse
+from .parameters import alias as _alias
+from .parameters import arg as _arg
+from .parameters import flag as _flag
+from .parameters import opt as _opt
+from .parser import HELP_FLAGS
 
 L = Logger({"log_line": {"format": []}})
 
@@ -34,7 +40,7 @@ class Applet:
             os.path.basename(sys.argv[0]) or "zenif-applet"
         )  # Strip the file extension from the basename
         self.name = os.path.splitext(self.name)[0]
-        self.single = single
+        self._single = single
 
         self.commands: dict[str, Callable] = {}
         self.aliases: dict[str, str] = {}
@@ -42,6 +48,7 @@ class Applet:
         self.root_callback: Callable[[], Any] | None = None
         self.main_command: Callable[[], Any] | None = None
         self.before_callback: Callable[[str, list[str]], Any] | None = None
+        self.after_callback: Callable[[str, list[str]], Any] | None = None
         self.help_callback: Callable[[], Any] | None = None
 
     def command(
@@ -83,7 +90,7 @@ class Applet:
         """
 
         def decorator(f: Callable) -> Callable:
-            self.root_callback = f  # Use root_callback consistently
+            self.root_callback = f
             # Attach CLI metadata similar to command decorator
             f._primary_name = f.__name__
             if not hasattr(f, "_aliases"):
@@ -103,6 +110,19 @@ class Applet:
 
         def decorator(f: Callable) -> Callable:
             self.before_callback = f
+            return f
+
+        if func is None:
+            return decorator
+        return decorator(func)
+
+    def after(self, func: Callable | None = None) -> Callable:
+        """
+        Decorator to set a callback that runs after any subcommand.
+        """
+
+        def decorator(f: Callable) -> Callable:
+            self.after_callback = f
             return f
 
         if func is None:
@@ -182,51 +202,31 @@ class Applet:
         if not args:
             args = sys.argv[1:]
 
-        help_flags = ["-h", "--help"]
+        # Help flags are imported from parser module
 
         # SINGLE COMMAND MODE
-        if self.single:
+        if self._single:
             # If help is requested, show help for the main command
-            if args and any(arg in help_flags for arg in args):
-                if self.help_callback:
-                    result = self.help_callback()
-                    if result is not None:
-                        L.info(result)
-                if self.main_command:
-                    print(
-                        f"{HelpFormatter.format_command_help(self.name, self.main_command)}\n"
-                    )
-                else:
+            if args and check_for_help_flags(
+                args, self.help_callback, self.name, self.main_command
+            ):
+                if not self.main_command:
                     self.print_help()
                 return
 
             # Execute the main command with all args
             if self.main_command:
-                try:
-                    if self.before_callback:
-                        result = self.before_callback(self.name, args)
-                        if result is not None:
-                            L.info(result)
-
-                    parsed_args = parse(self.main_command, args)
-                    print(f"\x1b]2;{self.name} {' '.join(args)}\x07", end="")
-                    result = self.main_command(**parsed_args)
-                    if result is not None:
-                        L.info(result)
-                except AppletError as e:
-                    if str(e) == "Help requested":
-                        if self.help_callback:
-                            result = self.help_callback()
-                            if result is not None:
-                                L.info(result)
-                        print(
-                            f"{HelpFormatter.format_command_help(self.name, self.main_command)}\n"
-                        )
-                        return
-                    print(f"Error: {str(e)}")
-                    print(
-                        f"{HelpFormatter.format_command_help(self.name, self.main_command)}\n"
-                    )
+                # Execute the main command with error handling
+                execmd(
+                    self.main_command,
+                    args,
+                    self.name,
+                    self.name,
+                    self.help_callback,
+                    self.before_callback,
+                    self.after_callback,
+                    {self.name: self.main_command},
+                )
             else:
                 print(
                     f"{Fore.YELLOW}No main command defined for single command mode{Style.RESET_ALL}"
@@ -235,25 +235,23 @@ class Applet:
 
         # MULTI COMMAND MODE (original behavior)
         # If help is explicitly requested with -h or --help as the first argument, show general help and exit
-        if args and args[0] in help_flags:
-            if self.help_callback:
-                result = self.help_callback()
-                if result is not None:
-                    L.info(result)
-            if self.root_callback:  # Use root_callback consistently
-                print(
-                    f"{HelpFormatter.format_command_help('root', self.root_callback)}\n"
-                )
+        if args and args[0] in HELP_FLAGS:
+            handle_help_request(self.help_callback, "root", self.root_callback)
             self.print_help()
             return
 
         # Handle no arguments - run root callback if defined
         if not args:
             if self.root_callback:  # Use root_callback consistently
-                parsed_args = parse(self.root_callback, args)
-                result = self.root_callback(**parsed_args)
-                if result is not None:
-                    L.info(result)
+                execmd(
+                    self.root_callback,
+                    args,
+                    self.name,
+                    "root",
+                    self.help_callback,
+                    None,
+                    {"root": self.root_callback},
+                )
             else:
                 self.print_help()
             return
@@ -278,94 +276,56 @@ class Applet:
                 args = args[1:]
 
             # Check for help flags specifically in root command arguments
-            if any(arg in help_flags for arg in args):
-                if self.help_callback:
-                    result = self.help_callback()
-                    if result is not None:
-                        L.info(result)
-                print(
-                    f"{HelpFormatter.format_command_help('root', self.root_callback)}\n"
-                )
+            if check_for_help_flags(
+                args, self.help_callback, "root", self.root_callback
+            ):
                 return
 
-            try:
-                parsed_args = parse(self.root_callback, args)
-                result = self.root_callback(**parsed_args)
-                if result is not None:
-                    L.info(result)
-                return
-            except AppletError as e:
-                if str(e) == "Help requested":
-                    if self.help_callback:
-                        result = self.help_callback()
-                        if result is not None:
-                            L.info(result)
-                    print(
-                        f"{HelpFormatter.format_command_help('root', self.root_callback)}\n"
-                    )
-                    return
-                print(f"Error: {str(e)}")
-                self.print_command_help("root")
-                return
+            # Execute the root command and return
+            execmd(
+                self.root_callback,
+                args,
+                self.name,
+                "root",
+                self.help_callback,
+                None,
+                {"root": self.root_callback},
+            )
+            return
 
         command_name = args[0]
-        # Resolve the alias: if the command name is not primary, check aliases.
-        if command_name not in self.commands:
-            if command_name in self.aliases:
-                # Use the primary command name even if an alias was given.
-                command_name = self.aliases[command_name]
-            else:
-                if self.help_callback:
-                    result = self.help_callback()
-                    if result is not None:
-                        L.info(result)
-                print(f"{Fore.YELLOW}Command {args[0]} not found{Style.RESET_ALL}")
-                self.print_help()
-                return
+        # Resolve the alias using our utility function
+        resolved_command = rescmd(command_name, self.commands, self.aliases)
 
-        # Handle command-specific help flag properly
-        if len(args) > 1 and any(arg in help_flags for arg in args[1:]):
+        if resolved_command != command_name:
+            command_name = resolved_command
+        elif command_name not in self.commands:
             if self.help_callback:
                 result = self.help_callback()
                 if result is not None:
                     L.info(result)
-            self.print_command_help(command_name)
+            print(f"{Fore.YELLOW}Command {args[0]} not found{Style.RESET_ALL}")
+            self.print_help()
             return
 
-        if self.before_callback:
-            result = self.before_callback(command_name, args[1:])
-            if result is not None:
-                L.info(result)
-        try:
-            command = self.commands[command_name]
-            # Check explicitly for help flags before parsing args
-            if any(arg in help_flags for arg in args[1:]):
-                if self.help_callback:
-                    result = self.help_callback()
-                    if result is not None:
-                        L.info(result)
-                self.print_command_help(command_name)
-                return
-
-            parsed_args = parse(command, args[1:])
-            primary_name = getattr(command, "_primary_name", command_name)
-            print(
-                f"\x1b]2;{self.name} {primary_name} {' '.join(args[1:])}\x07",
-                end="",
+        # Handle command-specific help flag properly
+        if len(args) > 1 and any(arg in HELP_FLAGS for arg in args[1:]):
+            handle_help_request(
+                self.help_callback, command_name, self.commands.get(command_name)
             )
-            result = command(**parsed_args)
-            if result is not None:
-                L.info(result)
-        except AppletError as e:
-            if str(e) == "Help requested":
-                if self.help_callback:
-                    result = self.help_callback()
-                    if result is not None:
-                        L.info(result)
-                self.print_command_help(command_name)
-                return
-            print(f"Error: {str(e)}")
-            self.print_command_help(command_name)
+            return
+
+        # Execute the command with full error handling
+        execmd(
+            self.commands[command_name],
+            args[1:],
+            self.name,
+            command_name,
+            self.help_callback,
+            self.before_callback,
+            self.after_callback,
+            self.commands,
+        )
 
     def execute(self, command_name: str, args: list[str] | None = None) -> None:
         """
@@ -374,12 +334,14 @@ class Applet:
 
         if args is None:
             args = []
-        if any(arg in ("-h", "--help") for arg in args):
-            if self.help_callback:
-                result = self.help_callback()
-                if result is not None:
-                    L.info(result)
-            self.print_command_help(command_name)
+        if any(arg in HELP_FLAGS for arg in args):
+            handle_help_request(
+                self.help_callback,
+                command_name,
+                self.commands.get(command_name)
+                if command_name in self.commands
+                else self.root_callback,
+            )
             return
 
         # Check if executing the root command
@@ -388,78 +350,54 @@ class Applet:
             and command_name == getattr(self.root_callback, "_primary_name", None)
         ):
             if self.root_callback:
-                if self.before_callback:
-                    result = self.before_callback("root", args)
-                    if result is not None:
-                        L.info(result)
-                try:
-                    parsed_args = parse(self.root_callback, args)
-                    print(f"\x1b]2;{self.name} {' '.join(args)}\x07", end="")
-                    result = self.root_callback(**parsed_args)
-                    if result is not None:
-                        L.info(result)
-                    return
-                except AppletError as e:
-                    if str(e) == "Help requested":
-                        if self.help_callback:
-                            result = self.help_callback()
-                            if result is not None:
-                                L.info(result)
-                        self.print_command_help("root")
-                        return
-                    print(f"Error: {str(e)}")
-                    if self.root_callback:
-                        self.print_command_help("root")
-                    return
+                # Execute the root command with error handling
+                execmd(
+                    self.root_callback,
+                    args,
+                    self.name,
+                    "root",
+                    self.help_callback,
+                    self.before_callback,
+                    self.after_callback,
+                    {"root": self.root_callback},
+                )
+                return
 
         # Resolve aliases if needed.
         if command_name not in self.commands and command_name in self.aliases:
             command_name = self.aliases[command_name]
 
         if command_name in self.commands:
-            if self.before_callback:
-                result = self.before_callback(command_name, args)
-                if result is not None:
-                    L.info(result)
-            try:
-                command = self.commands[command_name]
-                parsed_args = parse(command, args)
-                primary_name = getattr(command, "_primary_name", command_name)
-                print(f"\x1b]2;{self.name} {primary_name}\x07", end="")
-                result = command(**parsed_args)
-                if result is not None:
-                    L.info(result)
-            except AppletError as e:
-                if str(e) == "Help requested":
-                    if self.help_callback:
-                        result = self.help_callback()
-                        if result is not None:
-                            L.info(result)
-                    self.print_command_help(command_name)
-                    return
-                print(f"Error: {str(e)}")
-                self.print_command_help(command_name)
+            # Execute the command with full error handling
+            execmd(
+                self.commands[command_name],
+                args,
+                self.name,
+                command_name,
+                self.help_callback,
+                self.before_callback,
+                self.after_callback,
+                self.commands,
+            )
         else:
             print(f"{Fore.YELLOW}Command {command_name} not found{Style.RESET_ALL}")
             self.print_help()
 
     def print_help(self) -> None:
         """Print the help text for the Applet."""
-        if self.single and self.main_command:
+        if self._single and self.main_command:
             # In single mode, just show help for the main command
-            help_text = HelpFormatter.format_command_help(self.name, self.main_command)
+            help_text = Help.cmd(self.name, self.main_command)
             print(help_text)
         else:
             # For multi mode, iterate over the primary command names
-            help_text = HelpFormatter.format_cli_help(self.name, self.commands)
+            help_text = Help.cli(self.name, self.commands)
             print(help_text)
 
     def print_command_help(self, command_name: str) -> None:
         """Print the help text for a specific command."""
         if command_name in self.commands:
-            help_text = HelpFormatter.format_command_help(
-                command_name, self.commands[command_name]
-            )
+            help_text = Help.cmd(command_name, self.commands[command_name])
             print(help_text)
         else:
             print(f"{Fore.YELLOW}Command {command_name} not found{Style.RESET_ALL}")

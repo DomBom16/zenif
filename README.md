@@ -1,4 +1,4 @@
-# Zenif 0.5.2b2
+# Zenif 0.5.2
 
 Zenif (pronounced "Zenith") is a Python library designed to enhance the way you write your code. Please take it into consideration that I developed Zenif as a personal side-project of mine to help me with other projects, so some features might not work as expected as I have not full tested everything.
 
@@ -18,7 +18,7 @@ This command will download and install Zenif along with its dependencies.
 
 Zenif is a multi-faceted library, covering multiple areas of the developer experience that need improving.
 
-- [CLI](https://github.com/DomBom16/zenif/blob/main/docs/modules/cli.md): Create command line interfaces and interactive prompts
+- [CLI (Applet & Prompt)](https://github.com/DomBom16/zenif/blob/main/docs/modules/cli.md): Create command line interfaces and interactive prompts
 - [Log](https://github.com/DomBom16/zenif/blob/main/docs/modules/log.md): Enhance your debugging game with a highly customizable logger
 - [Decorators](https://github.com/DomBom16/zenif/blob/main/docs/modules/decorators.md): Give your functions extra functionality on the fly
 - [Schema](https://github.com/DomBom16/zenif/blob/main/docs/modules/schema.md): Validate your user's inputs with intuitive syntax

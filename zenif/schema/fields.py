@@ -40,13 +40,9 @@ class BooleanF(SchemaField[bool]):
     def coerce(self, value: Any) -> bool:
         try:
             if isinstance(value, str):
-                lowered = value.lower()
-                if lowered in ("true", "1", "yes"):
+                if value.lower() in ("true", "1", "yes"):
                     return True
-                elif lowered in ("false", "0", "no"):
-                    return False
                 else:
-                    # Fallback: return False for unrecognized boolean strings
                     return False
             return bool(value)
         except Exception:
