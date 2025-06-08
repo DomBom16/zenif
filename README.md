@@ -1,3 +1,5 @@
+![Cover](https://github.com/user-attachments/assets/6bf77e0d-b855-4c2b-8472-b2690286298c)
+
 # Zenif 0.5.2
 
 Zenif (pronounced "Zenith") is a Python library designed to enhance the way you write your code. Please take it into consideration that I developed Zenif as a personal side-project of mine to help me with other projects, so some features might not work as expected as I have not full tested everything.
