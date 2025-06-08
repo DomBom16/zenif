@@ -188,14 +188,17 @@ def root(debug: bool = False):
 
 @a.help
 def help():
-    # return "This is the help command"
-    pass
+    return "Help"
 
 
 @a.before
 def before(command: str, args: list[str]):
-    # return f"Command: {command}, Args: {args}"
-    pass
+    return "Before"
+
+
+@a.after
+def after(command: str, args: list[str]):
+    return "After"
 
 
 if __name__ == "__main__":

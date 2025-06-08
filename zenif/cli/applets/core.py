@@ -250,6 +250,7 @@ class Applet:
                     "root",
                     self.help_callback,
                     None,
+                    None,
                     {"root": self.root_callback},
                 )
             else:
@@ -288,6 +289,7 @@ class Applet:
                 self.name,
                 "root",
                 self.help_callback,
+                None,
                 None,
                 {"root": self.root_callback},
             )
