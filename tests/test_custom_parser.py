@@ -1,14 +1,14 @@
+import os
+import sys
 import unittest
 from typing import Callable
-import sys
-import os
 
 # Add the project root to sys.path to ensure imports work
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from zenif.cli.applets.parser import parse
-from zenif.cli.applets.parameters import Parameter
 from zenif.cli.applets.exceptions import AppletError
+from zenif.cli.applets.parameters import Parameter
+from zenif.cli.applets.parser import parse
 
 
 class TestCustomParser(unittest.TestCase):
@@ -94,41 +94,42 @@ class TestCustomParser(unittest.TestCase):
         self.assertEqual(result["depth"], 1)  # Default value
         self.assertFalse(result["quiet"])  # Default value
 
-    def test_options_standard_format(self):
-        """Test parsing options in --option value format"""
-        args = ["/path/to/dir", "--depth", "5", "--mode", "advanced"]
-        result = parse(self.cmd_with_params, args)
-        self.assertEqual(result["path"], "/path/to/dir")
-        self.assertEqual(result["depth"], "5")
-        self.assertEqual(result["mode"], "advanced")
-
     def test_options_equal_format(self):
         """Test parsing options in --option=value format"""
         args = ["/path/to/dir", "--depth=5", "--mode=advanced"]
         result = parse(self.cmd_with_params, args)
         self.assertEqual(result["path"], "/path/to/dir")
-        self.assertEqual(result["depth"], "5")
+        self.assertEqual(result["depth"], 5)
+        self.assertEqual(result["mode"], "advanced")
+        self.assertEqual(result["quiet"], False)
+
+    def test_options_standard_format(self):
+        """Test parsing options in --option value format"""
+        args = ["/path/to/dir", "--depth", "5", "--mode", "advanced"]
+        result = parse(self.cmd_with_params, args)
+        self.assertEqual(result["path"], "/path/to/dir")
+        self.assertEqual(result["depth"], 5)
         self.assertEqual(result["mode"], "advanced")
 
     def test_short_options(self):
         """Test parsing short options based on first letter"""
         args = ["/path/to/dir", "-d", "5", "-m", "advanced"]
         result = parse(self.cmd_with_params, args)
-        self.assertEqual(result["depth"], "5")
+        self.assertEqual(result["depth"], 5)
         self.assertEqual(result["mode"], "advanced")
 
     def test_short_options_equal_format(self):
         """Test parsing short options in -o=value format"""
         args = ["/path/to/dir", "-d=5", "-m=advanced"]
         result = parse(self.cmd_with_params, args)
-        self.assertEqual(result["depth"], "5")
+        self.assertEqual(result["depth"], 5)
         self.assertEqual(result["mode"], "advanced")
 
     def test_short_options_joined_numeric(self):
         """Test parsing short options in -o10 format (for numeric values)"""
         args = ["/path/to/dir", "-d5"]
         result = parse(self.cmd_with_params, args)
-        self.assertEqual(result["depth"], "5")
+        self.assertEqual(result["depth"], 5)
 
     def test_flags(self):
         """Test parsing boolean flags"""
@@ -155,9 +156,9 @@ class TestCustomParser(unittest.TestCase):
         args = ["/path/to/dir", "-q", "--depth=5", "-m", "advanced"]
         result = parse(self.cmd_with_params, args)
         self.assertEqual(result["path"], "/path/to/dir")
-        self.assertEqual(result["depth"], "5")
-        self.assertTrue(result["quiet"])
+        self.assertEqual(result["depth"], 5)
         self.assertEqual(result["mode"], "advanced")
+        self.assertEqual(result["quiet"], True)
 
     def test_root_command(self):
         """Test parsing arguments for a root command"""
@@ -165,6 +166,42 @@ class TestCustomParser(unittest.TestCase):
         result = parse(self.root_function, args)
         self.assertEqual(result["branch"], "develop")
         self.assertTrue(result["all"])
+
+    def test_type_coercion(self):
+        """Test that values are properly coerced to their expected types"""
+
+        # Create a mock function with typed parameters
+        def typed_func(name: str, age: int, height: float, active: bool):
+            return {"name": name, "age": age, "height": height, "active": active}
+
+        typed_func.__name__ = "typed_func"
+        typed_func._cli_params = {
+            "name": Parameter(param_name="name", kind="argument", help="Name"),
+            "age": Parameter(param_name="age", kind="option", help="Age", default=25),
+            "height": Parameter(
+                param_name="height", kind="option", help="Height", default=5.8
+            ),
+            "active": Parameter(
+                param_name="active", kind="flag", help="Active", default=False
+            ),
+        }
+
+        # Test with string inputs that should be coerced
+        args = ["John", "--age", "30", "--height", "6.2", "--active"]
+        result = parse(typed_func, args)
+
+        # Verify types are correctly coerced
+        self.assertEqual(result["name"], "John")
+        self.assertIsInstance(result["name"], str)
+
+        self.assertEqual(result["age"], 30)
+        self.assertIsInstance(result["age"], int)
+
+        self.assertEqual(result["height"], 6.2)
+        self.assertIsInstance(result["height"], float)
+
+        self.assertEqual(result["active"], True)
+        self.assertIsInstance(result["active"], bool)
 
     def test_missing_required_argument(self):
         """Test that an error is raised when a required argument is missing"""

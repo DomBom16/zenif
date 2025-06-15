@@ -165,16 +165,17 @@ Learn how you can simplify this code by using [Single Command Mode](#single-comm
 
 ### Using install() for Development
 
-The CLI module comes with a handy method that lets you install the given file as a symlink that can be run from anywhere. By using the `app.install()` method within your script, the targeted `Applet` will now show the `install` command. When run, you will be brought through an quick and simple installation flow.
+The CLI module comes with a handy method that lets you install the given file as a symlink that can be run from anywhere. By using the `app.install(path)` method within your script, the targeted `Applet` will now show the `install` command. When run, you will be brought through an quick and simple installation flow.
 
 > [!IMPORTANT]
 > This is intended for development use only. Do not use `install()` in production environments.
 
 ```python
 from zenif.cli import Applet
+import os
 
 app = Applet()
-app.install()
+app.install(__file__)  # Pass the current script file path
 ```
 
 You can now run pass `install` as an argument to get started.
@@ -280,6 +281,8 @@ if __name__ == '__main__':
 - `Prompt.checkbox()`: For selecting multiple items from a list (ListF)
 - `Prompt.number()`: For numeric input (IntegerF, FloatF)
 - `Prompt.date()`: For dates (DateF)
+- `Prompt.editor()`: For multi-line text input with syntax highlighting (StringF)
+- `Prompt.keypress()`: For single key input from a list of allowed keys (StringF)
 
 Find more about different types of prompts and how they work, check out [More About Prompts](../extra/more-about-prompts.md)
 

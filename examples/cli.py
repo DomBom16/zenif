@@ -22,7 +22,7 @@ from zenif.schema import (
     Value,
 )
 
-L = Logger()
+L = Logger({"log_line": {"format": "simple"}})
 
 
 a = Applet()
@@ -35,7 +35,7 @@ a.install(os.path.abspath(__file__))
 @a.arg("branch", help="The branch to fetch")
 @a.opt("depth", default=10, help="The depth to use")
 @a.alias("depth", "d")
-def fetch(branch, depth):
+def fetch(branch: str, depth: int):
     """
     Fetch a branch with a specified depth.
 
@@ -59,6 +59,7 @@ def ls(path, all):
     return f"Listing {path} with all={all}"
 
 
+@a.root
 @a.command(aliases=["tp"])
 def test_prompts():
     """Test all available prompts"""
@@ -66,13 +67,12 @@ def test_prompts():
     class OddOrEven(Validator):
         def __init__(self, parity: str = "even", err: str | None = None):
             super().__init__(err)
-            self.parity = 1 if parity == "odd" else 0
+            self.parity = "odd" if parity == "odd" else "even"
+            self.parity_mod = 1 if parity == "odd" else 0
 
         def _validate(self, value):
-            if value % 2 != self.parity:
-                raise ValidationError(
-                    f"Must be an {'even' if self.parity == 0 else 'odd'} number."
-                )
+            if value % 2 != self.parity_mod:
+                raise ValidationError(f"Must be an {self.parity} number.")
 
     # clear the screen
     os.system("cls" if os.name == "nt" else "clear")
@@ -166,25 +166,6 @@ def test_prompts():
         )
     )
 
-    print(f"{name=}")
-    print(f"{email=}")
-    print(f"{password=}")
-    print(f"{date=}")
-    print(f"{salary=}")
-    print(f"{age=}")
-    print(f"{editor=}")
-    print(f"{interests=}")
-    print(f"{fav_interest=}")
-
-
-@a.root
-@a.flag("debug", help="Enable debug mode")
-def root(debug: bool = False):
-    if debug:
-        print("Debug mode enabled")
-        time.sleep(3)
-    a.execute("test_prompts")
-
 
 @a.help
 def help():
@@ -193,13 +174,14 @@ def help():
 
 @a.before
 def before(command: str, args: list[str]):
-    return "Before"
+    return (command, args)
 
 
 @a.after
 def after(command: str, args: list[str]):
-    return "After"
+    return
 
 
 if __name__ == "__main__":
+    L.debug(vars(a))
     a.run()

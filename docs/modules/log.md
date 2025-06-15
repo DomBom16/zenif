@@ -57,7 +57,6 @@ Each logging function accepts the following parameters:
 
 - `*values`: The values to be logged. You can pass multiple values, which will be concatenated into a single log message.
 - `sep` (optional): A string inserted between values. Defaults to None.
-- `rich` (optional): When set to `True`, formats the values for easier readability with syntax highlighting and other enhancements. The default value is `True`.
 
 ### `StructuredLogger`
 
@@ -92,11 +91,11 @@ logger.info("Hello", "World", sep=" - ")  # Outputs: Hello - World
 
 > **Note**: There's a known limitation where two or more trailing newline characters are treated as one. For example, `logger.info("Hello\n\n\n", "World!")` will produce the same output as `logger.info("Hello\n", "World!")`.
 
-The `rich` argument enables syntax formatting and highlighting for complex data types like lists, tuples, and dictionaries. When `rich` is set to `True` (the default), these data structures are formatted for improved readability:
+Complex data types like lists, tuples, and dictionaries are automatically formatted for improved readability with syntax highlighting:
 
 ```python
 data = {"user": "John Doe", "actions": ["login", "view_profile", "logout"]}
-logger.info("User activity:", data, rich=True)
+logger.info("User activity:", data)
 ```
 
 This will output a nicely formatted and syntax-highlighted representation of the dictionary.

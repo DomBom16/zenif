@@ -9,24 +9,24 @@ L = Logger({"log_line": {"format": []}})
 
 
 def set_terminal_title(
-    applet_name: str, command_name: str, args: List[str] = None
+    applet_name: str, command: Callable, args: List[str] = None
 ) -> None:
     """
     Set the terminal title to reflect the currently running command.
 
     Args:
         applet_name: The name of the applet
-        command_name: The name of the command being executed
+        command: The command being executed
         args: Command arguments
     """
     if args:
-        print(f"\x1b]2;{applet_name} {command_name} {' '.join(args)}\x07", end="")
+        print(f"\x1b]2;{applet_name} {command.__name__} {' '.join(args)}\x07", end="")
     else:
-        print(f"\x1b]2;{applet_name} {command_name}\x07", end="")
+        print(f"\x1b]2;{applet_name} {command.__name__}\x07", end="")
 
 
-def execute_before_callback(
-    before_callback: Callable, command_name: str, args: List[str]
+def run_before_hook(
+    before_callback: Callable, command_name: str, args: Dict[str, Any]
 ) -> None:
     """
     Execute the before callback for a command if one is defined.
@@ -34,7 +34,7 @@ def execute_before_callback(
     Args:
         before_callback: The callback to execute before running a command
         command_name: The name of the command to be executed
-        args: Command arguments
+        args: Parsed command arguments
     """
     if before_callback:
         result = before_callback(command_name, args)
@@ -42,8 +42,8 @@ def execute_before_callback(
             L.info(result)
 
 
-def execute_after_callback(
-    after_callback: Callable, command_name: str, args: List[str]
+def run_after_hook(
+    after_callback: Callable, command_name: str, args: Dict[str, Any]
 ) -> None:
     """
     Execute the after callback for a command if one is defined.
@@ -51,7 +51,7 @@ def execute_after_callback(
     Args:
         after_callback: The callback to execute after running a command
         command_name: The name of the command that was executed
-        args: Command arguments
+        args: Parsed command arguments
     """
     if after_callback:
         result = after_callback(command_name, args)
@@ -59,7 +59,7 @@ def execute_after_callback(
             L.info(result)
 
 
-def check_for_help_flags(
+def handle_help_flags(
     args: List[str],
     help_callback: Optional[Callable],
     command_name: str,
@@ -83,31 +83,21 @@ def check_for_help_flags(
     return False
 
 
-def run_command(
+def invoke_command(
     command: Callable,
-    args: List[str],
-    applet_name: str = None,
-    command_name: str = None,
+    parsed_args: Dict[str, Any],
 ) -> Any:
     """
-    Parse arguments and run a command with error handling.
+    Run a command with already-parsed arguments.
 
     Args:
         command: The command function to execute
-        args: Command arguments
-        applet_name: Optional applet name for terminal title
-        command_name: Optional command name for terminal title and error handling
+        parsed_args: Already parsed command arguments
 
     Returns:
         The result of the command execution
     """
     try:
-        parsed_args = parse(command, args)
-
-        # Set terminal title if applet_name is provided
-        if applet_name and command_name:
-            set_terminal_title(applet_name, command_name, args)
-
         # Execute the command with parsed arguments
         result = command(**parsed_args)
 
@@ -118,7 +108,7 @@ def run_command(
         raise e
 
 
-def execute_command(
+def run_command(
     command: Callable,
     args: List[str],
     applet_name: str,
@@ -145,16 +135,24 @@ def execute_command(
         The result of the command execution, or None if an error occurred
     """
     # Check for help flags first
-    if check_for_help_flags(args, help_callback, command_name, command):
+    if handle_help_flags(args, help_callback, command_name, command):
         return None
 
-    # Execute before callback if defined
-    if before_callback:
-        execute_before_callback(before_callback, command_name, args)
-
+    parsed_args = None
     try:
-        # Run the command and get the result
-        result = run_command(command, args, applet_name, command_name)
+        # Parse arguments early so they're available for callbacks
+        parsed_args = parse(command, args)
+
+        # Execute before callback if defined
+        if before_callback:
+            run_before_hook(before_callback, command_name, parsed_args)
+
+        # Set terminal title if applet_name is provided
+        if applet_name and command:
+            set_terminal_title(applet_name, command, args)
+
+        # Execute the command with parsed arguments
+        result = command(**parsed_args)
 
         # Log the result if it's not None
         if result is not None:
@@ -167,8 +165,8 @@ def execute_command(
         handle_applet_error(e, command_name, commands)
     finally:
         # Execute after callback if defined
-        if after_callback:
-            execute_after_callback(after_callback, command_name, args)
+        if after_callback and parsed_args is not None:
+            run_after_hook(after_callback, command_name, parsed_args)
 
     return None
 

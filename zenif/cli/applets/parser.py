@@ -1,3 +1,4 @@
+import inspect
 import re
 from typing import Any, Callable, Dict, List, Tuple
 
@@ -101,6 +102,80 @@ class CommandParser:
                 if len(alias_key) == 1:
                     self.short_aliases[alias_key] = name
 
+    def _coerce_value(self, param_name: str, value: Any) -> Any:
+        """
+        Coerce a value to the appropriate type based on parameter type annotation.
+        """
+        if param_name not in self.param_by_name:
+            return value
+
+        param = self.param_by_name[param_name]
+
+        # Flags are always boolean
+        if param.kind == "flag":
+            return bool(value) if isinstance(value, str) else value
+
+        # If value is not a string, it's likely already the correct type
+        if not isinstance(value, str):
+            return value
+
+        # Try to get type annotation from function signature
+        try:
+            sig = inspect.signature(self.command)
+            if param_name in sig.parameters:
+                annotation = sig.parameters[param_name].annotation
+                if annotation != inspect.Parameter.empty:
+                    return self._convert_to_type(value, annotation)
+        except (ValueError, TypeError):
+            pass
+
+        # Fall back to inferring type from default value
+        if param.default is not None:
+            return self._convert_to_type(value, type(param.default))
+
+        # If all else fails, return the string value
+        return value
+
+    def _convert_to_type(self, value: Any, target_type: type) -> Any:
+        """Convert a value to the target type."""
+        # If value is already the correct type, return it
+        if isinstance(value, target_type):
+            return value
+
+        # If value is not a string, try direct conversion
+        if not isinstance(value, str):
+            try:
+                return target_type(value)
+            except (ValueError, TypeError):
+                return value
+
+        # Handle string conversions
+        if target_type is str:
+            return value
+        elif target_type is int:
+            try:
+                return int(value)
+            except ValueError:
+                return value
+        elif target_type is float:
+            try:
+                return float(value)
+            except ValueError:
+                return value
+        elif target_type is bool:
+            if isinstance(value, str):
+                if value.lower() in ("true", "1", "yes", "y", "on", "enabled", "enable"):
+                    return True
+                else:
+                    return False
+            return bool(value)
+        else:
+            # For other types, try direct conversion
+            try:
+                return target_type(value)
+            except (ValueError, TypeError):
+                return value
+
     def _resolve_short_option(self, short_opt: str) -> str:
         """
         Resolve a short option like -m to its full parameter name.
@@ -167,7 +242,7 @@ class CommandParser:
             # Long option
             param_name = option_name[2:]
             if param_name in self.option_params:
-                result[param_name] = value
+                result[param_name] = self._coerce_value(param_name, value)
             else:
                 raise AppletNotFoundError(f"Unknown option: {option_name}")
         elif option_name.startswith("-"):
@@ -175,7 +250,7 @@ class CommandParser:
             short_name = option_name[1:]
             param_name = self._resolve_short_option(short_name)
             if param_name:
-                result[param_name] = value
+                result[param_name] = self._coerce_value(param_name, value)
             else:
                 raise AppletNotFoundError(
                     f"Unknown or ambiguous short option: {option_name}"
@@ -194,7 +269,7 @@ class CommandParser:
         if value and _is_numeric(value):
             param_name = self._resolve_short_option(short_opt)
             if param_name:
-                result[param_name] = value
+                result[param_name] = self._coerce_value(param_name, value)
                 return i + 1
         return i  # If not handled, return the same index for normal processing
 
@@ -209,12 +284,12 @@ class CommandParser:
         option_name = arg[2:]
         if option_name in self.option_params:
             if i + 1 < len(args) and not args[i + 1].startswith("-"):
-                result[option_name] = args[i + 1]
+                result[option_name] = self._coerce_value(option_name, args[i + 1])
                 return i + 2
             else:
                 raise AppletValidationError(f"Option {arg} requires a value")
         elif option_name in self.flag_params:
-            result[option_name] = True
+            result[option_name] = self._coerce_value(option_name, True)
             return i + 1
         else:
             raise AppletNotFoundError(f"Unknown option or flag: {arg}")
@@ -243,11 +318,11 @@ class CommandParser:
         param_name = self.short_aliases[short_name]
         # Check if it's a flag or an option
         if param_name in self.flag_params:
-            result[param_name] = True
+            result[param_name] = self._coerce_value(param_name, True)
             return i + 1
         elif param_name in self.option_params:
             if i + 1 < len(args) and not args[i + 1].startswith("-"):
-                result[param_name] = args[i + 1]
+                result[param_name] = self._coerce_value(param_name, args[i + 1])
                 return i + 2
             else:
                 raise AppletValidationError(f"Option {arg} requires a value")
@@ -263,13 +338,15 @@ class CommandParser:
         # If it's an option
         if option_param_name:
             if i + 1 < len(args) and not args[i + 1].startswith("-"):
-                result[option_param_name] = args[i + 1]
+                result[option_param_name] = self._coerce_value(
+                    option_param_name, args[i + 1]
+                )
                 return i + 2
             else:
                 raise AppletValidationError(f"Option {arg} requires a value")
         # If it's a flag
         elif flag_param_name:
-            result[flag_param_name] = True
+            result[flag_param_name] = self._coerce_value(flag_param_name, True)
             return i + 1
         else:
             raise AppletNotFoundError(
@@ -287,7 +364,7 @@ class CommandParser:
         """Handle a positional argument."""
         if positional_index < len(positional_args):
             param = positional_args[positional_index]
-            result[param.param_name] = arg
+            result[param.param_name] = self._coerce_value(param.param_name, arg)
             return i + 1
         else:
             raise AppletValidationError(f"Too many positional arguments: {arg}")

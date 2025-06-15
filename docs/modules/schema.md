@@ -15,6 +15,14 @@ The Zenif Schema module provides a powerful and flexible way to define data stru
     - [Optional Fields and Default Values](#optional-fields-and-default-values)
     - [Enum Fields](#enum-fields)
   - [Error Handling](#error-handling)
+  - [SchemaField Methods](#schemafield-methods)
+    - [`.has(validator)`](#hasvalidator)
+    - [`.default(value)`](#defaultvalue)
+    - [`.when(condition, error_message)`](#whencondition-error_message)
+    - [`.pre(func)`](#prefunc)
+    - [`.post(func)`](#postfunc)
+    - [Method Chaining](#method-chaining)
+    - [Complete Example](#complete-example)
   - [Coercion](#coercion)
 
 ## Basic Usage
@@ -91,10 +99,29 @@ Validators are used to apply specific rules to fields. Zenif's built-in validato
 - `Email()`: Validates email addresses
 - `Date()`: Ensures the field is in the format YYYY-MM-DD
 - `Alphanumeric()`: Ensures the field only contains letters and numbers
-- `URL()`: Validates URL addresses
+- `Url()`: Validates URL addresses
 - `NotEmpty()`: Ensures the field is not empty
 - `Truthy()`: Ensures a value is truthy
 - `Falsy()`: Ensures a value is falsy
+
+The `Url` validator supports different validation types through the `URLType` enum:
+
+- `URLType.DEFAULT`: Basic URL validation (allows with or without protocol)
+- `URLType.FORCEHTTP`: Requires http:// or https:// protocol
+- `URLType.RFC3986`: Full RFC 3986 compliant validation
+
+```python
+from zenif.schema import Url, URLType
+
+# Basic URL validation
+url_field = StringF().has(Url())
+
+# Force HTTP/HTTPS protocol
+strict_url_field = StringF().has(Url(type=URLType.FORCEHTTP))
+
+# RFC 3986 compliant validation
+rfc_url_field = StringF().has(Url(type=URLType.RFC3986))
+```
 
 You can also create custom validators by extending the base `Validator` class. **Important:** When your custom validator extends the `Validator` class, its `__call__` method automatically wraps any exceptions thrown in the `_validate` method. This ensures that any error raised is an instance of `ValidationError` or one of its subclasses, which maintains consistent error handling across the schema. For example:
 
@@ -199,6 +226,153 @@ When validation fails, the `validate` method returns a tuple `(is_valid, errors,
 - **`coerced_data`**: A dictionary containing the validated and coerced data.
 
 For example, if a field fails a length check, the error might look like `('LengthError', 'Minimum length is 3')`.
+
+## SchemaField Methods
+
+All field types inherit from the `SchemaField` base class, which provides several methods for configuring field behavior:
+
+### `.has(validator)`
+
+Adds a validator to the field. Validators are applied in the order they are added.
+
+```python
+from zenif.schema import StringF, Length, Email
+
+email_field = StringF().has(Length(min=5)).has(Email())
+```
+
+### `.default(value)`
+
+Sets a default value for the field and makes it optional. The value can be a static value or a callable that returns a value.
+
+```python
+from zenif.schema import StringF, IntegerF
+from datetime import datetime
+
+# Static default value
+name_field = StringF().default("Anonymous")
+
+# Callable default value
+timestamp_field = IntegerF().default(lambda: int(datetime.now().timestamp()))
+
+# No default (None)
+optional_field = StringF().default(None)
+```
+
+### `.when(condition, error_message)`
+
+Adds a conditional requirement based on other fields in the schema. The field is only validated if the condition returns `True`.
+
+```python
+from zenif.schema import Schema, StringF, BooleanF
+
+user_schema = Schema({
+    "is_admin": BooleanF(),
+    "admin_code": StringF().when(
+        lambda data: data.get("is_admin", False),
+        "Admin code is required when is_admin is True"
+    )
+})
+```
+
+### `.pre(func)`
+
+Adds a pre-transformation function that modifies the value before validation. This is useful for normalizing input data.
+
+```python
+from zenif.schema import StringF
+
+# Convert to lowercase before validation
+username_field = StringF().pre(lambda x: x.lower() if isinstance(x, str) else x)
+
+# Strip whitespace
+text_field = StringF().pre(lambda x: x.strip() if isinstance(x, str) else x)
+```
+
+### `.post(func)`
+
+Adds a post-transformation function that modifies the value after validation. This is useful for formatting output data.
+
+```python
+from zenif.schema import StringF
+
+# Convert to title case after validation
+name_field = StringF().post(lambda x: x.title())
+
+# Add prefix to the value
+code_field = StringF().post(lambda x: f"CODE_{x}")
+```
+
+### Method Chaining
+
+All SchemaField methods return the field instance, allowing for method chaining:
+
+```python
+from zenif.schema import StringF, Length, Email
+
+email_field = (StringF()
+    .pre(lambda x: x.lower().strip())
+    .has(Length(min=5, max=100))
+    .has(Email())
+    .default("user@example.com")
+    .post(lambda x: x.lower()))
+```
+
+### Complete Example
+
+Here's a comprehensive example using multiple SchemaField methods:
+
+```python
+from zenif.schema import Schema, StringF, IntegerF, BooleanF, Length, Value
+from datetime import datetime
+
+user_schema = Schema({
+    "username": (StringF()
+        .pre(lambda x: x.strip().lower())
+        .has(Length(min=3, max=20))
+        .post(lambda x: f"@{x}")),
+
+    "email": (StringF()
+        .pre(lambda x: x.strip().lower())
+        .has(Email())
+        .default("user@example.com")),
+
+    "age": (IntegerF()
+        .has(Value(min=0, max=120))
+        .default(18)),
+
+    "is_premium": BooleanF().default(False),
+
+    "premium_code": (StringF()
+        .when(
+            lambda data: data.get("is_premium", False),
+            "Premium code required for premium users"
+        )
+        .has(Length(min=10, max=10))),
+
+    "created_at": IntegerF().default(lambda: int(datetime.now().timestamp()))
+})
+
+# Validate data
+data = {
+    "username": "  JohnDoe  ",
+    "email": "  JOHN@EXAMPLE.COM  ",
+    "age": 25,
+    "is_premium": True,
+    "premium_code": "ABCD123456"
+}
+
+is_valid, errors, coerced_data = user_schema.validate(data)
+print(coerced_data)
+# Output: {
+#     'username': '@johndoe',
+#     'email': 'john@example.com',
+#     'age': 25,
+#     'is_premium': True,
+#     'premium_code': 'ABCD123456',
+#     'created_at': 1640995200
+# }
+```
 
 ## Coercion
 

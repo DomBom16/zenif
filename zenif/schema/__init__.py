@@ -25,7 +25,6 @@ from .fields import (
     StringF,
 )
 from .validators import (
-    URL,
     Alphanumeric,
     Date,
     Email,
@@ -34,6 +33,7 @@ from .validators import (
     NotEmpty,
     Regex,
     Truthy,
+    Url,
     URLType,  # enum for URL types
     Validator,
     Value,
@@ -58,7 +58,7 @@ __all__ = [
     "Regex",
     "Email",
     "Date",
-    "URL",
+    "Url",
     "URLType",  # enum for URL types
     "NotEmpty",
     "Alphanumeric",

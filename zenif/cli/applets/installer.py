@@ -119,7 +119,7 @@ def install_setup(applet: "Applet", script_path: str) -> Callable:
     @app.command
     @app.opt("name", default=app.name.lower(), help="Name for the installed command")
     def install(name: str):
-        """Install as a global command"""
+        """Add this Applet to your PATH"""
         install_dir = detect_install_dir()
         original_script = Path(script_path)
 
@@ -128,7 +128,7 @@ def install_setup(applet: "Applet", script_path: str) -> Callable:
         friendly_install_dir = friendly_path(install_dir)
 
         L.warning(
-            f"{Fore.YELLOW}\033[1m\033[3mWARNING: install is not intended for production use, only use for development{Style.RESET_ALL}"
+            f"{Fore.YELLOW}\033[1m\033[3mThe `install` command is experimental and may not work as expected. Use at your own risk.{Style.RESET_ALL}"
         )
         print()
 

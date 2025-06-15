@@ -40,7 +40,7 @@ class BooleanF(SchemaField[bool]):
     def coerce(self, value: Any) -> bool:
         try:
             if isinstance(value, str):
-                if value.lower() in ("true", "1", "yes"):
+                if value.lower() in ("true", "1", "yes", "y", "on", "enabled", "enable"):
                     return True
                 else:
                     return False

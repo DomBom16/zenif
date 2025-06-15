@@ -1,9 +1,9 @@
 from .commands import (
-    check_for_help_flags,
-    execute_before_callback,
-    execute_after_callback,
-    execute_command,
+    handle_help_flags,
+    invoke_command,
     resolve_command,
+    run_after_hook,
+    run_before_hook,
     run_command,
     set_terminal_title,
 )
@@ -50,10 +50,10 @@ __all__ = [
     "handle_applet_error",
     # Command runners
     "set_terminal_title",
-    "execute_before_callback",
-    "execute_after_callback",
-    "check_for_help_flags",
+    "run_before_hook",
+    "run_after_hook",
+    "handle_help_flags",
+    "invoke_command",
     "run_command",
-    "execute_command",
     "resolve_command",
 ]
