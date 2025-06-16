@@ -132,7 +132,7 @@ rfc_url_field = StringF().has(Url(type=URLType.RFC3986))
 You can also create custom validators by extending the base `Validator` class.
 
 > [!NOTE]
-> When your custom validator extends the `Validator` class, its `__call__` method automatically wraps any exceptions thrown in the `_validate` method. This ensures that any error raised is an instance of `ValidationError` or one of its subclasses, which maintains consistent error handling across the schema. For example:
+> When your custom validator extends the `Validator` class, its `__call__` method automatically wraps any exceptions thrown in the `validate` method. This ensures that any error raised is an instance of `ValidationError` or one of its subclasses, which maintains consistent error handling across the schema. For example:
 
 ```python
 from zenif.schema import Validator
@@ -142,7 +142,7 @@ class OddOrEven(Validator):
         super().__init__(err)
         self.parity = 1 if parity.lower() == "odd" else 0
 
-    def _validate(self, value):
+    def validate(self, value):
         if value % 2 != self.parity:
             # Even if a different type of error is raised, the base Validator wraps it as a ValidationError
             raise ValueError(f"Must be an {'even' if self.parity == 0 else 'odd'} number.")

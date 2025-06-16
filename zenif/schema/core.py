@@ -24,11 +24,11 @@ class Validator:
             self.err = ""
 
     def __call__(self, value: Any) -> Any:
-        self.validate(value=value)
+        self._validate(value=value)
 
-    def validate(self, value: Any):
+    def _validate(self, value: Any):
         try:
-            self._validate(value)
+            self.validate(value)
         except Exception as e:
             # If a custom error message was provided via err, use it
             if self.err:
@@ -41,7 +41,7 @@ class Validator:
                     raise
                 raise ValidationError(str(e)) from e
 
-    def _validate(self, value: Any):
+    def validate(self, value: Any):
         raise NotImplementedError()
 
 

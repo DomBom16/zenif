@@ -70,7 +70,7 @@ def test_prompts():
             self.parity = "odd" if parity == "odd" else "even"
             self.parity_mod = 1 if parity == "odd" else 0
 
-        def _validate(self, value):
+        def validate(self, value):
             if value % 2 != self.parity_mod:
                 raise ValidationError(f"Must be an {self.parity} number.")
 
