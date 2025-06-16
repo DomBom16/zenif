@@ -21,6 +21,48 @@ from .exceptions import (
 inf = float("inf")
 
 
+class MinLength(Validator):
+    """Validates that the value has at least the minimum length."""
+
+    def __init__(self, min: int, err: str | None = None):
+        super().__init__(err)
+        self.min = min
+
+    def _validate(self, value: Any):
+        if value is None:
+            raise LengthError("Value is of None type.")
+        if len(value) < self.min:
+            raise LengthError(f"Minimum length is {self.min}.")
+
+
+class MaxLength(Validator):
+    """Validates that the value has at most the maximum length."""
+
+    def __init__(self, max: int, err: str | None = None):
+        super().__init__(err)
+        self.max = max
+
+    def _validate(self, value: Any):
+        if value is None:
+            raise LengthError("Value is of None type.")
+        if len(value) > self.max:
+            raise LengthError(f"Maximum length is {self.max}.")
+
+
+class ExactLength(Validator):
+    """Validates that the value has exactly the specified length."""
+
+    def __init__(self, length: int, err: str | None = None):
+        super().__init__(err)
+        self.length = length
+
+    def _validate(self, value: Any):
+        if value is None:
+            raise LengthError("Value is of None type.")
+        if len(value) != self.length:
+            raise LengthError(f"Length must be exactly {self.length}.")
+
+
 class Length(Validator):
     """Compares whether the length of the value is within the given range."""
 
@@ -57,6 +99,48 @@ class Value(Validator):
             raise ValueRangeError(f"Minimum value is {self.min}.")
         if value > self.max:
             raise ValueRangeError(f"Maximum value is {self.max}.")
+
+
+class MinValue(Validator):
+    """Validates that the value is at least the minimum value."""
+
+    def __init__(self, min: int, err: str | None = None):
+        super().__init__(err)
+        self.min = min
+
+    def _validate(self, value: Any):
+        if value is None:
+            raise ValueRangeError("Value is of None type.")
+        if value < self.min:
+            raise ValueRangeError(f"Minimum value is {self.min}.")
+
+
+class MaxValue(Validator):
+    """Validates that the value is at most the maximum value."""
+
+    def __init__(self, max: int, err: str | None = None):
+        super().__init__(err)
+        self.max = max
+
+    def _validate(self, value: Any):
+        if value is None:
+            raise ValueRangeError("Value is of None type.")
+        if value > self.max:
+            raise ValueRangeError(f"Maximum value is {self.max}.")
+
+
+class ExactValue(Validator):
+    """Validates that the value is exactly the given value."""
+
+    def __init__(self, value: Any, err: str | None = None):
+        super().__init__(err)
+        self.value = value
+
+    def _validate(self, value: Any):
+        if value is None:
+            raise ValueRangeError("Value is of None type.")
+        if value != self.value:
+            raise ValueRangeError(f"Value must be exactly {self.value}.")
 
 
 class Regex(Validator):

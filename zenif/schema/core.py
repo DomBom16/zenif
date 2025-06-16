@@ -120,21 +120,38 @@ class Schema:
             if field.condition:
                 if not field.condition.check(data):
                     continue  # Skip this field if the condition is not met
+            value = None
+            should_validate = False
+
             if field_name not in data:
                 if partial:
                     continue
-                if field.is_required:
+                # Check if field has a condition that makes it required
+                if field.condition and field.condition.check(data):
+                    is_valid = False
+                    errors[field_name] = [
+                        ("ValidationError", field.condition.error_message)
+                    ]
+                    continue
+                elif field.is_required:
                     is_valid = False
                     errors[field_name] = [("ValidationError", "Field is required.")]
+                    continue
                 elif field._default is not None:
+                    # No condition or condition not met, just set default without validation
                     coerced_data[field_name] = (
                         field._default() if callable(field._default) else field._default
                     )
-                continue
+                    continue
+                else:
+                    continue
             else:
-                try:
-                    value = data[field_name]
+                value = data[field_name]
+                should_validate = True
 
+            # Validation logic for both provided values and conditional defaults
+            if should_validate:
+                try:
                     if not self._strict:
                         value = field.coerce(value)
 

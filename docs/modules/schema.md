@@ -94,7 +94,13 @@ When creating a field, your class name should be in the `{type}F` format, where 
 Validators are used to apply specific rules to fields. Zenif's built-in validators include:
 
 - `Length(min=None, max=None)`: Ensures a minimum and maximum length for strings or lists
+- `MinLength(min)`: Ensures a minimum length for strings or lists
+- `MaxLength(max)`: Ensures a maximum length for strings or lists
+- `ExactLength(length)`: Ensures the field is exactly the specified length for strings or lists
 - `Value(min=None, max=None)`: Ensures a minimum and maximum value for numbers
+- `MinValue(min)`: Ensures a minimum value for numbers
+- `MaxValue(max)`: Ensures a maximum value for numbers
+- `ExactValue(value)`: Ensures the field is exactly the specified value for numbers
 - `Regex(pattern)`: Validates strings against a regular expression
 - `Email()`: Validates email addresses
 - `Date()`: Ensures the field is in the format YYYY-MM-DD
@@ -123,7 +129,10 @@ strict_url_field = StringF().has(Url(type=URLType.FORCEHTTP))
 rfc_url_field = StringF().has(Url(type=URLType.RFC3986))
 ```
 
-You can also create custom validators by extending the base `Validator` class. **Important:** When your custom validator extends the `Validator` class, its `__call__` method automatically wraps any exceptions thrown in the `_validate` method. This ensures that any error raised is an instance of `ValidationError` or one of its subclasses, which maintains consistent error handling across the schema. For example:
+You can also create custom validators by extending the base `Validator` class.
+
+> [!NOTE]
+> When your custom validator extends the `Validator` class, its `__call__` method automatically wraps any exceptions thrown in the `_validate` method. This ensures that any error raised is an instance of `ValidationError` or one of its subclasses, which maintains consistent error handling across the schema. For example:
 
 ```python
 from zenif.schema import Validator
@@ -139,7 +148,7 @@ class OddOrEven(Validator):
             raise ValueError(f"Must be an {'even' if self.parity == 0 else 'odd'} number.")
 ```
 
-In addition, the framework now provides more specific exceptions that extend `ValidationError`, such as:
+In addition, Zenif also provides more specific exceptions that extend `ValidationError`, such as:
 
 - `LengthError`
 - `ValueRangeError`
@@ -323,35 +332,48 @@ email_field = (StringF()
 Here's a comprehensive example using multiple SchemaField methods:
 
 ```python
-from zenif.schema import Schema, StringF, IntegerF, BooleanF, Length, Value
 from datetime import datetime
 
-user_schema = Schema({
-    "username": (StringF()
-        .pre(lambda x: x.strip().lower())
-        .has(Length(min=3, max=20))
-        .post(lambda x: f"@{x}")),
+from zenif.schema import (
+    BooleanF,
+    Email,
+    IntegerF,
+    Length,
+    Regex,
+    Schema,
+    StringF,
+    Value,
+)
 
-    "email": (StringF()
-        .pre(lambda x: x.strip().lower())
-        .has(Email())
-        .default("user@example.com")),
-
-    "age": (IntegerF()
-        .has(Value(min=0, max=120))
-        .default(18)),
-
-    "is_premium": BooleanF().default(False),
-
-    "premium_code": (StringF()
-        .when(
-            lambda data: data.get("is_premium", False),
-            "Premium code required for premium users"
-        )
-        .has(Length(min=10, max=10))),
-
-    "created_at": IntegerF().default(lambda: int(datetime.now().timestamp()))
-})
+user_schema = Schema(
+    {
+        "username": (
+            StringF()
+            .pre(lambda x: x.strip().lower())
+            .has(Length(min=3, max=20))
+            .post(lambda x: x if x.startswith("@") else f"@{x}")
+        ),
+        "email": (
+            StringF()
+            .pre(lambda x: x.strip().lower())
+            .has(Email())
+            .default("user@example.com")
+        ),
+        "age": IntegerF().has(Value(min=0, max=120)).default(18),
+        "is_premium": BooleanF().default(False),
+        "premium_code": (
+            StringF()
+            .pre(lambda x: x.strip().lower().replace("-", ""))
+            .when(
+                lambda data: data.get("is_premium", False),
+                "Premium code required for premium users",
+            )
+            .default("")
+            .has(Regex(r"^[a-z]{4}[a-z]{4}[a-z]{4}$", err="Invalid format."))
+        ),
+        "created_at": IntegerF().default(lambda: int(datetime.now().timestamp())),
+    }
+)
 
 # Validate data
 data = {
@@ -359,7 +381,7 @@ data = {
     "email": "  JOHN@EXAMPLE.COM  ",
     "age": 25,
     "is_premium": True,
-    "premium_code": "ABCD123456"
+    "premium_code": "JGUI-PYBF-WSMN",
 }
 
 is_valid, errors, coerced_data = user_schema.validate(data)
@@ -369,7 +391,7 @@ print(coerced_data)
 #     'email': 'john@example.com',
 #     'age': 25,
 #     'is_premium': True,
-#     'premium_code': 'ABCD123456',
+#     'premium_code': "jguipybfwsmn",
 #     'created_at': 1640995200
 # }
 ```
