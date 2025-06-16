@@ -103,7 +103,7 @@ Validators are used to apply specific rules to fields. Zenif's built-in validato
 - `ExactValue(value)`: Ensures the field is exactly the specified value for numbers
 - `Regex(pattern)`: Validates strings against a regular expression
 - `Email()`: Validates email addresses
-- `Date()`: Ensures the field is in the format YYYY-MM-DD
+- `Date()`: Validates date formats with range validation
 - `Alphanumeric()`: Ensures the field only contains letters and numbers
 - `Url()`: Validates URL addresses
 - `NotEmpty()`: Ensures the field is not empty
@@ -128,6 +128,46 @@ strict_url_field = StringF().has(Url(type=URLType.FORCEHTTP))
 # RFC 3986 compliant validation
 rfc_url_field = StringF().has(Url(type=URLType.RFC3986))
 ```
+
+The `Date` validator supports different date formats through the `DateType` enum:
+
+- `DateType.ISO`: YYYY-MM-DD format (default, ISO 8601 standard)
+- `DateType.SLASH_US`: MM/DD/YYYY format
+- `DateType.SLASH`: DD/MM/YYYY format
+- `DateType.DASH_US`: MM-DD-YYYY format
+- `DateType.DASH`: DD-MM-YYYY format
+- `DateType.DOTS_US`: MM.DD.YYYY format
+- `DateType.DOTS`: DD.MM.YYYY format
+- `DateType.COMPACT`: YYYYMMDD format
+- `DateType.DATETIME_ISO`: YYYY-MM-DDTHH:MM:SS format (ISO 8601 datetime)
+- `DateType.DATETIME_SPACE`: YYYY-MM-DD HH:MM:SS format (datetime with space)
+
+```python
+from zenif.schema import Date, DateType
+
+# Default ISO format (YYYY-MM-DD)
+date_field = StringF().has(Date())
+
+# US format with slashes (MM/DD/YYYY)
+us_date_field = StringF().has(Date(type=DateType.SLASH_US))
+
+# European format with dots (DD.MM.YYYY)
+eu_date_field = StringF().has(Date(type=DateType.DOTS))
+
+# Compact format (YYYYMMDD)
+compact_date_field = StringF().has(Date(type=DateType.COMPACT))
+
+# ISO datetime format
+datetime_field = StringF().has(Date(type=DateType.DATETIME_ISO))
+```
+
+All date formats include range validation:
+
+- Years: 1900-2099
+- Months: 01-12
+- Days: 01-31
+- Hours: 00-23 (for datetime formats)
+- Minutes/Seconds: 00-59 (for datetime formats)
 
 You can also create custom validators by extending the base `Validator` class.
 

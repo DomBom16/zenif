@@ -207,13 +207,29 @@ class Url(Regex):
             raise URLError(self.err)
 
 
-class Date(Regex):
-    """Validates that the value matches the YYYY-MM-DD format."""
+class DateType(Enum):
+    # YYYY-MM-DD (ISO 8601) - Year: 1900-2099, Month: 01-12, Day: 01-31
+    ISO = r"^(19|20)\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$"
+    SLASH_US = r"^(0[1-9]|1[0-2])/(0[1-9]|[12]\d|3[01])/(19|20)\d{2}$"
+    SLASH = r"^(0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/(19|20)\d{2}$"
+    DASH_US = r"^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])-(19|20)\d{2}$"
+    DASH = r"^(0[1-9]|[12]\d|3[01])-(0[1-9]|1[0-2])-(19|20)\d{2}$"
+    DOTS_US = r"^(0[1-9]|1[0-2])\.(0[1-9]|[12]\d|3[01])\.(19|20)\d{2}$"
+    DOTS = r"^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.(19|20)\d{2}$"
+    COMPACT = r"^(19|20)\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])$"
+    DATETIME_ISO = r"^(19|20)\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$"
+    DATETIME_SPACE = r"^(19|20)\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]) ([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$"
 
-    def __init__(self, err: str | None = None):
+
+class Date(Regex):
+    """Validates that the value matches a specified date format with range validation."""
+
+    def __init__(self, type: DateType | None = None, err: str | None = None):
         if err is None:
-            err = "Invalid date format. Expected format is YYYY-MM-DD."
-        super().__init__(r"^\d{4}-\d{2}-\d{2}$", err)
+            err = "Invalid date format."
+        if type is None:
+            type = DateType.ISO
+        super().__init__(type.value, err)
 
     def _validate(self, value: Any):
         if not match(self.pattern, str(value)):
