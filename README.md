@@ -1,4 +1,4 @@
-![Cover](https://github.com/user-attachments/assets/6bf77e0d-b855-4c2b-8472-b2690286298c)
+![Zenif Cover](https://github.com/user-attachments/assets/6b956c46-eeee-43b2-aac7-21e3dca4227a)
 
 # Zenif
 
