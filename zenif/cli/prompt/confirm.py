@@ -63,14 +63,6 @@ class ConfirmPrompt(BasePrompt):
                     self._print_prompt(
                         self.message,
                         value="Yes" if result else "No",
-                        options=options,
-                        default_option=(
-                            "Y"
-                            if self._default is True
-                            else "N"
-                            if self._default is False
-                            else None
-                        ),
                     )
                     print()
                     return result

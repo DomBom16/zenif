@@ -110,6 +110,9 @@ class NumberPrompt(BasePrompt):
             char = self._get_key()
             if char == Keys.ENTER:  # Enter key
                 if not error and (value or self._default is not None):
+                    self._print_prompt(
+                        self.message, truncated_value or self._default, error=error
+                    )
                     print()  # Move to next line after input
                     return (
                         float(value)

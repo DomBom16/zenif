@@ -120,6 +120,8 @@ def test_prompts():
         print(i + 1)
 
     print(Cursor.get())
+    
+    p.number("Enter your age").default(25).ask()
 
     p.keypress("Press a, b, or c").keys("a", "b", "c").ask()
 

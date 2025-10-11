@@ -52,9 +52,7 @@ class TextPrompt(BasePrompt):
             char = self._get_key()
             if char == Keys.ENTER:  # Enter key
                 if not error and (value or self._default):
-                    self._print_prompt(
-                        self.message, value or self._default, self._default
-                    )
+                    self._print_prompt(self.message, value or self._default)
                     print()
                     return value or self._default
             elif char == Keys.BACKSPACE:  # Backspace
