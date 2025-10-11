@@ -121,24 +121,24 @@ def test_prompts():
 
     print(Cursor.get())
     
-    p.number("Enter your age").default(25).ask()
+    # p.number("Enter your age").default(25).ask()
 
-    p.keypress("Press a, b, or c").keys("a", "b", "c").ask()
+    # p.keypress("Press a, b, or c").keys("a", "b", "c").ask()
 
-    if (
-        not p.confirm("Are you sure you want to continue?", s, "are_you_sure")
-        .default(True)
-        .ask()
-    ):
-        return
-    name = p.text("Enter your name", s, "name").ask()
-    email = p.text("Enter your email", s, "email").ask()
-    password = p.password("Enter your password", s, "password").peeper().ask()
-    date = (
-        p.date("Enter your date of birth", s, "date").month_first().show_words().ask()
-    )
-    salary = p.number("Enter your salary", s, "salary").commas().ask()
-    age = p.number("Enter your age", s, "age").ask()
+    # if (
+    #     not p.confirm("Are you sure you want to continue?", s, "are_you_sure")
+    #     .default(True)
+    #     .ask()
+    # ):
+    #     return
+    # name = p.text("Enter your name", s, "name").ask()
+    # email = p.text("Enter your email", s, "email").ask()
+    # password = p.password("Enter your password", s, "password").peeper().ask()
+    # date = (
+    #     p.date("Enter your date of birth", s, "date").month_first().show_words().ask()
+    # )
+    # salary = p.number("Enter your salary", s, "salary").commas().ask()
+    # age = p.number("Enter your age", s, "age").ask()
     editor = p.editor("Enter your hacker code", s, "editor").language("py").ask()
     interests = (
         p.checkbox("Select your interests", s, "interests")
@@ -155,12 +155,12 @@ def test_prompts():
         s.validate(
             {
                 "are_you_sure": True,
-                "name": name,
-                "email": email,
-                "password": password,
-                "date": date,
-                "salary": salary,
-                "age": age,
+                # "name": name,
+                # "email": email,
+                # "password": password,
+                # "date": date,
+                # "salary": salary,
+                # "age": age,
                 "editor": editor,
                 "interests": interests,
                 "fav_interest": fav_interest,
